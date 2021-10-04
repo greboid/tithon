@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"path/filepath"
 
 	"github.com/gorilla/websocket"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -22,7 +21,7 @@ type Client struct {
 }
 
 func NewIRCClient(databaseDirectory string) (*Client, error) {
-	db, err := leveldb.OpenFile(filepath.Join(databaseDirectory), nil)
+	db, err := leveldb.OpenFile(databaseDirectory, nil)
 	if err != nil {
 		return nil, err
 	}

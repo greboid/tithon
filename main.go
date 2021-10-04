@@ -23,7 +23,7 @@ import (
 var public embed.FS
 
 var (
-	port = flag.Int("port", 8080, "Port for the webserver to listen on")
+	port              = flag.Int("port", 8080, "Port for the webserver to listen on")
 	databaseDirectory = flag.String("db-dir", filepath.Join(".", "database"), "Directory used to store database contents")
 )
 

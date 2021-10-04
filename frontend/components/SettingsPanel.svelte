@@ -1,7 +1,12 @@
 <script>
-    import MdList from 'svelte-icons/md/MdList.svelte'
-    import MdPeople from 'svelte-icons/md/MdPeople.svelte'
+    import MdAdd from 'svelte-icons/md/MdAdd.svelte'
+    import MdEdit from 'svelte-icons/md/MdEdit.svelte'
     import MdSettings from 'svelte-icons/md/MdSettings.svelte'
+    import {addNetwork} from "../stores";
+
+    const showAddNetwork = () => {
+        addNetwork.set(true)
+    }
 </script>
 <style>
     button {
@@ -9,6 +14,6 @@
         height: 2em;
     }
 </style>
-<button title="Edit Networks"><MdList/></button>
-<button title="Edit Profiles"><MdPeople/></button>
+<button title="Edit Networks" on:click={showAddNetwork}><MdAdd/></button>
+<button title="Edit Profiles"><MdEdit/></button>
 <button title="Edit Settings"><MdSettings /></button>

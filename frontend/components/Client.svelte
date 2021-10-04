@@ -7,6 +7,7 @@
     import ReconnectingWebSocket from "reconnecting-websocket";
     import {connected, serverList, messages} from "../stores";
     import SettingsPanel from "./SettingsPanel.svelte";
+    import NetworkEditor from "./NetworkEditor.svelte";
 
     let socket
     const startSocket = socketLocation => {
@@ -55,6 +56,20 @@
                 "network": network,
                 "channel": channel,
                 "message": message,
+            },
+        }))
+    }
+    const doAddNetwork = (name, server, tls, nickname, realname, username, password) => {
+        socket.send(JSON.stringify({
+            "action": "ADDNETWORK",
+            "message": {
+                "name": name,
+                "server": server,
+                "tls": tls,
+                "nickname": nickname,
+                "realname": realname,
+                "username": username,
+                "password": password,
             },
         }))
     }
@@ -110,6 +125,7 @@
     }
 </style>
 <main>
+    <NetworkEditor doAddNetwork="{doAddNetwork}"/>
     <section class="serverlist">
         <ServerList />
     </section>

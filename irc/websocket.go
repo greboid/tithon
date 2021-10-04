@@ -7,7 +7,7 @@ import (
 )
 
 type SocketAction struct {
-	Action string `json:"action"`
+	Action  string          `json:"action"`
 	Message json.RawMessage `json:"message"`
 }
 
@@ -19,6 +19,16 @@ type SocketSendChannelMessage struct {
 	Network string `json:"network"`
 	Channel string `json:"channel"`
 	Message string `json:"message"`
+}
+
+type SocketAddNetwork struct {
+	Name     string `json:"name"`
+	Server   string `json:"server"`
+	TLS      bool   `json:"tls"`
+	Nickname string `json:"nickname"`
+	Realname string `json:"realname"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func SocketHandler(client *Client) func(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +54,7 @@ func SocketHandler(client *Client) func(w http.ResponseWriter, r *http.Request) 
 				message := &SocketInit{}
 				err := json.Unmarshal(actionMessage.Message, message)
 				if err != nil {
-					log.Printf("Unable to parse init message: %s", err)
+					log.Printf("Unable to parse init message: %s", err.Error())
 					break
 				}
 				client.InitClient(conn, message.Since)
@@ -53,11 +63,28 @@ func SocketHandler(client *Client) func(w http.ResponseWriter, r *http.Request) 
 				message := &SocketSendChannelMessage{}
 				err := json.Unmarshal(actionMessage.Message, message)
 				if err != nil {
-					log.Printf("Unable to parse message message")
+					log.Printf("Unable to parse send chan message: %s", err.Error())
 					break
 				}
 				client.SendMessage(message.Network, message.Channel, message.Message)
 				break
+			case "ADDNETWORK":
+				message := &SocketAddNetwork{}
+				err := json.Unmarshal(actionMessage.Message, message)
+				if err != nil {
+					log.Printf("Unable to parse message add network: %s", err.Error())
+				}
+				client.addNetwork(&Network{
+					Name:           message.Name,
+					Profile:        &Profile{
+						Nickname:     message.Nickname,
+						Username:     message.Username,
+						Password:     message.Password,
+						RealName:     message.Realname,
+					},
+					Hostname:       message.Server,
+					UseTLS:         message.TLS,
+				})
 			}
 		}
 	}

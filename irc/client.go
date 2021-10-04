@@ -16,7 +16,7 @@ type ClientConfig struct {
 
 type Client struct {
 	Networks         []*Network
-	database		 *leveldb.DB
+	database         *leveldb.DB
 	connectedClients []*websocket.Conn
 	upgrader         websocket.Upgrader
 }
@@ -27,7 +27,7 @@ func NewIRCClient(databaseDirectory string) (*Client, error) {
 		return nil, err
 	}
 	client := &Client{
-		upgrader:     websocket.Upgrader{},
+		upgrader: websocket.Upgrader{},
 		database: db,
 	}
 	return client, nil
@@ -127,6 +127,8 @@ func (c *Client) SendMessage(network string, channel string, message string) {
 	}
 }
 
-func (c *Client) socketSender() {
-
+func (c *Client) addNetwork(network *Network) {
+	c.Networks = append(c.Networks, network)
+	c.sendServerLists()
+	network.Connect(c)
 }

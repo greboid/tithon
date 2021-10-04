@@ -66,7 +66,6 @@ func (n *Network) Connect(updater Updater) {
 
 func (n *Network) addCallbacks() {
 	n.connection.AddConnectCallback(func(message ircmsg.Message) {
-		_ = n.connection.Join("#mdbot")
 	})
 	n.connection.AddCallback("JOIN", func(message ircmsg.Message) {
 		if ircutils.ParseUserhost(message.Prefix).Nick == n.connection.CurrentNick() {

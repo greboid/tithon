@@ -131,3 +131,11 @@ func (c *Client) addNetwork(network *Network) {
 	c.sendServerLists()
 	network.Connect(c)
 }
+
+func (c *Client) joinChannel(network string, channel string) {
+	for _, net := range c.Networks {
+		if net.Name == network{
+			_ = net.connection.Join(channel)
+		}
+	}
+}

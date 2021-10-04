@@ -31,6 +31,11 @@ type SocketAddNetwork struct {
 	Password string `json:"password"`
 }
 
+type SocketJoinChannel struct {
+	Network string `json:"network"`
+	Channel string `json:"channel"`
+}
+
 func SocketHandler(client *Client) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := client.upgrader.Upgrade(w, r, nil)
@@ -85,6 +90,13 @@ func SocketHandler(client *Client) func(w http.ResponseWriter, r *http.Request) 
 					Hostname:       message.Server,
 					UseTLS:         message.TLS,
 				})
+			case "JOINCHANNEL":
+				message := &SocketJoinChannel{}
+				err := json.Unmarshal(actionMessage.Message, message)
+				if err != nil {
+					log.Printf("Unable to parse message join channel: %s", err.Error())
+				}
+				client.joinChannel(message.Network, message.Channel)
 			}
 		}
 	}

@@ -1,9 +1,19 @@
 <script>
     import {selectedChannel, selectedNetwork} from "../stores";
 
-    export let sendToIRC
+    export let sendToIRC, joinChannel
     let newMessage = ""
+    const parseCommand= () => {
+        if (newMessage.startsWith("/join ")) {
+            joinChannel($selectedNetwork, newMessage.substring(6))
+        }
+        newMessage = ""
+    }
     const sendMessage = () => {
+        if (newMessage.startsWith("/")) {
+            parseCommand()
+            return
+        }
         sendToIRC($selectedNetwork, $selectedChannel, newMessage)
         newMessage = ""
     }

@@ -73,6 +73,15 @@
             },
         }))
     }
+    const joinChannel = (network, channel) => {
+        socket.send(JSON.stringify({
+            "action": "JOINCHANNEL",
+            "message": {
+                "network": network,
+                "channel": channel,
+            }
+        }))
+    }
 </script>
 <style>
     main {
@@ -143,7 +152,7 @@
             <ChannelContent />
         </section>
         <section class="input">
-            <WindowInput {sendToIRC} />
+            <WindowInput {sendToIRC} {joinChannel} />
         </section>
     </div>
 </main>

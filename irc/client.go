@@ -1,7 +1,13 @@
 package irc
 
 import (
+	"encoding/json"
+	"errors"
+	"log"
+	"path/filepath"
+
 	"github.com/gorilla/websocket"
+	"github.com/syndtr/goleveldb/leveldb"
 )
 
 type ClientConfig struct {
@@ -10,18 +16,21 @@ type ClientConfig struct {
 
 type Client struct {
 	Networks         []*Network
-	config           *ClientConfig
+	database		 *leveldb.DB
 	connectedClients []*websocket.Conn
 	upgrader         websocket.Upgrader
 }
 
-func NewIRCClient() *Client {
-	conf := &ClientConfig{}
-	client := &Client{
-		config:       conf,
-		upgrader:     websocket.Upgrader{},
+func NewIRCClient(databaseDirectory string) (*Client, error) {
+	db, err := leveldb.OpenFile(filepath.Join(databaseDirectory), nil)
+	if err != nil {
+		return nil, err
 	}
-	return client
+	client := &Client{
+		upgrader:     websocket.Upgrader{},
+		database: db,
+	}
+	return client, nil
 }
 
 func (c *Client) AddClient(conn *websocket.Conn) {
@@ -46,10 +55,37 @@ func (c *Client) RemoveClient(conn *websocket.Conn) {
 	}
 }
 
-func (c *Client) Init() {
-	for _, network := range c.config.Networks {
+func (c *Client) Start() {
+	networksBytes, err := c.database.Get([]byte("networks"), nil)
+	if err != nil && !errors.Is(err, leveldb.ErrNotFound) {
+		log.Printf("Unable to start: %s", err.Error())
+		return
+	}
+	var networks []*Network
+	err = json.Unmarshal(networksBytes, &networks)
+	if err != nil {
+		log.Printf("Unable to start: %s", err.Error())
+		return
+	}
+	c.Networks = networks
+	for _, network := range c.Networks {
 		network.Connect(c)
 	}
+}
+
+func (c *Client) Stop() error {
+	defer func() {
+		_ = c.database.Close()
+	}()
+	networks, err := json.Marshal(c.Networks)
+	if err != nil {
+		return err
+	}
+	err = c.database.Put([]byte("networks"), networks, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *Client) InitClient(conn *websocket.Conn, since int) {
@@ -64,7 +100,7 @@ func (c *Client) sendServerLists() {
 
 func (c *Client) sendServerList(conn *websocket.Conn) {
 	serverlist := make(map[string][]string)
-	for _, network := range c.config.Networks {
+	for _, network := range c.Networks {
 		serverlist[network.Name] = []string{}
 		for _, channel := range network.Channels {
 			serverlist[network.Name] = append(serverlist[network.Name], channel.Name)
@@ -80,7 +116,7 @@ func (c *Client) sendChannelMessage(network *Network, channel *Channel, message 
 }
 
 func (c *Client) SendMessage(network string, channel string, message string) {
-	for _, net := range c.config.Networks {
+	for _, net := range c.Networks {
 		if net.Name == network {
 			for _, chann := range net.Channels {
 				if chann.Name == channel {

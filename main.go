@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"time"
 
 	"ircclient/irc"
@@ -23,6 +24,7 @@ var public embed.FS
 
 var (
 	port = flag.Int("port", 8080, "Port for the webserver to listen on")
+	databaseDirectory = flag.String("db-dir", filepath.Join(".", "database"), "Directory used to store database contents")
 )
 
 func GetEmbedOrOSFS(path string, embedFs embed.FS) (fs.FS, error) {
@@ -49,8 +51,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to find web content: %s", err.Error())
 	}
-	client := irc.NewIRCClient()
-	client.Init()
+	client, err := irc.NewIRCClient(*databaseDirectory)
+	if err != nil {
+		log.Fatalf("Unable to launch client: %s", err.Error())
+	}
+	client.Start()
+	defer func() {
+		_ = client.Stop()
+	}()
 	router := http.NewServeMux()
 	router.Handle("/", http.StripPrefix("/", http.FileServer(http.FS(publicFS))))
 	router.HandleFunc("/socket", irc.SocketHandler(client))

@@ -98,11 +98,14 @@ func (c *Client) sendServerLists() {
 }
 
 func (c *Client) sendServerList(conn *websocket.Conn) {
-	serverlist := make(map[string][]string)
+	serverlist := make(map[string][]interface{})
 	for _, network := range c.Networks {
-		serverlist[network.Name] = []string{}
+		serverlist[network.Name] = []interface{}{}
 		for _, channel := range network.Channels {
-			serverlist[network.Name] = append(serverlist[network.Name], channel.Name)
+			serverlist[network.Name] = append(serverlist[network.Name], map[string]interface{}{
+				"name": channel.Name,
+				"joined": channel.Joined,
+			})
 		}
 	}
 	_ = conn.WriteJSON(map[string]interface{}{"serverlist": serverlist})
@@ -134,7 +137,7 @@ func (c *Client) addNetwork(network *Network) {
 
 func (c *Client) joinChannel(network string, channel string) {
 	for _, net := range c.Networks {
-		if net.Name == network{
+		if net.Name == network {
 			_ = net.connection.Join(channel)
 		}
 	}

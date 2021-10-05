@@ -23,6 +23,9 @@ const selectWindow = event => {
     a.active {
         font-weight: bold;
     }
+    a.joined {
+        text-decoration: line-through;
+    }
 </style>
 <nav>
     {#if [...$serverList.keys()].length > 0}
@@ -35,9 +38,10 @@ const selectWindow = event => {
                 {#if [...$serverList.get(network).values()].length > 0}
                     <ul class="windows">
                         {#each [...$serverList.get(network).values()] as window}
-                            <li><a data-network="{network}" data-channel="{window}" on:click|preventDefault={selectWindow}
-                                   class:active="{$selectedNetwork === network && $selectedChannel === window}"
-                            >{window}</a></li>
+                            <li><a data-network="{network}" data-channel="{window.name}" on:click|preventDefault={selectWindow}
+                                   class:active="{$selectedNetwork === network && $selectedChannel === window.name}"
+                                   class:joined="{window.joined === false}"
+                            >{window.name}</a></li>
                         {/each}
                     </ul>
                 {/if}

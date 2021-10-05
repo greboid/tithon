@@ -11,6 +11,6 @@ type QueryMessage struct {
 }
 
 type Query struct {
-	Name           string         `yaml:"name"`
-	RecentMessages []QueryMessage `yaml:"-"`
+	Name           string         `json:"name"`
+	RecentMessages []QueryMessage `json:"-"`
 }

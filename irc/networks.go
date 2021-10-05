@@ -11,24 +11,24 @@ import (
 
 type Network struct {
 	Name           string
-	Profile        *Profile          `yaml:"profile"`
-	Hostname       string            `yaml:"hostname"`
-	UseTLS         bool              `yaml:"useTLS"`
-	Channels       []*Channel        `yaml:"channels"`
-	Queries        []*Query          `yaml:"queries"`
-	StatusMessages []*NetworkMessage `yaml:"-"`
+	Profile        *Profile          `json:"profile"`
+	Hostname       string            `json:"hostname"`
+	UseTLS         bool              `json:"useTLS"`
+	Channels       []*Channel        `json:"channels"`
+	Queries        []*Query          `json:"queries"`
+	StatusMessages []*NetworkMessage `json:"-"`
 	connection     *ircevent.Connection
 	updater        Updater
 }
 
 type Profile struct {
-	Nickname     string `yaml:"nickname"`
-	Username     string `yaml:"username"`
-	Password     string `yaml:"password"`
-	Ident        string `yaml:"ident"`
-	RealName     string `yaml:"realname"`
-	SASLUsername string `yaml:"saslusername"`
-	SASLPassword string `yaml:"saslpassword"`
+	Nickname     string `json:"nickname"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	Ident        string `json:"ident"`
+	RealName     string `json:"realname"`
+	SASLUsername string `json:"saslusername"`
+	SASLPassword string `json:"saslpassword"`
 }
 
 type NetworkMessage struct {
@@ -58,7 +58,7 @@ func (n *Network) Connect(updater Updater) {
 		QuitMessage: " ",
 		Version:     "",
 		UseTLS:      n.UseTLS,
-		Debug:       false,
+		Debug:       true,
 	}
 	n.addCallbacks()
 	_ = n.connection.Connect()
@@ -91,24 +91,26 @@ func (n *Network) addToChannels(channel string) {
 	existing := false
 	for i := range n.Channels {
 		if n.Channels[i].Name == channel {
+			n.Channels[i].Joined = true
 			existing = true
 			break
 		}
 	}
 	if !existing {
-		n.Channels = append(n.Channels, &Channel{Name: channel})
-		n.updater.sendServerLists()
+		newChannel := &Channel{Name: channel, Joined: true}
+		n.Channels = append(n.Channels, newChannel)
 	}
+	n.updater.sendServerLists()
 }
 
 func (n *Network) removeFromChannels(channel string) {
 	for i, v := range n.Channels {
 		if v.Name == channel {
 			n.Channels = append(n.Channels[:i], n.Channels[i+1:]...)
-			n.updater.sendServerLists()
 			break
 		}
 	}
+	n.updater.sendServerLists()
 }
 
 func (n *Network) handlePrivMessage(message ircmsg.Message) {

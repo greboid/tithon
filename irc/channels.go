@@ -1,10 +1,11 @@
 package irc
 
 type Channel struct {
-	Subject        string           `yaml:"-"`
-	Nicknames      []User           `yaml:"-"`
-	RecentMessages []ChannelMessage `yaml:"-"`
-	Name           string           `yaml:"name"`
+	Subject        string           `json:"-"`
+	Nicknames      []User           `json:"-"`
+	RecentMessages []ChannelMessage `json:"-"`
+	Name           string           `json:"name"`
+	Joined         bool             `json:"-"`
 }
 
 type ChannelMessage struct {

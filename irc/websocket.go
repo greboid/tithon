@@ -80,15 +80,15 @@ func SocketHandler(client *Client) func(w http.ResponseWriter, r *http.Request) 
 					log.Printf("Unable to parse message add network: %s", err.Error())
 				}
 				client.addNetwork(&Network{
-					Name:           message.Name,
-					Profile:        &Profile{
-						Nickname:     message.Nickname,
-						Username:     message.Username,
-						Password:     message.Password,
-						RealName:     message.Realname,
+					Name: message.Name,
+					Profile: &Profile{
+						Nickname: message.Nickname,
+						Username: message.Username,
+						Password: message.Password,
+						RealName: message.Realname,
 					},
-					Hostname:       message.Server,
-					UseTLS:         message.TLS,
+					Hostname: message.Server,
+					UseTLS:   message.TLS,
 				})
 			case "JOINCHANNEL":
 				message := &SocketJoinChannel{}

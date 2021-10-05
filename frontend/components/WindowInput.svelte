@@ -14,8 +14,10 @@
             parseCommand()
             return
         }
-        sendToIRC($selectedNetwork, $selectedChannel, newMessage)
-        newMessage = ""
+        if ($selectedChannel !== "") {
+            sendToIRC($selectedNetwork, $selectedChannel, newMessage)
+            newMessage = ""
+        }
     }
 </script>
 <style>
@@ -23,8 +25,6 @@
         width: 100%;
     }
 </style>
-{#if $selectedChannel !== ""}
 <form on:submit|preventDefault={sendMessage}>
     <input class="input" type="text" bind:value={newMessage}>
 </form>
-{/if}

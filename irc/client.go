@@ -73,6 +73,9 @@ func (c *Client) Start() {
 }
 
 func (c *Client) Stop() error {
+	for i := range c.Networks {
+		c.Networks[i].connection.Quit()
+	}
 	defer func() {
 		_ = c.database.Close()
 	}()

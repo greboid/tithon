@@ -78,5 +78,8 @@ func main() {
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatalf("Unable to shutdown: %s", err.Error())
 	}
+	if err := client.Stop(); err != nil {
+		log.Printf("Unable to shutdown client.")
+	}
 	log.Print("Finishing server.")
 }

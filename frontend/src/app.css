@@ -1,0 +1,21 @@
+body {
+  background-color: white;
+  color: black;
+}
+#app {
+  display: contents;
+}
+
+form {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-gap: 1em;
+}
+
+label {
+  grid-column: 1 / 2;
+}
+
+input, button {
+  grid-column: 2 / 3;
+}

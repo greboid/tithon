@@ -76,13 +76,13 @@
         <div class="content">
             <p>Add Network</p>
             <form on:submit|preventDefault={handleAdd}>
-                <label>Name:</label><input type="text" bind:value="{name}" required />
-                <label>Server:</label><input type="text" bind:value="{server}" required />
-                <label>TLS</label><input type="checkbox" bind:checked="{tls}" />
-                <label>Nickname:</label><input type="text" bind:value="{nickname}" required />
-                <label>Realname:</label><input type="text" bind:value="{realname}" required />
-                <label>Username:</label><input type="text" bind:value="{username}" />
-                <label>Password:</label><input type="password" bind:value="{password}" />
+                <label for="name">Name:</label><input type="text" bind:value="{name}" required />
+                <label for="server">Server:</label><input type="text" bind:value="{server}" required />
+                <label for="tls">TLS</label><input type="checkbox" bind:checked="{tls}" />
+                <label for="nickname">Nickname:</label><input type="text" bind:value="{nickname}" required />
+                <label for="realname">Realname:</label><input type="text" bind:value="{realname}" required />
+                <label for="username">Username:</label><input type="text" bind:value="{username}" />
+                <label for="password">Password:</label><input type="password" bind:value="{password}" />
                 <div></div>
                 <section>
                     <button on:click={dismiss}>Cancel</button>

@@ -16,7 +16,7 @@ import (
 
 	"ircclient/irc"
 
-	"github.com/kouhin/envflag"
+	"github.com/csmith/envflag"
 )
 
 //go:embed public
@@ -44,9 +44,7 @@ func GetEmbedOrOSFS(path string, embedFs embed.FS) (fs.FS, error) {
 }
 
 func main() {
-	if err := envflag.Parse(); err != nil {
-		log.Fatalf("Unable to parse flags: %s", err.Error())
-	}
+	envflag.Parse()
 	publicFS, err := GetEmbedOrOSFS("public", public)
 	if err != nil {
 		log.Fatalf("Unable to find web content: %s", err.Error())

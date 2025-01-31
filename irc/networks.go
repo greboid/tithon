@@ -1,12 +1,12 @@
 package irc
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
-	"github.com/ergochat/irc-go/ircutils"
 )
 
 type Network struct {
@@ -61,14 +61,17 @@ func (n *Network) Connect(updater Updater) {
 		Debug:       true,
 	}
 	n.addCallbacks()
-	_ = n.connection.Connect()
+	err := n.connection.Connect()
+	if err != nil {
+		fmt.Printf("Error connecting: %s", err.Error())
+	}
 }
 
 func (n *Network) addCallbacks() {
 	n.connection.AddConnectCallback(func(message ircmsg.Message) {
 	})
 	n.connection.AddCallback("JOIN", func(message ircmsg.Message) {
-		if ircutils.ParseUserhost(message.Prefix).Nick == n.connection.CurrentNick() {
+		if message.Nick() == n.connection.CurrentNick() {
 			n.addToChannels(message.Params[0])
 		}
 	})
@@ -78,7 +81,7 @@ func (n *Network) addCallbacks() {
 		}
 	})
 	n.connection.AddCallback("PART", func(message ircmsg.Message) {
-		if ircutils.ParseUserhost(message.Prefix).Nick == n.connection.CurrentNick() {
+		if message.Nick() == n.connection.CurrentNick() {
 			n.removeFromChannels(message.Params[0])
 		}
 	})
@@ -114,10 +117,13 @@ func (n *Network) removeFromChannels(channel string) {
 }
 
 func (n *Network) handlePrivMessage(message ircmsg.Message) {
-	userHost := ircutils.ParseUserhost(message.Prefix)
+	userHost, err := message.NUH()
+	if err != nil {
+		panic("Unable to parse NUH for host")
+	}
 	n.updater.sendChannelMessage(n, n.Channels[0], ChannelMessage{
 		Source: User{
-			Name: userHost.Nick,
+			Name: message.Nick(),
 			Host: userHost.Host,
 		},
 		Time:    time.Now().Unix(),

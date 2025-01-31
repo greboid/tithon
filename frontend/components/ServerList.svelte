@@ -32,13 +32,13 @@ const selectWindow = event => {
     <ul class="networks">
         {#each [...$serverList.keys()] as network}
             <li>
-                <a data-network="{network}" data-channel="" on:click|preventDefault={selectWindow}
+                <a href="/server/{network}" data-network="{network}" data-channel="" on:click|preventDefault={selectWindow}
                    class:active="{$selectedNetwork === network && $selectedChannel === ''}"
                 >{network}</a>
                 {#if [...$serverList.get(network).values()].length > 0}
                     <ul class="windows">
                         {#each [...$serverList.get(network).values()] as window}
-                            <li><a data-network="{network}" data-channel="{window.name}" on:click|preventDefault={selectWindow}
+                            <li><a href="/server/{network}/channel/{window.name}" data-network="{network}" data-channel="{window.name}" on:click|preventDefault={selectWindow}
                                    class:active="{$selectedNetwork === network && $selectedChannel === window.name}"
                                    class:joined="{window.joined === false}"
                             >{window.name}</a></li>

@@ -6,10 +6,12 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"newirc/irc"
 )
 
 type App struct {
-	Ctx context.Context
+	Ctx         context.Context
+	Connections []irc.Client
 }
 
 func NewApp() *App {
@@ -28,5 +30,7 @@ func (a *App) applicationMenu() *menu.Menu {
 	})
 	return AppMenu
 }
+
+func (a *App) Connect(server irc.Server, profile irc.Profile) {}
 
 func (a *App) ExportTypesToWailsRuntime(ircmsg.Message) {}

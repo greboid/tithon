@@ -8,7 +8,6 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/linux"
 	"newirc/gui"
-	"newirc/irc"
 )
 
 //go:embed all:frontend/dist
@@ -19,10 +18,6 @@ var icon []byte
 
 func main() {
 	app := gui.NewApp()
-	client := irc.Client{
-		App: app,
-	}
-
 	err := wails.Run(&options.App{
 		Title:     "IRC Client",
 		MinWidth:  800,
@@ -36,7 +31,9 @@ func main() {
 			app.Ctx = ctx
 		},
 		OnShutdown: func(ctx context.Context) {
-			client.Quit()
+			for index := range app.Connections {
+				app.Connections[index].Quit()
+			}
 		},
 		Bind: []interface{}{
 			app,

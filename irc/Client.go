@@ -2,7 +2,6 @@ package irc
 
 import (
 	"github.com/ergochat/irc-go/ircevent"
-	"newirc/gui"
 )
 
 const (
@@ -26,5 +25,4 @@ type Profile struct {
 
 type Client struct {
 	ircevent.Connection
-	App *gui.App
 }

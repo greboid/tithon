@@ -3,7 +3,7 @@
   import ActiveWindow from '~lib/ActiveWindow.svelte'
   import NickList from '~lib/NickList.svelte'
   import Empty from '~lib/Empty.svelte'
-  let { servers = [] } = $props()
+  let { servers  = []} = $props()
 </script>
 
 {#if servers.length === 0}

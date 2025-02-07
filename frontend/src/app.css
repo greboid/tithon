@@ -1,11 +1,22 @@
+html {
+  height: 100%;
+  overflow: hidden;
+}
 body {
   background-color: white;
   color: black;
+  display: flex;
+  gap: 1em;
+  height: 100%;
 }
 #app {
   display: contents;
 }
-
+#app > div {
+  display: contents;
+}
+nav {}
+main{}
 form {
   display: grid;
   grid-template-columns: 200px 1fr;

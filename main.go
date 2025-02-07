@@ -1,83 +1,53 @@
-// server.go
 package main
 
 import (
 	"context"
 	"embed"
-	"flag"
-	"fmt"
-	"io/fs"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"time"
-
-	"ircclient/irc"
-
-	"github.com/csmith/envflag"
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/linux"
+	"newirc/gui"
+	"newirc/irc"
 )
 
-//go:embed public
-var public embed.FS
+//go:embed all:frontend/dist
+var assets embed.FS
 
-var (
-	port              = flag.Int("port", 8080, "Port for the webserver to listen on")
-	databaseDirectory = flag.String("db-dir", filepath.Join(".", "database"), "Directory used to store database contents")
-)
-
-func GetEmbedOrOSFS(path string, embedFs embed.FS) (fs.FS, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return os.DirFS(path), nil
-	}
-	_, err = embedFs.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	staticFiles, err := fs.Sub(embedFs, path)
-	if err != nil {
-		return nil, err
-	}
-	return staticFiles, nil
-}
+//go:embed all:build/appicon.png
+var icon []byte
 
 func main() {
-	envflag.Parse()
-	publicFS, err := GetEmbedOrOSFS("public", public)
+	app := gui.NewApp()
+	client := irc.Client{
+		App: app,
+	}
+
+	err := wails.Run(&options.App{
+		Title:     "IRC Client",
+		MinWidth:  800,
+		MinHeight: 600,
+		Width:     1024,
+		Height:    768,
+		AssetServer: &assetserver.Options{
+			Assets: assets,
+		},
+		OnStartup: func(ctx context.Context) {
+			app.Ctx = ctx
+			client.TestConnect()
+		},
+		OnShutdown: func(ctx context.Context) {
+			client.Quit()
+		},
+		Bind: []interface{}{
+			app,
+		},
+		Linux: &linux.Options{
+			Icon:             icon,
+			WebviewGpuPolicy: linux.WebviewGpuPolicyNever,
+		},
+	})
 	if err != nil {
-		log.Fatalf("Unable to find web content: %s", err.Error())
+		println("Error:", err.Error())
 	}
-	client, err := irc.NewIRCClient(*databaseDirectory)
-	if err != nil {
-		log.Fatalf("Unable to launch client: %s", err.Error())
-	}
-	client.Start()
-	defer func() {
-		_ = client.Stop()
-	}()
-	router := http.NewServeMux()
-	router.Handle("/", http.StripPrefix("/", http.FileServer(http.FS(publicFS))))
-	router.HandleFunc("/socket", irc.SocketHandler(client))
-	log.Printf("Starting server: http://127.0.0.1:%d", *port)
-	server := http.Server{
-		Addr:    fmt.Sprintf(":%d", *port),
-		Handler: router,
-	}
-	go func() {
-		_ = server.ListenAndServe()
-	}()
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, os.Kill)
-	<-stop
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Unable to shutdown: %s", err.Error())
-	}
-	if err := client.Stop(); err != nil {
-		log.Printf("Unable to shutdown client.")
-	}
-	log.Print("Finishing server.")
 }

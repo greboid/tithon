@@ -34,7 +34,6 @@ func main() {
 		},
 		OnStartup: func(ctx context.Context) {
 			app.Ctx = ctx
-			client.TestConnect()
 		},
 		OnShutdown: func(ctx context.Context) {
 			client.Quit()

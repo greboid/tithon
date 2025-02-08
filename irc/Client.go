@@ -13,18 +13,18 @@ type Server struct {
 }
 
 type ConnectableServer struct {
-	Hostname     string `json:"hostname"`
-	Port         int    `json:"port"`
-	TLS          bool   `json:"tls"`
-	SaslMech     string `json:"saslMech,omitempty"`
-	Saslusername string `json:"saslUsername,omitempty"`
-	Saslpassword string `json:"saslPassword,omitempty"`
+	Server       string             `json:"server"`
+	TLS          bool               `json:"tls"`
+	SaslMech     string             `json:"saslMech,omitempty"`
+	Saslusername string             `json:"saslUsername,omitempty"`
+	Saslpassword string             `json:"saslPassword,omitempty"`
+	Profile      ConnectableProfile `json:"profile"`
 }
 
 type ConnectableProfile struct {
 	Nick     string `json:"nick"`
 	User     string `json:"user,omitempty"`
-	Realname string `json:"readlname,omitempty"`
+	Realname string `json:"realname,omitempty"`
 }
 
 type Client struct {

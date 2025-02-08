@@ -10,19 +10,18 @@
   import NickList from '~lib/NickList.svelte'
 
   let servers = $state([])
-  let activeServer = $state()
   EventsOn('serverAdded', server => {
     servers.push(server)
   })
   GetServers().then(response => response.forEach(server => servers.push(server)))
-  const {typ, ser, win } = /^\/?(?<typ>[^\/]?)\/?(?<ser>[^\/]*)\/?(?<win>[^\/]*)\/?$/.exec(window.location.pathname)['groups']
+  const {typ, ser, win } = /^\/?(?<typ>[^\/]?)\/?(?<ser>[^\/]*)\/?(?<win>[^\/]*)\/?$/.exec(window.location.pathname)?.['groups'] ?? {typ:"",ser:"",win:""}
 </script>
 <main>
   {#if servers.length === 0}
     <Empty/>
   {:else}
-    <ServerList servers={servers} activeServer={activeServer} />
-    <ActiveWindow/>
+    <ServerList servers={servers} activeServer={ser} />
+    <ActiveWindow activeServer={ser} activeWindow={win}/>
     <NickList/>
   {/if}
 </main>

@@ -16,14 +16,13 @@
     errorMessage = ""
     Connect(
         {
-          hostname: server,
-          port: port,
+          server: `${server}:${port}`,
           tls: tls,
           saslUsername: username,
-          saslPassword: password
-        },
-        {
-          nick: nickname,
+          saslPassword: password,
+          profile: {
+            nick: nickname,
+          },
         }
     ).catch(error => {
       connecting = false

@@ -28,12 +28,10 @@ func main() {
 			Assets: assets,
 		},
 		OnStartup: func(ctx context.Context) {
-			app.Ctx = ctx
+			app.Startup(ctx)
 		},
 		OnShutdown: func(ctx context.Context) {
-			for index := range app.Connections {
-				app.Connections[index].Quit()
-			}
+			app.Shutdown(ctx)
 		},
 		Bind: []interface{}{
 			app,

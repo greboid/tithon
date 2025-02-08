@@ -1,6 +1,8 @@
 html {
   height: 100%;
+  width: 100%;
   overflow: hidden;
+  display: flex;
 }
 body {
   background-color: white;
@@ -8,11 +10,12 @@ body {
   display: flex;
   gap: 1em;
   height: 100%;
+  width: 100%;
 }
 #app {
   display: contents;
 }
-#app > div {
+main {
   display: contents;
 }
 nav {}

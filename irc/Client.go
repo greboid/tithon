@@ -9,6 +9,10 @@ const (
 )
 
 type Server struct {
+	Name string `json:"name"`
+}
+
+type ConnectableServer struct {
 	Hostname     string `json:"hostname"`
 	Port         int    `json:"port"`
 	TLS          bool   `json:"tls"`
@@ -17,7 +21,7 @@ type Server struct {
 	Saslpassword string `json:"saslPassword,omitempty"`
 }
 
-type Profile struct {
+type ConnectableProfile struct {
 	Nick     string `json:"nick"`
 	User     string `json:"user,omitempty"`
 	Realname string `json:"readlname,omitempty"`

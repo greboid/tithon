@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/ergochat/irc-go/ircmsg"
-	"github.com/wailsapp/wails/v2/pkg/menu"
-	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"newirc/irc"
 )
@@ -23,16 +21,7 @@ func (a *App) Startup(ctx context.Context) {
 	a.Ctx = ctx
 }
 
-func (a *App) applicationMenu() *menu.Menu {
-	AppMenu := menu.NewMenu()
-	FileMenu := AppMenu.AddSubmenu("File")
-	FileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-		runtime.Quit(a.Ctx)
-	})
-	return AppMenu
-}
-
-func (a *App) Connect(server irc.Server, profile irc.Profile) (bool, error) {
+func (a *App) Connect(server irc.ConnectableServer, profile irc.ConnectableProfile) (bool, error) {
 	runtime.LogDebugf(a.Ctx, "Connecting to: %s:%d", server.Hostname, server.Port)
 	client := &irc.Client{}
 	client.Server = fmt.Sprintf("%s:%d", server.Hostname, server.Port)
@@ -51,7 +40,16 @@ func (a *App) Connect(server irc.Server, profile irc.Profile) (bool, error) {
 		client.Loop()
 	}()
 	a.Connections = append(a.Connections, client)
+	runtime.EventsEmit(a.Ctx, "serverAdded", irc.Server{Name: client.Server})
 	return true, nil
+}
+
+func (a *App) GetServers() []irc.Server {
+	servers := make([]irc.Server, 0)
+	for index := range a.Connections {
+		servers = append(servers, irc.Server{Name: a.Connections[index].Server})
+	}
+	return servers
 }
 
 func (a *App) ExportTypesToWailsRuntime(ircmsg.Message) {}

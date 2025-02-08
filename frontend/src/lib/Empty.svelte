@@ -1,6 +1,5 @@
 <script lang="ts">
   import {Connect} from '../../wailsjs/go/gui/App'
-  import { LogInfo } from '../../wailsjs/runtime/runtime'
   let nickname: string = $state("")
   let server: string = $state("")
   let port: number = $state(6667)

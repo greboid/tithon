@@ -14,6 +14,7 @@
   const handleSubmit = (e: SubmitEvent): void => {
     e.preventDefault();
     connecting = true
+    errorMessage = ""
     Connect(
         {
           hostname: server,
@@ -45,7 +46,7 @@
     <label for="saslusername">Username</label>
     <input type="text" name="saslusername" bind:value={username} />
     <label for="saslpassword">Password</label>
-    <input type="text" name="saslpassword" bind:value={password} />
+    <input type="password" name="saslpassword" bind:value={password} />
     <button disabled={connecting}>Connect</button>
   </form>
   <p>{errorMessage}</p>

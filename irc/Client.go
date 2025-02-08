@@ -9,18 +9,18 @@ const (
 )
 
 type Server struct {
-	Hostname     string
-	Port         int
-	TLS          bool
-	SaslMech     string
-	Saslusername string
-	Saslpassword string
+	Hostname     string `json:"hostname"`
+	Port         int    `json:"port"`
+	TLS          bool   `json:"tls"`
+	SaslMech     string `json:"saslMech,omitempty"`
+	Saslusername string `json:"saslUsername,omitempty"`
+	Saslpassword string `json:"saslPassword,omitempty"`
 }
 
 type Profile struct {
-	Nick     string
-	User     string
-	Realname string
+	Nick     string `json:"nick"`
+	User     string `json:"user,omitempty"`
+	Realname string `json:"readlname,omitempty"`
 }
 
 type Client struct {

@@ -1,51 +1,66 @@
 <script lang="ts">
   import {Connect} from '../../wailsjs/go/gui/App'
-  let nickname: string
-  let server: string
-  let port: number
-  let tls: boolean
-  let username: string
-  let password: string
-  const handleSubmit = (e) => {
+  import { LogInfo } from '../../wailsjs/runtime/runtime'
+  let nickname: string = $state("")
+  let server: string = $state("")
+  let port: number = $state(6667)
+  let tls: boolean = $state(true)
+  let username: string = $state("")
+  let password: string = $state("")
+
+  let connecting = $state(false)
+  let errorMessage = $state("")
+
+  const handleSubmit = (e: SubmitEvent): void => {
     e.preventDefault();
+    connecting = true
     Connect(
         {
-          Hostname: server,
-          Port: port,
-          TLS: tls,
-          Saslusername: username,
-          Saslpassword: password
+          hostname: server,
+          port: port,
+          tls: tls,
+          saslUsername: username,
+          saslPassword: password
         },
         {
-          Nick: nickname
+          nick: nickname,
         }
-    )
+    ).catch(error => {
+      connecting = false
+      errorMessage = error
+    })
   }
 </script>
+
+<div>
+  <form onsubmit={handleSubmit}>
+    <label for="nickname">Nickname</label>
+    <input type="text" name="nickname" bind:value={nickname} required />
+    <label for="server">Server</label>
+    <input type="text" name="server" bind:value={server} required />
+    <label for="port">Port</label>
+    <input type="number" name="port" bind:value={port} />
+    <label for="tls">TLS</label>
+    <input type="checkbox" name="tls" bind:checked={tls} required/>
+    <label for="saslusername">Username</label>
+    <input type="text" name="saslusername" bind:value={username} />
+    <label for="saslpassword">Password</label>
+    <input type="text" name="saslpassword" bind:value={password} />
+    <button disabled={connecting}>Connect</button>
+  </form>
+  <p>{errorMessage}</p>
+</div>
 
 <style>
   div {
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
   }
+  p {
+    padding-top: 1em;
+  }
 </style>
-<div>
-  <form on:submit={handleSubmit}>
-    <label for="nickname">Nickname</label>
-    <input type="text" name="nickname" bind:value={nickname} />
-    <label for="server">Server</label>
-    <input type="text" name="server" bind:value={server} />
-    <label for="port">Port</label>
-    <input type="number" name="port" bind:value={port} />
-    <label for="tls">TLS</label>
-    <input type="checkbox" name="tls" bind:checked={tls} />
-    <label for="saslusername">Username</label>
-    <input type="text" name="saslusername" bind:value={username} />
-    <label for="saslpassword">Password</label>
-    <input type="text" name="saslpassword" bind:value={password} />
-    <button>Connect</button>
-  </form>
-</div>

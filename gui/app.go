@@ -32,9 +32,8 @@ func (a *App) applicationMenu() *menu.Menu {
 	return AppMenu
 }
 
-func (a *App) Connect(server irc.Server, profile irc.Profile) {
-	fmt.Println(server)
-	fmt.Println(profile)
+func (a *App) Connect(server irc.Server, profile irc.Profile) (bool, error) {
+	runtime.LogDebugf(a.Ctx, "Connecting to: %s:%d", server.Hostname, server.Port)
 	client := &irc.Client{}
 	client.Server = fmt.Sprintf("%s:%d", server.Hostname, server.Port)
 	client.UseTLS = server.TLS
@@ -43,11 +42,16 @@ func (a *App) Connect(server irc.Server, profile irc.Profile) {
 	client.Nick = profile.Nick
 	client.Debug = true
 	err := client.Connect()
-	fmt.Println(err)
+	if err != nil {
+		runtime.LogDebugf(a.Ctx, "Failed to connect: %s", err.Error())
+		return false, err
+	}
+	runtime.LogDebugf(a.Ctx, "Connected to: %s:%d", server.Hostname, server.Port)
 	go func() {
 		client.Loop()
 	}()
 	a.Connections = append(a.Connections, client)
+	return true, nil
 }
 
 func (a *App) ExportTypesToWailsRuntime(ircmsg.Message) {}

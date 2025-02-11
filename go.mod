@@ -7,6 +7,7 @@ toolchain go1.23.6
 require (
 	github.com/ergochat/irc-go v0.4.0
 	github.com/wailsapp/wails/v2 v2.9.2
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

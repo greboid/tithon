@@ -27,7 +27,7 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		OnStartup: func(ctx context.Context) {
+		OnDomReady: func(ctx context.Context) {
 			app.Startup(ctx)
 		},
 		OnShutdown: func(ctx context.Context) {

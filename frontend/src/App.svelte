@@ -2,26 +2,40 @@
   import '../wailsjs/runtime/runtime'
   import './reset.css'
   import './app.css'
-  import {EventsOn} from '../wailsjs/runtime/runtime'
-  import {GetServers} from '../wailsjs/go/gui/App'
-  import Empty from '~lib/Empty.svelte'
-  import ServerList from '~lib/ServerList.svelte'
-  import ActiveWindow from '~lib/ActiveWindow.svelte'
-  import NickList from '~lib/NickList.svelte'
-
-  let servers = $state([])
-  EventsOn('serverAdded', server => {
-    servers.push(server)
+  import {EventsOn, LogInfo} from '../wailsjs/runtime/runtime'
+  import {Started} from '../wailsjs/go/gui/App'
+  import * as irc from '../wailsjs/go/models'
+  const scrollToBottom = async () => {
+    window.scrollTo(0, document.body.scrollHeight);
+  };
+  const messages = $state([])
+  EventsOn('serverAdded', (server: irc.irc.ConnectableServer) => {
+    messages.push(`Server added: ${server.server}`)
+    scrollToBottom();
   })
-  GetServers().then(response => response.forEach(server => servers.push(server)))
+  EventsOn('channelMessage', (message: irc.irc.ChannelMessage) => {
+    messages.push(`CM: ${message.target} ${message.source} ${message.message}`)
+    scrollToBottom();
+  })
+  EventsOn('directMessage', (message: irc.irc.DirectMessage) => {
+    messages.push(`DM: ${message.source} ${message.message}`)
+    scrollToBottom();
+  })
+  EventsOn('channelAdded', (channel: irc.irc.Channel) => {
+    messages.push(`Channel added: ${channel.name}`)
+    scrollToBottom();
+  })
   const {typ, ser, win } = /^\/?(?<typ>[^\/]?)\/?(?<ser>[^\/]*)\/?(?<win>[^\/]*)\/?$/.exec(window.location.pathname)?.['groups'] ?? {typ:"",ser:"",win:""}
+  Started()
 </script>
+<style>
+  main {
+    display: flex;
+    flex-direction: column;
+  }
+</style>
 <main>
-  {#if servers.length === 0}
-    <Empty/>
-  {:else}
-    <ServerList servers={servers} activeServer={ser} />
-    <ActiveWindow activeServer={ser} activeWindow={win}/>
-    <NickList/>
-  {/if}
+  {#each messages as message}
+    <p>{message}</p>
+  {/each}
 </main>

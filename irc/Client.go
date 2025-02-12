@@ -6,6 +6,7 @@ import (
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"newirc/events"
 	"strings"
 )
 
@@ -13,50 +14,13 @@ const (
 	v3TimestampFormat = "2006-01-02T15:04:05.000Z"
 )
 
-type ConnectableServer struct {
-	Server       string             `yaml:"server" json:"server"`
-	TLS          bool               `yaml:"tls" json:"tls"`
-	SaslMech     string             `yaml:"saslMech,omitempty" json:"saslMech,omitempty"`
-	Saslusername string             `yaml:"saslUsername,omitempty" json:"saslUsername,omitempty"`
-	Saslpassword string             `yaml:"saslPassword,omitempty" json:"saslPassword,omitempty"`
-	Profile      ConnectableProfile `yaml:"profile" json:"profile"`
-}
-
-type ConnectableProfile struct {
-	Nick     string `yaml:"nick" json:"nick"`
-	User     string `yaml:"user,omitempty" json:"user,omitempty"`
-	Realname string `yaml:"realname,omitempty" json:"realname,omitempty"`
-}
-
-type Channel struct {
-	Name string `json:"name" yaml:"name"`
-}
-
-type Message struct {
-	Source  string `json:"source" yaml:"source"`
-	Target  string `json:"target" yaml:"target"`
-	Message string `json:"message" yaml:"message"`
-}
-
-type ChannelMessage struct {
-	Message
-}
-
-type DirectMessage struct {
-	Message
-}
-
-type ServerMessage struct {
-	Message
-}
-
 type Client struct {
 	Ctx                 context.Context `json:"-" yaml:"-"`
 	ircevent.Connection `json:"-" yaml:"-"`
-	ConnectableServer   ConnectableServer `json:"-" yaml:"-"`
+	ConnectableServer   events.ConnectableServer `json:"-" yaml:"-"`
 }
 
-func (c *Client) Connect(server ConnectableServer) error {
+func (c *Client) Connect(server events.ConnectableServer) error {
 	c.ConnectableServer = server
 	c.Connection.Server = fmt.Sprintf("%s", server.Server)
 	c.Connection.UseTLS = server.TLS
@@ -80,13 +44,13 @@ func (c *Client) AddListeners() {
 
 func (c *Client) handlePrivMsg(message ircmsg.Message) {
 	if c.isChannel(message.Params[0]) {
-		go runtime.EventsEmit(c.Ctx, "channelMessage", ChannelMessage{Message{
+		go runtime.EventsEmit(c.Ctx, "channelMessage", events.ChannelMessage{Message: events.Message{
 			Source:  message.Source,
 			Target:  message.Params[0],
 			Message: message.Params[1],
 		}})
 	} else {
-		go runtime.EventsEmit(c.Ctx, "directMessage", DirectMessage{Message{
+		go runtime.EventsEmit(c.Ctx, "directMessage", events.DirectMessage{Message: events.Message{
 			Source:  message.Source,
 			Target:  message.Params[0],
 			Message: message.Params[1],
@@ -95,7 +59,7 @@ func (c *Client) handlePrivMsg(message ircmsg.Message) {
 }
 
 func (c *Client) handleJoin(message ircmsg.Message) {
-	go runtime.EventsEmit(c.Ctx, "channelAdded", &Channel{Name: message.Params[0]})
+	go runtime.EventsEmit(c.Ctx, "channelAdded", &events.Channel{Name: message.Params[0]})
 }
 
 func (c *Client) isChannel(source string) bool {

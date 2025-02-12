@@ -7,12 +7,13 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"gopkg.in/yaml.v3"
 	"io/fs"
+	"newirc/events"
 	"newirc/irc"
 	"os"
 )
 
 type Config struct {
-	Servers []irc.ConnectableServer `yaml:"servers" json:"servers"`
+	Servers []events.ConnectableServer `yaml:"servers" json:"servers"`
 }
 
 type App struct {
@@ -68,7 +69,7 @@ func (a *App) LoadConfig() {
 func (a *App) SaveConfig() {
 }
 
-func (a *App) Connect(server *irc.ConnectableServer) (bool, error) {
+func (a *App) Connect(server *events.ConnectableServer) (bool, error) {
 	runtime.LogDebugf(a.Ctx, "Connecting to: %s", server.Server)
 	client := &irc.Client{
 		Ctx:               a.Ctx,
@@ -88,10 +89,10 @@ func (a *App) Connect(server *irc.ConnectableServer) (bool, error) {
 	return true, nil
 }
 
-func (a *App) ExposeTypesToWails(profile irc.ConnectableProfile,
-	server irc.ConnectableServer,
-	channel irc.Channel,
-	message irc.ChannelMessage,
-	directMessage irc.DirectMessage,
-	serverMessage irc.ServerMessage) {
+func (a *App) ExposeTypesToWails(profile events.ConnectableProfile,
+	server events.ConnectableServer,
+	channel events.Channel,
+	message events.ChannelMessage,
+	directMessage events.DirectMessage,
+	serverMessage events.ServerMessage) {
 }

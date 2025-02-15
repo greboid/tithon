@@ -2,6 +2,7 @@ package irc
 
 import (
 	"context"
+	"newirc/events"
 )
 
 type ConfigServer struct {
@@ -23,13 +24,13 @@ type Config struct {
 
 type App struct {
 	Ctx     context.Context
-	EE      EventEmitter
+	EE      WailsEmitter
 	Servers []Connection
 }
 
 type NullEmitter struct{}
 
-type EventEmitter interface {
+type WailsEmitter interface {
 	Emit(eventName string, data ...interface{})
 }
 
@@ -41,4 +42,7 @@ type Connection interface {
 	Loop()
 	ID() string
 	Name() string
+	SelfJoin(channel string)
+	GetChannels() []events.Channel
+	ChannelMessage(message events.ChannelMessage)
 }

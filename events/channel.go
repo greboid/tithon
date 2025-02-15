@@ -10,6 +10,7 @@ type ChannelMessageSent struct {
 
 type ChannelJoinedSelf struct {
 	Channel Channel `json:"channel"`
+	Time    IRCTime `json:"time"`
 }
 
 type ChannelJoinedOther struct {

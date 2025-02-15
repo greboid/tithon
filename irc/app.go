@@ -2,6 +2,7 @@ package irc
 
 import (
 	"context"
+	"fmt"
 	"github.com/albinj12/unique-id"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
@@ -9,10 +10,14 @@ import (
 	"gopkg.in/yaml.v2"
 	"newirc/events"
 	"os"
+	"slices"
+	"strings"
 	"time"
 )
 
-func (e NullEmitter) Emit(string, ...interface{}) {}
+func (e NullEmitter) Emit(string, ...interface{})                                         {}
+func (e NullEmitter) Add(eventName string, callback func(data ...interface{}))            {}
+func (e NullEmitter) AddWithHistory(eventName string, callback func(data ...interface{})) {}
 
 func NewApp() *App {
 	return &App{}
@@ -25,7 +30,7 @@ func (a *App) Shutdown(context.Context) {
 func (a *App) Startup(ctx context.Context) {
 	a.Ctx = ctx
 	if a.Ctx.Value("events") != nil {
-		a.EE = a.Ctx.Value("events").(EventEmitter)
+		a.EE = a.Ctx.Value("events").(WailsEmitter)
 	} else {
 		a.EE = NullEmitter{}
 	}
@@ -35,9 +40,16 @@ func (a *App) Startup(ctx context.Context) {
 func (a *App) UIReady() {
 	for i := range a.Servers {
 		a.EE.Emit("ServerAdded", events.ServerAdded{
-			Server: events.Server{ID: a.Servers[i].ID(), Server: a.Servers[i].Name()},
+			Server: events.Server{ID: a.Servers[i].ID(), Server: a.Servers[i].Name(), Channels: make([]*events.Channel, 0)},
 			Time:   events.IRCTime{Time: time.Now()},
 		})
+		channels := a.Servers[i].GetChannels()
+		for j := range channels {
+			a.EE.Emit("ChannelJoinedSelf", events.ChannelJoinedSelf{
+				Channel: channels[j],
+				Time:    events.IRCTime{Time: time.Now()},
+			})
+		}
 	}
 }
 
@@ -83,7 +95,7 @@ func (a *App) NewConnection(server string, useTLS bool, SASLLogin string, SASLPa
 	connection.Init(a.Ctx, server, useTLS, SASLLogin, SASLPassword, PreferredNick)
 	a.Servers = append(a.Servers, connection)
 	a.EE.Emit("ServerAdded", events.ServerAdded{
-		Server: events.Server{ID: connection.ID(), Server: connection.Name()},
+		Server: events.Server{ID: connection.ID(), Server: connection.Name(), Channels: make([]*events.Channel, 0)},
 		Time:   events.IRCTime{Time: time.Now()},
 	})
 	a.SaveConfig()
@@ -91,7 +103,7 @@ func (a *App) NewConnection(server string, useTLS bool, SASLLogin string, SASLPa
 	connection.Loop()
 	connection.connection.AddConnectCallback(func(message ircmsg.Message) {
 		a.EE.Emit("ServerUpdated", events.ServerUpdated{
-			Server: events.Server{ID: connection.ID(), Server: connection.Name()},
+			Server: events.Server{ID: connection.ID(), Server: connection.Name(), Channels: make([]*events.Channel, 0)},
 			Time:   events.IRCTime{Time: time.Now()},
 		})
 	})
@@ -99,18 +111,23 @@ func (a *App) NewConnection(server string, useTLS bool, SASLLogin string, SASLPa
 }
 
 type ConnectionImpl struct {
-	ee         EventEmitter
+	ee         WailsEmitter
 	connection *ircevent.Connection
 	id         string
+	channels   []events.Channel
+}
+
+func (b *ConnectionImpl) GetChannels() []events.Channel {
+	return b.channels
 }
 
 func (b *ConnectionImpl) Init(ctx context.Context, server string, useTLS bool, SASLLogin string, SASLPassword string, PreferredNick string) {
 	if ctx.Value("events") != nil {
-		b.ee = ctx.Value("events").(EventEmitter)
+		b.ee = ctx.Value("events").(WailsEmitter)
 	} else {
 		b.ee = NullEmitter{}
 	}
-	s, _ := uniqueid.Generateid()
+	s, _ := uniqueid.Generateid("n")
 	useSASL := SASLLogin != "" && SASLPassword != ""
 	b.id = s
 	b.connection = &ircevent.Connection{
@@ -133,21 +150,45 @@ func (b *ConnectionImpl) Init(ctx context.Context, server string, useTLS bool, S
 		//Log:          nil,
 		Debug: true,
 	}
-}
+	b.connection.AddCallback("JOIN", func(message ircmsg.Message) {
+		if message.Nick() == b.CurrentNick() {
+			b.SelfJoin(message.Params[0])
+		}
+	})
+	b.connection.AddCallback("PART", func(message ircmsg.Message) {
 
-func (b *ConnectionImpl) AddCallback(s string, f func(message ircmsg.Message)) {
-	//TODO implement me
-	panic("implement me")
-}
+	})
+	b.connection.AddCallback("KICK", func(message ircmsg.Message) {
 
-func (b *ConnectionImpl) AddConnectCallback(f func(message ircmsg.Message)) {
-	//TODO implement me
-	panic("implement me")
-}
+	})
+	b.connection.AddCallback("QUIT", func(message ircmsg.Message) {
 
-func (b *ConnectionImpl) AddDisconnectCallback(f func(message ircmsg.Message)) {
-	//TODO implement me
-	panic("implement me")
+	})
+	b.connection.AddCallback("PRIVMSG", func(message ircmsg.Message) {
+		if strings.HasPrefix(message.Params[0], "#") {
+			index := slices.IndexFunc(b.channels, func(channel events.Channel) bool {
+				return channel.Name == message.Params[0]
+			})
+			nuh, err := message.NUH()
+			if index != -1 && err == nil {
+
+				b.ChannelMessage(events.ChannelMessage{
+					Source: events.ChannelUser{
+						User: events.User{
+							Nick:     message.Nick(),
+							UserHost: fmt.Sprintf("%s@%s", nuh.User, nuh.Host),
+							Realname: "",
+						},
+						Modes: "",
+					},
+					Channel:  &b.channels[index],
+					Message:  strings.Join(message.Params[1:], " "),
+					IsNotice: false,
+					IsAction: false,
+				})
+			}
+		}
+	})
 }
 
 func (b *ConnectionImpl) CurrentNick() string {
@@ -189,4 +230,31 @@ func (b *ConnectionImpl) Name() string {
 
 func (b *ConnectionImpl) ID() string {
 	return b.id
+}
+
+func (b *ConnectionImpl) SelfJoin(name string) {
+	channel := events.Channel{
+		ServerID:           b.ID(),
+		Name:               name,
+		Users:              nil,
+		Topic:              "",
+		ModesList:          []events.ModeList{},
+		ModesNoParam:       []events.ModeNoParam{},
+		ModesParamSet:      []events.ModeParamSet{},
+		ModesParamSetUnset: []events.ModeParamSetUnset{},
+	}
+	b.channels = append(b.channels, channel)
+	b.ee.Emit("ChannelJoinedSelf", events.ChannelJoinedSelf{
+		Channel: channel,
+		Time:    events.IRCTime{Time: time.Now()},
+	})
+}
+
+func (b *ConnectionImpl) ChannelMessage(message events.ChannelMessage) {
+	b.ee.Emit("ChannelMessageReceived", events.ChannelMessageReceived{
+		Message: message,
+	})
+}
+
+func (a *App) ExportToWails(events.Server, events.Channel, events.ServerUpdated, events.ServerAdded, events.ChannelJoinedSelf, events.ChannelMessageReceived) {
 }

@@ -1,6 +1,8 @@
 package events
 
-import "time"
+import (
+	"time"
+)
 
 const v3TimestampFormat = "2006-01-02T15:04:05.000Z"
 
@@ -55,7 +57,7 @@ type ModeParamSet struct {
 }
 
 type Channel struct {
-	Server             *Server             `yaml:"-" json:"server"`
+	ServerID           string              `yaml:"-" json:"serverid"`
 	Name               string              `yaml:"-" json:"name"`
 	Users              []*ChannelUser      `yaml:"-" json:"users"`
 	Topic              string              `yaml:"-" json:"topic"`
@@ -66,10 +68,11 @@ type Channel struct {
 }
 
 type ChannelMessage struct {
-	Channel  *Channel `yaml:"-" json:"channel"`
-	Message  string   `yaml:"message" json:"message"`
-	IsNotice bool     `yaml:"-" json:"isNotice,omitempty"`
-	IsAction bool     `yaml:"-" json:"isAction,omitempty"`
+	Channel  *Channel    `yaml:"-" json:"channel"`
+	Source   ChannelUser `json:"source"`
+	Message  string      `yaml:"message" json:"message"`
+	IsNotice bool        `yaml:"-" json:"isNotice,omitempty"`
+	IsAction bool        `yaml:"-" json:"isAction,omitempty"`
 }
 
 type DirectMessage struct {

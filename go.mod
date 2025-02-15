@@ -5,9 +5,10 @@ go 1.23
 toolchain go1.23.6
 
 require (
+	github.com/albinj12/unique-id v1.1.0
 	github.com/ergochat/irc-go v0.4.0
 	github.com/wailsapp/wails/v2 v2.9.2
-	gopkg.in/yaml.v3 v3.0.1
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (

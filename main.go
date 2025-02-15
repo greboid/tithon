@@ -7,7 +7,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/linux"
-	"newirc/gui"
+	"newirc/irc"
 )
 
 //go:embed all:frontend/dist
@@ -17,7 +17,7 @@ var assets embed.FS
 var icon []byte
 
 func main() {
-	app := gui.NewApp()
+	app := irc.NewApp()
 	err := wails.Run(&options.App{
 		Title:     "IRC Client",
 		MinWidth:  800,
@@ -27,7 +27,7 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		OnDomReady: func(ctx context.Context) {
+		OnStartup: func(ctx context.Context) {
 			app.Startup(ctx)
 		},
 		OnShutdown: func(ctx context.Context) {

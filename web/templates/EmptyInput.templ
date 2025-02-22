@@ -1,0 +1,8 @@
+package templates
+
+templ EmptyInput() {
+	<form id="input" data-on-submit="@get('/input', {contentType: 'form'})">
+		<label aria-hidden="true" hidden for="input"></label>
+		<input name="input" required/>
+	</form>
+}

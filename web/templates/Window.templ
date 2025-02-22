@@ -1,0 +1,18 @@
+package templates
+
+import "test/irc"
+
+templ GetWindow(server *irc.Connection, channel *irc.Channel) {
+	if server == nil && channel == nil {
+		<div id="window"></div>
+	} else if channel == nil {
+		<div id="window">Server: { server.GetName() }</div>
+	} else {
+		<div id="window">
+		<p>Server: { server.GetName() } Channel: { channel.GetName() }</p>
+		for _, message := range channel.GetMessages() {
+		    <p>{message}</p>
+		}
+		</div>
+	}
+}

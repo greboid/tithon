@@ -1,0 +1,13 @@
+package templates
+
+templ SettingsPage() {
+	<div id="dialog" class="dialog">
+		<div
+			data-on-click__outside="@get('/closeDialog')"
+			data-on-keydown__window="evt.key === 'Escape' && @get('/closeDialog')"
+		>
+			<h1>Settings</h1>
+			<button data-on-click="@get('/closeDialog')">Close</button>
+		</div>
+	</div>
+}

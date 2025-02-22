@@ -1,0 +1,34 @@
+package templates
+
+import "test/irc"
+
+type TemplCounterSignals struct {
+	ActiveWindow string `json:"activeWindow"`
+}
+
+templ ServerList(servers []*irc.Connection) {
+	<div id="serverlist">
+		<ul>
+			for _, item := range servers {
+				<li>
+					<a
+						data-on-click={ "@get('/changeWindow/" + item.GetID() + "')" }
+						href={ templ.URL("/#/" + item.GetID()) }
+					>{ item.GetName() }</a>
+					if len(item.GetChannels()) > 0 {
+						<ul>
+							for _, channel := range item.GetChannels() {
+								<li>
+									<a
+										data-on-click={ "@get('/changeWindow/" + item.GetID() + "/"+channel.GetID()+"')" }
+										href={ templ.URL("/#/" + item.GetID() +"/"+channel.GetID())}
+									>{ channel.GetName() }</a>
+								</li>
+							}
+						</ul>
+					}
+				</li>
+			}
+		</ul>
+	</div>
+}

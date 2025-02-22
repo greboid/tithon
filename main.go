@@ -28,12 +28,14 @@ func main() {
 	log := slog.New(slog.NewTextHandler(os.Stdout, options))
 	slog.SetDefault(log)
 	connectionManager := irc.NewConnectionManager()
+	defer connectionManager.Stop()
 	err := connectionManager.Load()
 	if err != nil {
 		slog.Error("Unable to load config", "error", err)
 		return
 	}
 	server := web.NewServer(connectionManager)
+	defer server.Stop()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)
 	go func() {
@@ -43,6 +45,5 @@ func main() {
 		server.Start()
 	}()
 	<-quit
-	connectionManager.Stop()
-	server.Stop()
+	slog.Info("Quitting")
 }

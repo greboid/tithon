@@ -174,7 +174,10 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	nickname := r.URL.Query().Get("nickname")
 	sasllogin := r.URL.Query().Get("sasllogin")
 	saslpassword := r.URL.Query().Get("saslpassword")
-	s.connectionManager.AddConnection(hostname, portInt, tlsBool, sasllogin, saslpassword, irc.NewProfile(nickname))
+	id := s.connectionManager.AddConnection(hostname, portInt, tlsBool, sasllogin, saslpassword, irc.NewProfile(nickname))
+	go func() {
+		s.connectionManager.GetConnection(id).Connect()
+	}()
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)

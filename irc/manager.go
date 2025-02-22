@@ -22,7 +22,7 @@ func NewConnectionManager() *ConnectionManager {
 	}
 }
 
-func (cm *ConnectionManager) AddConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) {
+func (cm *ConnectionManager) AddConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) string {
 	s, _ := uniqueid.Generateid("a", 5, "s")
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
@@ -49,9 +49,7 @@ func (cm *ConnectionManager) AddConnection(hostname string, port int, tls bool, 
 		channels: map[string]*Channel{},
 	}
 	cm.connections[connection.id] = connection
-	go func() {
-		connection.Connect()
-	}()
+	return connection.id
 }
 
 func (cm *ConnectionManager) RemoveConnection(id string) {

@@ -44,21 +44,30 @@ func NewServer(cm *irc.ConnectionManager) *Server {
 	return server
 }
 
-func (s *Server) Start() {
+func (s *Server) GetListenAddress() string {
+	if s.httpServer.Addr != "" {
+		return fmt.Sprintf("http://%s", s.httpServer.Addr)
+	}
 	listenAddr, clickAddr, err := getListenAddr()
 	if err != nil {
 		slog.Error("Unable to get free port", "error", err)
-		return
+		return ""
 	}
 	s.httpServer.Addr = listenAddr
+	return clickAddr
+}
+
+func (s *Server) Start() string {
+	clickAddr := s.GetListenAddress()
 	slog.Info("Starting webserver", "url", clickAddr)
 	if *openBrowser {
 		go func() { _ = browser.OpenURL(clickAddr) }()
 	}
-	if err = s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+	if err := s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("Error starting server:", slog.String("error", err.Error()))
 	}
 	slog.Debug("Server stopped")
+	return clickAddr
 }
 
 func (s *Server) Stop() {

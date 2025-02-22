@@ -6,12 +6,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/greboid/ircclient/irc"
 	"github.com/pkg/browser"
 	"log/slog"
 	"net"
 	"net/http"
 	"sync"
-	"test/irc"
 	"time"
 )
 

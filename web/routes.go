@@ -1,14 +1,14 @@
 package web
 
 import (
+	"github.com/greboid/ircclient/irc"
+	"github.com/greboid/ircclient/web/templates"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
-	"test/irc"
-	"test/web/templates"
 	"time"
 )
 

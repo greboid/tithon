@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/albinj12/unique-id"
 	"github.com/ergochat/irc-go/ircevent"
+	"github.com/greboid/ircclient/config"
 	"gopkg.in/yaml.v3"
 	"log/slog"
 	"maps"
 	"os"
 	"slices"
-	"test/config"
 )
 
 type ConnectionManager struct {

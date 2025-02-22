@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"github.com/csmith/envflag"
+	"github.com/greboid/ircclient/irc"
+	"github.com/greboid/ircclient/web"
+	"github.com/webview/webview_go"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
-	"test/irc"
-	"test/web"
 )
 
 //go:generate go run github.com/a-h/templ/cmd/templ@latest generate
@@ -38,11 +39,21 @@ func main() {
 	defer server.Stop()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)
+	listenAddr := server.GetListenAddress()
 	go func() {
 		connectionManager.Start()
 	}()
 	go func() {
 		server.Start()
+	}()
+	go func() {
+		w := webview.New(false)
+		defer w.Destroy()
+		w.SetTitle("IRC Client")
+		w.SetSize(800, 600, webview.HintNone)
+		w.Navigate(listenAddr)
+		w.Run()
+		quit <- syscall.SIGINT
 	}()
 	<-quit
 	slog.Info("Quitting")

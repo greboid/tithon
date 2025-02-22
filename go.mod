@@ -1,8 +1,6 @@
-module test
+module github.com/greboid/ircclient
 
 go 1.23.3
-
-toolchain go1.23.6
 
 require (
 	github.com/a-h/templ v0.3.833
@@ -11,6 +9,7 @@ require (
 	github.com/ergochat/irc-go v0.4.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/starfederation/datastar v0.21.4
+	github.com/webview/webview_go v0.0.0-20240831120633-6173450d4dd6
 	gopkg.in/yaml.v3 v3.0.1
 )
 

@@ -21,8 +21,8 @@ templ AddServerPage() {
 				<label for="saslpassword">SASL Password</label>
 				<input type="password" name="saslpassword"/>
 				<button data-on-click="@get('/addServer', {contentType: 'form'})">Add</button>
-				<button data-on-click="@get('/closeDialog', {contentType: 'form'})">Close</button>
 			</form>
+			<button data-on-click="@get('/closeDialog')">Close</button>
 		</div>
 	</div>
 }

@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -48,13 +49,13 @@ func (s *Server) GetListenAddress() string {
 	if s.httpServer.Addr != "" {
 		return fmt.Sprintf("http://%s", s.httpServer.Addr)
 	}
-	listenAddr, clickAddr, err := getListenAddr()
+	ip, port, err := getPort()
 	if err != nil {
 		slog.Error("Unable to get free port", "error", err)
 		return ""
 	}
-	s.httpServer.Addr = listenAddr
-	return clickAddr
+	s.httpServer.Addr = net.JoinHostPort(ip.String(), strconv.Itoa(port))
+	return fmt.Sprintf("http://%s", s.httpServer.Addr)
 }
 
 func (s *Server) Start() string {
@@ -78,24 +79,10 @@ func (s *Server) Stop() {
 	}
 }
 
-func getListenAddr() (string, string, error) {
-	ip, port, err := getPort()
-	if err != nil {
-		return "", "", err
-	}
-	if ip.To4() == nil {
-		return fmt.Sprintf("[%s]:%d", ip, port), fmt.Sprintf("http://[%s]:%d", ip, port), nil
-	}
-	return fmt.Sprintf("%s:%d", ip, port), fmt.Sprintf("http://%s:%d", ip, port), nil
-}
-
 func getPort() (net.IP, int, error) {
-	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("[::1]:%d", *fixedPort))
+	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", *fixedPort))
 	if err != nil {
-		addr, err = net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", *fixedPort))
-		if err != nil {
-			return nil, -1, err
-		}
+		return nil, -1, err
 	}
 	listen, err := net.ListenTCP("tcp", addr)
 	if err != nil {

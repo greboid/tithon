@@ -2,15 +2,13 @@ package irc
 
 import (
 	"errors"
-	"fmt"
-	"github.com/albinj12/unique-id"
-	"github.com/ergochat/irc-go/ircevent"
 	"github.com/greboid/ircclient/config"
 	"gopkg.in/yaml.v3"
 	"log/slog"
 	"maps"
 	"os"
 	"slices"
+	"strings"
 )
 
 type ConnectionManager struct {
@@ -24,31 +22,7 @@ func NewConnectionManager() *ConnectionManager {
 }
 
 func (cm *ConnectionManager) AddConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) string {
-	s, _ := uniqueid.Generateid("a", 5, "s")
-	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
-
-	connection := &Connection{
-		id:                s,
-		hostname:          hostname,
-		port:              port,
-		tls:               tls,
-		saslLogin:         sasllogin,
-		saslPassword:      saslpassword,
-		preferredNickname: profile.nickname,
-		connection: &ircevent.Connection{
-			Server:       fmt.Sprintf("%s:%d", hostname, port),
-			Nick:         profile.nickname,
-			SASLLogin:    sasllogin,
-			SASLPassword: saslpassword,
-			QuitMessage:  " ",
-			Version:      " ",
-			UseTLS:       tls,
-			UseSASL:      useSasl,
-			EnableCTCP:   false,
-			Debug:        true,
-		},
-		channels: map[string]*Channel{},
-	}
+	connection := NewConnection(hostname, port, tls, sasllogin, saslpassword, profile)
 	cm.connections[connection.id] = connection
 	return connection.id
 }
@@ -59,7 +33,11 @@ func (cm *ConnectionManager) RemoveConnection(id string) {
 }
 
 func (cm *ConnectionManager) GetConnections() []*Connection {
-	return slices.Collect(maps.Values(cm.connections))
+	connections := slices.Collect(maps.Values(cm.connections))
+	slices.SortStableFunc(connections, func(a, b *Connection) int {
+		return strings.Compare(strings.ToLower(a.GetName()), strings.ToLower(b.GetName()))
+	})
+	return connections
 }
 
 func (cm *ConnectionManager) GetConnection(id string) *Connection {

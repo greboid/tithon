@@ -1,6 +1,7 @@
 package irc
 
 import (
+	"fmt"
 	uniqueid "github.com/albinj12/unique-id"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
@@ -23,6 +24,34 @@ type Connection struct {
 	connection        *ircevent.Connection
 	callbacksAdded    bool
 	mutex             sync.Mutex
+}
+
+func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) *Connection {
+	s, _ := uniqueid.Generateid("a", 5, "s")
+	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
+
+	return &Connection{
+		id:                s,
+		hostname:          hostname,
+		port:              port,
+		tls:               tls,
+		saslLogin:         sasllogin,
+		saslPassword:      saslpassword,
+		preferredNickname: profile.nickname,
+		connection: &ircevent.Connection{
+			Server:       fmt.Sprintf("%s:%d", hostname, port),
+			Nick:         profile.nickname,
+			SASLLogin:    sasllogin,
+			SASLPassword: saslpassword,
+			QuitMessage:  " ",
+			Version:      " ",
+			UseTLS:       tls,
+			UseSASL:      useSasl,
+			EnableCTCP:   false,
+			Debug:        true,
+		},
+		channels: map[string]*Channel{},
+	}
 }
 
 func (c *Connection) GetID() string {

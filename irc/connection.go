@@ -1,10 +1,10 @@
 package irc
 
 import (
+	"errors"
 	"fmt"
 	uniqueid "github.com/albinj12/unique-id"
 	"github.com/ergochat/irc-go/ircevent"
-	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
 	"maps"
 	"slices"
@@ -22,8 +22,8 @@ type Connection struct {
 	preferredNickname string
 	channels          map[string]*Channel
 	connection        *ircevent.Connection
-	callbacksAdded    bool
 	mutex             sync.Mutex
+	callbackHandler   *Handler
 }
 
 func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) *Connection {
@@ -48,7 +48,11 @@ func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpa
 			UseTLS:       tls,
 			UseSASL:      useSasl,
 			EnableCTCP:   false,
-			Debug:        true,
+			RequestCaps: []string{
+				"message-tags",
+				"echo-message",
+			},
+			Debug: true,
 		},
 		channels: map[string]*Channel{},
 	}
@@ -69,10 +73,13 @@ func (c *Connection) GetName() string {
 func (c *Connection) Connect() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	if !c.callbacksAdded {
-		c.addCallbacks()
-		c.callbacksAdded = true
+	if c.callbackHandler == nil {
+		c.callbackHandler = &Handler{
+			connection: c,
+		}
+		c.callbackHandler.addCallbacks()
 	}
+	//TODO Need to store a connection state
 	if !c.connection.Connected() {
 		c.connection.Connect()
 	}
@@ -97,17 +104,22 @@ func (c *Connection) GetChannel(id string) *Channel {
 	return c.channels[id]
 }
 
-func (c *Connection) isChannel(target string) bool {
-	chanTypes := c.connection.ISupport()["CHANTYPES"]
-	if chanTypes == "" {
-		chanTypes = "#"
-	}
-	for _, char := range chanTypes {
-		if strings.HasPrefix(target, string(char)) {
-			return true
+func (c *Connection) GetChannelByName(name string) (*Channel, error) {
+	for _, channel := range c.GetChannels() {
+		if channel.name == name {
+			return channel, nil
 		}
 	}
-	return false
+	return nil, errors.New("channel not found")
+}
+
+func (c *Connection) AddChannel(name string) {
+	s, _ := uniqueid.Generateid("a", 5, "h")
+
+	c.channels[s] = &Channel{
+		id:   s,
+		name: name,
+	}
 }
 
 func (c *Connection) SendMessage(window string, message string) {
@@ -115,7 +127,7 @@ func (c *Connection) SendMessage(window string, message string) {
 	if channel == nil {
 		return
 	}
-	if c.connection.AcknowledgedCaps()["echo-message"] == "" {
+	if _, exists := c.connection.AcknowledgedCaps()["echo-message"]; !exists {
 		channel.messages = append(channel.messages, NewMessage(c.connection.CurrentNick(), message))
 	}
 	err := c.connection.Send("PRIVMSG", channel.name, message)
@@ -124,68 +136,6 @@ func (c *Connection) SendMessage(window string, message string) {
 	}
 }
 
-func (c *Connection) addCallbacks() {
-	c.connection.AddCallback("JOIN", c.handleJoin)
-	c.connection.AddCallback("PRIVMSG", c.handlePrivMsg)
-	c.connection.AddCallback("332", c.handleRPL_TOPIC)
-	c.connection.AddCallback("TOPIC", c.handleTopic)
-}
-
-func (c *Connection) handleTopic(message ircmsg.Message) {
-	slog.Debug("Handling topic", "message", message)
-	for _, channel := range c.channels {
-		if channel.name == message.Params[0] {
-			topic := NewTopic(strings.Join(message.Params[1:], " "))
-			slog.Debug("Setting topic", "server", c.GetName(), "channel", channel.GetName(), "topic", topic)
-			channel.SetTopic(topic)
-			return
-		}
-	}
-}
-
-func (c *Connection) handleRPL_TOPIC(message ircmsg.Message) {
-	for _, channel := range c.channels {
-		if channel.name == message.Params[1] {
-			topic := NewTopic(strings.Join(message.Params[2:], " "))
-			slog.Debug("Setting topic", "server", c.GetName(), "channel", channel.GetName(), "topic", topic)
-			channel.SetTopic(topic)
-			return
-		}
-	}
-}
-
-func (c *Connection) handlePrivMsg(message ircmsg.Message) {
-	mess := NewMessage(message.Nick(), strings.Join(message.Params[1:], " "))
-	if c.isChannel(message.Params[0]) {
-		for _, channel := range c.channels {
-			if channel.name == message.Params[0] {
-				channel.messages = append(channel.messages, mess)
-				return
-			}
-		}
-		slog.Warn("Message for unknown channel", "message", message)
-	} else {
-		slog.Warn("Unsupported DM", "message", message)
-	}
-}
-
-func (c *Connection) handleJoin(message ircmsg.Message) {
-	if message.Nick() == c.connection.CurrentNick() {
-		c.handleSelfJoin(message)
-	} else {
-		c.handleOtherJoin(message)
-	}
-}
-
-func (c *Connection) handleSelfJoin(message ircmsg.Message) {
-	slog.Debug("Joining channel", "channel", message.Params[0])
-	s, _ := uniqueid.Generateid("a", 5, "c")
-	c.channels[s] = &Channel{
-		id:   s,
-		name: message.Params[0],
-	}
-}
-
-func (c *Connection) handleOtherJoin(message ircmsg.Message) {
-
+func (c *Connection) CurrentNick() string {
+	return c.connection.CurrentNick()
 }

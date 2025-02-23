@@ -92,7 +92,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		select {

@@ -2,10 +2,6 @@ package templates
 
 import "github.com/greboid/ircclient/irc"
 
-type TemplCounterSignals struct {
-	ActiveWindow string `json:"activeWindow"`
-}
-
 templ ServerList(servers []*irc.Connection, activeID string) {
 	<div id="serverlist">
 		<ul>

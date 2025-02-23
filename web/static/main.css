@@ -16,6 +16,7 @@ main {
   width: 100%;
   padding: 0.5em;
   gap: 0.5em;
+  overflow: hidden;
 }
 
 #content {
@@ -38,11 +39,13 @@ main {
 
 #window {
   flex-grow: 100;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 #text {
-  overflow-y: scroll;
+  line-break: anywhere;
+  overflow-y: auto;
 }
 
 #serverlist {

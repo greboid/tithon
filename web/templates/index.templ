@@ -2,7 +2,7 @@ package templates
 
 templ Index() {
 	<main>
-		<div id="sidebar" data-on-load="@get('/update')">
+		<div id="sidebar" data-on-load="@get('/update', {openWhenHidden: true})">
 			<div id="serverlist"></div>
 			<div id="settings">
 				<span data-on-click="@get('/showAddServer')">

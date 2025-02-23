@@ -4,10 +4,8 @@ import (
 	"context"
 	"embed"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/greboid/ircclient/irc"
-	"github.com/pkg/browser"
 	"log/slog"
 	"net"
 	"net/http"
@@ -19,9 +17,6 @@ import (
 var (
 	//go:embed static/*
 	staticFS embed.FS
-
-	fixedPort   = flag.Int("port", 0, "Fixed port to use")
-	openBrowser = flag.Bool("openbrowser", false, "Should we open the browser")
 )
 
 type Server struct {
@@ -30,12 +25,14 @@ type Server struct {
 	connectionManager *irc.ConnectionManager
 	activeServer      string
 	activeWindow      string
+	fixedPort         int
 }
 
-func NewServer(cm *irc.ConnectionManager) *Server {
+func NewServer(cm *irc.ConnectionManager, fixedPort int) *Server {
 	mux := http.NewServeMux()
 	server := &Server{
-		lock: sync.Mutex{},
+		fixedPort: fixedPort,
+		lock:      sync.Mutex{},
 		httpServer: &http.Server{
 			Handler: mux,
 		},
@@ -49,7 +46,7 @@ func (s *Server) GetListenAddress() string {
 	if s.httpServer.Addr != "" {
 		return fmt.Sprintf("http://%s", s.httpServer.Addr)
 	}
-	ip, port, err := getPort()
+	ip, port, err := s.getPort()
 	if err != nil {
 		slog.Error("Unable to get free port", "error", err)
 		return ""
@@ -61,9 +58,6 @@ func (s *Server) GetListenAddress() string {
 func (s *Server) Start() string {
 	clickAddr := s.GetListenAddress()
 	slog.Info("Starting webserver", "url", clickAddr)
-	if *openBrowser {
-		go func() { _ = browser.OpenURL(clickAddr) }()
-	}
 	if err := s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("Error starting server:", slog.String("error", err.Error()))
 	}
@@ -79,8 +73,8 @@ func (s *Server) Stop() {
 	}
 }
 
-func getPort() (net.IP, int, error) {
-	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", *fixedPort))
+func (s *Server) getPort() (net.IP, int, error) {
+	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", s.fixedPort))
 	if err != nil {
 		return nil, -1, err
 	}

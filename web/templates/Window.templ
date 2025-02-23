@@ -4,15 +4,23 @@ import "github.com/greboid/ircclient/irc"
 
 templ GetWindow(server *irc.Connection, channel *irc.Channel) {
 	if server == nil && channel == nil {
-		<div id="window"></div>
+		<div id="window">
+			<div id="header"></div>
+			<div id="text"></div>
+		</div>
 	} else if channel == nil {
-		<div id="window">Server: { server.GetName() }</div>
+		<div id="window">
+			<div id="header"><p>Server: { server.GetName() }</p></div>
+			<div id="text"></div>
+		</div>
 	} else {
 		<div id="window">
-		<p>Server: { server.GetName() } Channel: { channel.GetName() }</p>
-		for _, message := range channel.GetMessages() {
-		    <p>{message}</p>
-		}
+			<div id="header"><p>{ channel.GetTopic().GetTopic() }</p></div>
+			<div id="text">
+				for _, message := range channel.GetMessages() {
+					<p>{ message }</p>
+				}
+			</div>
 		</div>
 	}
 }

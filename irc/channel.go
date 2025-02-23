@@ -4,6 +4,7 @@ type Channel struct {
 	id       string
 	name     string
 	messages []*Message
+	topic    *Topic
 }
 
 func (c *Channel) GetID() string {
@@ -20,4 +21,15 @@ func (c *Channel) GetMessages() []string {
 		messages = append(messages, message.GetMessage())
 	}
 	return messages
+}
+
+func (c *Channel) SetTopic(topic *Topic) {
+	c.topic = topic
+}
+
+func (c *Channel) GetTopic() *Topic {
+	if c.topic == nil {
+		return NewTopic("")
+	}
+	return c.topic
 }

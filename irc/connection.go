@@ -127,6 +127,31 @@ func (c *Connection) SendMessage(window string, message string) {
 func (c *Connection) addCallbacks() {
 	c.connection.AddCallback("JOIN", c.handleJoin)
 	c.connection.AddCallback("PRIVMSG", c.handlePrivMsg)
+	c.connection.AddCallback("332", c.handleRPL_TOPIC)
+	c.connection.AddCallback("TOPIC", c.handleTopic)
+}
+
+func (c *Connection) handleTopic(message ircmsg.Message) {
+	slog.Debug("Handling topic", "message", message)
+	for _, channel := range c.channels {
+		if channel.name == message.Params[0] {
+			topic := NewTopic(strings.Join(message.Params[1:], " "))
+			slog.Debug("Setting topic", "server", c.GetName(), "channel", channel.GetName(), "topic", topic)
+			channel.SetTopic(topic)
+			return
+		}
+	}
+}
+
+func (c *Connection) handleRPL_TOPIC(message ircmsg.Message) {
+	for _, channel := range c.channels {
+		if channel.name == message.Params[1] {
+			topic := NewTopic(strings.Join(message.Params[2:], " "))
+			slog.Debug("Setting topic", "server", c.GetName(), "channel", channel.GetName(), "topic", topic)
+			channel.SetTopic(topic)
+			return
+		}
+	}
 }
 
 func (c *Connection) handlePrivMsg(message ircmsg.Message) {

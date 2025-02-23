@@ -55,6 +55,9 @@ main {
       padding-left: 1em;
     }
   }
+  .active {
+    font-weight: bold;
+  }
 }
 
 #input {

@@ -63,7 +63,13 @@ func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
-	err := sse.MergeFragmentTempl(templates.ServerList(s.connectionManager.GetConnections()))
+	activeID := ""
+	if s.activeWindow == "nil" {
+		activeID = s.activeServer
+	} else {
+		activeID = s.activeWindow
+	}
+	err := sse.MergeFragmentTempl(templates.ServerList(s.connectionManager.GetConnections(), activeID))
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		s.lock.Unlock()
@@ -196,19 +202,7 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("Changing Window", "server", s.activeServer, "channel", s.activeWindow)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	sse := datastar.NewSSE(w, r)
-	server := s.connectionManager.GetConnection(s.activeServer)
-	var channel *irc.Channel
-	if server == nil {
-		channel = nil
-	} else {
-		channel = server.GetChannel(s.activeWindow)
-	}
-	err := sse.MergeFragmentTempl(templates.GetWindow(server, channel))
-	if err != nil {
-		slog.Debug("Error merging fragments", "error", err)
-		return
-	}
+	s.UpdateUI(w, r)
 }
 
 func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
@@ -217,19 +211,7 @@ func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("Changing Server", "server", s.activeServer)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	sse := datastar.NewSSE(w, r)
-	server := s.connectionManager.GetConnection(s.activeServer)
-	var channel *irc.Channel
-	if server == nil {
-		channel = nil
-	} else {
-		channel = server.GetChannel(s.activeWindow)
-	}
-	err := sse.MergeFragmentTempl(templates.GetWindow(server, channel))
-	if err != nil {
-		slog.Debug("Error merging fragments", "error", err)
-		return
-	}
+	s.UpdateUI(w, r)
 }
 
 func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {

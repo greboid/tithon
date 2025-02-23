@@ -6,12 +6,15 @@ type TemplCounterSignals struct {
 	ActiveWindow string `json:"activeWindow"`
 }
 
-templ ServerList(servers []*irc.Connection) {
+templ ServerList(servers []*irc.Connection, activeID string) {
 	<div id="serverlist">
 		<ul>
 			for _, item := range servers {
 				<li>
 					<a
+						if activeID == item.GetID() {
+							class="active"
+						}
 						data-on-click={ "@get('/changeWindow/" + item.GetID() + "')" }
 						href={ templ.URL("/#/" + item.GetID()) }
 					>{ item.GetName() }</a>
@@ -20,8 +23,11 @@ templ ServerList(servers []*irc.Connection) {
 							for _, channel := range item.GetChannels() {
 								<li>
 									<a
-										data-on-click={ "@get('/changeWindow/" + item.GetID() + "/"+channel.GetID()+"')" }
-										href={ templ.URL("/#/" + item.GetID() +"/"+channel.GetID())}
+										if activeID == channel.GetID() {
+											class="active"
+										}
+										data-on-click={ "@get('/changeWindow/" + item.GetID() + "/" + channel.GetID() + "')" }
+										href={ templ.URL("/#/" + item.GetID() + "/" + channel.GetID()) }
 									>{ channel.GetName() }</a>
 								</li>
 							}

@@ -54,7 +54,12 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 }
 
 func (h *Handler) handlePrivMsg(message ircmsg.Message) {
-	mess := NewMessage(message.Nick(), strings.Join(message.Params[1:], " "))
+	var mess *Message
+	if found, messageTime := message.GetTag("time"); found {
+		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "))
+	} else {
+		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "))
+	}
 	if h.isChannel(message.Params[0]) {
 		channel, err := h.connection.GetChannelByName(message.Params[0])
 		if err != nil {

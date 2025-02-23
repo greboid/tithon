@@ -51,6 +51,7 @@ func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpa
 			RequestCaps: []string{
 				"message-tags",
 				"echo-message",
+				"server-time",
 			},
 			Debug: true,
 		},
@@ -122,12 +123,17 @@ func (c *Connection) AddChannel(name string) {
 	}
 }
 
+func (c *Connection) HasCapability(name string) bool {
+	_, exists := c.connection.AcknowledgedCaps()[name]
+	return exists
+}
+
 func (c *Connection) SendMessage(window string, message string) {
 	channel := c.GetChannel(window)
 	if channel == nil {
 		return
 	}
-	if _, exists := c.connection.AcknowledgedCaps()["echo-message"]; !exists {
+	if !c.HasCapability("echo-message") {
 		channel.messages = append(channel.messages, NewMessage(c.connection.CurrentNick(), message))
 	}
 	err := c.connection.Send("PRIVMSG", channel.name, message)

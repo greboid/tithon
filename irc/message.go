@@ -2,9 +2,12 @@ package irc
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 )
+
+const v3TimestampFormat = "2006-01-02T15:04:05.000Z"
 
 type Message struct {
 	timestamp time.Time
@@ -14,8 +17,17 @@ type Message struct {
 }
 
 func NewMessage(nickname string, message string) *Message {
+	return NewMessageWithTime(time.Now().Format(v3TimestampFormat), nickname, message)
+}
+
+func NewMessageWithTime(messageTime string, nickname string, message string) *Message {
+	parsedTime, err := time.Parse(v3TimestampFormat, messageTime)
+	if err != nil {
+		slog.Error("Error parsing time from server", "time", messageTime, "error", err)
+		parsedTime = time.Now()
+	}
 	ircmsg := &Message{
-		timestamp: time.Now(),
+		timestamp: parsedTime,
 		nickname:  nickname,
 	}
 	if strings.HasPrefix(message, "\001ACTION") && strings.HasSuffix(message, "\001") {

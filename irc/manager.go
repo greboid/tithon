@@ -1,6 +1,7 @@
 package irc
 
 import (
+	"errors"
 	"fmt"
 	"github.com/albinj12/unique-id"
 	"github.com/ergochat/irc-go/ircevent"
@@ -83,7 +84,7 @@ func (cm *ConnectionManager) Load() error {
 	conf := &config.Config{}
 
 	yamlData, err := os.ReadFile("./config.yaml")
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		slog.Error("Unable to load config", "error", err)
 		return err
 	}

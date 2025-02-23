@@ -34,6 +34,9 @@ main {
 
 #window {
   flex-grow: 100;
+}
+
+#text {
   overflow-y: scroll;
 }
 

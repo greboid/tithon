@@ -219,7 +219,13 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	if input == "" {
 		return
 	}
-	s.connectionManager.GetConnection(s.activeServer).SendMessage(s.activeWindow, input)
+	if s.activeServer == "" && s.activeWindow == "" {
+		slog.Debug("No server or window selected.  Unsupported")
+	} else if s.activeWindow == "" {
+		slog.Debug("No window selected.  Unsupported")
+	} else {
+		s.connectionManager.GetConnection(s.activeServer).SendMessage(s.activeWindow, input)
+	}
 	sse := datastar.NewSSE(w, r)
 	err := sse.MergeFragmentTempl(templates.EmptyInput())
 	if err != nil {

@@ -38,6 +38,7 @@ main {
 
 #window {
   flex-grow: 100;
+  overflow: auto;
 }
 
 #text {

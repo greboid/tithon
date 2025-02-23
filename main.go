@@ -49,9 +49,11 @@ func main() {
 	go func() {
 		w := webview.New(false)
 		defer w.Destroy()
-		w.SetTitle("IRC Client")
-		w.SetSize(800, 600, webview.HintNone)
-		w.Navigate(listenAddr)
+		w.Dispatch(func() {
+			w.SetTitle("IRC Client")
+			w.SetSize(800, 600, webview.HintNone)
+			w.Navigate(listenAddr)
+		})
 		w.Run()
 		quit <- syscall.SIGINT
 	}()

@@ -34,6 +34,7 @@ main {
 
 #window {
   flex-grow: 100;
+  overflow-y: scroll;
 }
 
 #serverlist {

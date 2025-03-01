@@ -4,32 +4,25 @@ import "github.com/greboid/ircclient/irc"
 
 templ GetWindow(server *irc.Connection, channel *irc.Channel) {
 	if server == nil && channel == nil {
-		<div id="window" data-signals-atbottom__ifmissing="true" data-on-scroll="$atbottom = event.srcElement.scrollTop == event.srcElement.scrollTopMax">
+		<div id="window">
 			<div id="header"></div>
 			<div id="text"></div>
 		</div>
 	} else if channel == nil {
-		<div id="window" data-signals-atbottom__ifmissing="true" data-on-scroll="$atbottom = event.srcElement.scrollTop == event.srcElement.scrollTopMax">
+		<div id="window">
 			<div id="header"><p>Server: { server.GetName() }</p></div>
 			<div id="text"></div>
 		</div>
 	} else {
-		<div id="window" data-signals-atbottom__ifmissing="true" data-on-scroll="$atbottom = event.srcElement.scrollTop == event.srcElement.scrollTopMax">
+		<div id="window">
 			<div id="header"><p>{ channel.GetTopic().GetTopic() }</p></div>
-			<div id="text">
-				@messageList(channel.GetMessages())
-			</div>
+			<div id="text">@messageList(channel.GetMessages())</div>
 		</div>
 	}
 }
 
 templ messageList(messages []string) {
-	if len(messages) > 1 {
-		for i:= 0; i < len(messages)-1; i++ {
-			<p>{ messages[i] }</p>
-		}
-		<p>{ messages[len(messages)-1] }</p>
-	} else if len(messages) == 1 {
-		<p>{ messages[0] }</p>
+	for i:= 0; i < len(messages); i++ {
+		<p>{ messages[i] }</p>
 	}
 }

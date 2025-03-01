@@ -88,7 +88,6 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		s.lock.Unlock()
 		return
 	}
-
 }
 
 func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {

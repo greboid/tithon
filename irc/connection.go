@@ -114,13 +114,15 @@ func (c *Connection) GetChannelByName(name string) (*Channel, error) {
 	return nil, errors.New("channel not found")
 }
 
-func (c *Connection) AddChannel(name string) {
+func (c *Connection) AddChannel(name string) *Channel {
 	s, _ := uniqueid.Generateid("a", 5, "h")
-
-	c.channels[s] = &Channel{
-		id:   s,
-		name: name,
+	channel := &Channel{
+		id:       s,
+		name:     name,
+		messages: make([]*Message, 0),
 	}
+	c.channels[s] = channel
+	return channel
 }
 
 func (c *Connection) HasCapability(name string) bool {

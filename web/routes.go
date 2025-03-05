@@ -41,6 +41,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /input", s.handleInput)
 	mux.HandleFunc("POST /upload", s.handleUpload)
 	mux.HandleFunc("GET /join", s.handleJoin)
+	mux.HandleFunc("GET /part", s.handlePart)
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -357,6 +358,17 @@ func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 	err = sse.MergeFragmentTempl(templates.EmptyDialog())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
+func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
+	if s.connectionManager.GetConnection(s.activeServer) == nil {
+		return
+	}
+	err := s.connectionManager.GetConnection(s.activeServer).PartChannel(r.URL.Query().Get("channel"))
+	if err != nil {
+		slog.Debug("Error parting channel", "error", err)
 		return
 	}
 }

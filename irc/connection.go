@@ -135,6 +135,10 @@ func (c *Connection) AddChannel(name string) *Channel {
 	return channel
 }
 
+func (c *Connection) RemoveChannel(s string) {
+	delete(c.channels, s)
+}
+
 func (c *Connection) HasCapability(name string) bool {
 	_, exists := c.connection.AcknowledgedCaps()[name]
 	return exists
@@ -160,4 +164,8 @@ func (c *Connection) CurrentNick() string {
 
 func (c *Connection) JoinChannel(channel string, password string) error {
 	return c.connection.Join(channel)
+}
+
+func (c *Connection) PartChannel(channel string) error {
+	return c.connection.Part(c.GetChannel(channel).GetName())
 }

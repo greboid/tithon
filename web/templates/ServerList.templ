@@ -1,6 +1,7 @@
 package templates
 
 import "github.com/greboid/ircclient/irc"
+import "net/url"
 
 templ ServerList(servers []*irc.Connection, activeID string) {
 	<div id="serverlist">
@@ -13,7 +14,9 @@ templ ServerList(servers []*irc.Connection, activeID string) {
 						}
 						data-on-click={ "@get('/changeWindow/" + item.GetID() + "')" }
 						href={ templ.URL("/#/" + item.GetID()) }
-					>{ item.GetName() }</a> <span><a href="#" data-on-click="@get('/showJoinChannel')">+</a></span>
+					>{ item.GetName() }</a> <span><a href="#" data-on-click="@get('/showJoinChannel')">
+					<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M9 12h6" /><path d="M12 9v6" /></svg>
+					</a></span>
 					if len(item.GetChannels()) > 0 {
 						<ul>
 							for _, channel := range item.GetChannels() {
@@ -24,7 +27,9 @@ templ ServerList(servers []*irc.Connection, activeID string) {
 										}
 										data-on-click={ "@get('/changeWindow/" + item.GetID() + "/" + channel.GetID() + "')" }
 										href={ templ.URL("/#/" + item.GetID() + "/" + channel.GetID()) }
-									>{ channel.GetName() }</a>
+									>{ channel.GetName() }</a> <span><a href="#" data-on-click={"@get('/part?channel="+url.QueryEscape(channel.GetID())+"')"}>
+									<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-circle-minus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l6 0" /></svg>
+									</a></span>
 								</li>
 							}
 						</ul>

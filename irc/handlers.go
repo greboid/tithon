@@ -16,6 +16,7 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback("332", h.handleRPLTopic)
 	h.connection.connection.AddCallback("TOPIC", h.handleTopic)
 	h.connection.connection.AddConnectCallback(h.handleConnected)
+	h.connection.connection.AddCallback("PART", h.handlePart)
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -84,6 +85,15 @@ func (h *Handler) handleJoin(message ircmsg.Message) {
 func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 	slog.Debug("Joining channel", "channel", message.Params[0])
 	h.connection.AddChannel(message.Params[0])
+}
+
+func (h *Handler) handlePart(message ircmsg.Message) {
+	channel, err := h.connection.GetChannelByName(message.Params[0])
+	if err != nil {
+		slog.Warn("Received part for unknown channel", "channel", message.Params[0])
+		return
+	}
+	h.connection.RemoveChannel(channel.id)
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {

@@ -15,10 +15,10 @@ func (c *Channel) GetName() string {
 	return c.name
 }
 
-func (c *Channel) GetMessages() []string {
-	var messages []string
+func (c *Channel) GetMessages() []*Message {
+	var messages []*Message
 	for _, message := range c.messages {
-		messages = append(messages, message.GetMessage())
+		messages = append(messages, message)
 	}
 	return messages
 }

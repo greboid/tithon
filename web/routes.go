@@ -1,14 +1,20 @@
 package web
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"github.com/greboid/ircclient/irc"
 	"github.com/greboid/ircclient/web/templates"
 	datastar "github.com/starfederation/datastar/sdk/go"
+	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -32,6 +38,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /changeWindow/{server}", s.handleChangeServer)
 	mux.HandleFunc("GET /changeWindow/{server}/{channel}", s.handleChangeChannel)
 	mux.HandleFunc("GET /input", s.handleInput)
+	mux.HandleFunc("POST /upload", s.handleUpload)
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -85,6 +92,16 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	err = sse.MergeFragmentTempl(templates.GetWindow(server, channel))
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
+		s.lock.Unlock()
+		return
+	}
+	if s.connectionManager.GetConnection(s.activeServer) == nil {
+		return
+	}
+	err = sse.MergeSignals([]byte(fmt.Sprintf("{filehost: '%s'}",
+		s.connectionManager.GetConnection(s.activeServer).GetFileHost())))
+	if err != nil {
+		slog.Debug("Error merging signals", "error", err)
 		s.lock.Unlock()
 		return
 	}
@@ -220,11 +237,18 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	}
 	if s.activeServer == "" && s.activeWindow == "" {
 		slog.Debug("No server or window selected.  Unsupported")
-	} else if s.activeWindow == "" {
-		slog.Debug("No window selected.  Unsupported")
-	} else {
-		s.connectionManager.GetConnection(s.activeServer).SendMessage(s.activeWindow, input)
+		return
 	}
+	if s.activeWindow == "" {
+		slog.Debug("No window selected.  Unsupported")
+		return
+	}
+	//TODO Proper command processing
+	if strings.HasPrefix(input, "/me") {
+		input = strings.TrimPrefix(input, "/me ")
+		input = fmt.Sprintf("\001ACTION %s\001", input)
+	}
+	s.connectionManager.GetConnection(s.activeServer).SendMessage(s.activeWindow, input)
 	sse := datastar.NewSSE(w, r)
 	err := sse.MergeFragmentTempl(templates.EmptyInput())
 	if err != nil {
@@ -232,4 +256,76 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.UpdateUI(w, r)
+}
+
+func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
+	if s.connectionManager.GetConnection(s.activeServer) == nil {
+		return
+	}
+	type uploadBody struct {
+		Files    []string `json:"files"`
+		Mimes    []string `json:"filesMimes"`
+		Names    []string `json:"filesNames"`
+		FileHost string   `json:"filehost"`
+	}
+	uploaded := &uploadBody{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(uploaded)
+	if err != nil {
+		slog.Debug("Error uploading file", "error", err)
+		return
+	}
+	if len(uploaded.Files) != 1 && len(uploaded.Mimes) != 1 && len(uploaded.Names) != 1 {
+		slog.Debug("Error wrong number of files uploaded")
+		return
+	}
+	data, err := base64.StdEncoding.DecodeString(uploaded.Files[0])
+	if err != nil {
+		slog.Debug("Error decoding file", "error", err)
+		return
+	}
+	if len(uploaded.FileHost) == 0 {
+		return
+	}
+	dataReader := bytes.NewReader(data)
+	username, password := s.connectionManager.GetConnection(s.activeServer).GetCredentials()
+	if strings.Contains(username, "/") {
+		username = strings.Split(username, "/")[0]
+	}
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", uploaded.FileHost, dataReader)
+	if err != nil {
+		slog.Debug("Error creating request file", "error", err)
+		return
+	}
+	req.Header.Set("Content-Type", uploaded.Mimes[0])
+	req.Header.Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, uploaded.Names[0]))
+	req.SetBasicAuth(username, password)
+	resp, err := client.Do(req)
+	if err != nil {
+		slog.Debug("Error uploading file", "error", err)
+		return
+	}
+	if resp.StatusCode != http.StatusCreated {
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			slog.Debug("Error reading error", "error", err)
+			return
+		}
+		slog.Debug("File not uploaded", "error", string(body))
+		return
+	}
+	location := resp.Header.Get("location")
+	location = strings.TrimPrefix(location, "/uploads")
+	slog.Info("File uploaded to bouncer", "file", uploaded.FileHost+location)
+
+	sse := datastar.NewSSE(w, r)
+	err = sse.MergeSignals([]byte("{files: [], filesMimes: [], filesNames: [], location: \"" + uploaded.FileHost + location + "\"}"))
+	if err != nil {
+		slog.Debug("Error removing signals", "error", err)
+		return
+	}
 }

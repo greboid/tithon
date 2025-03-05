@@ -1,8 +1,9 @@
 package irc
 
 import (
-	"fmt"
+	"html"
 	"log/slog"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -35,13 +36,29 @@ func NewMessageWithTime(messageTime string, nickname string, message string) *Me
 		message = strings.TrimSuffix(message, "\001")
 		ircmsg.isAction = true
 	}
-	ircmsg.message = message
+	ircmsg.message = ircmsg.parseFormatting(message)
 	return ircmsg
 }
 
+func (m *Message) IsAction() bool {
+	return m.isAction
+}
+
 func (m *Message) GetMessage() string {
-	if m.isAction {
-		return fmt.Sprintf("[%s] * %s %s", m.timestamp.Format(time.TimeOnly), m.nickname, m.message)
-	}
-	return fmt.Sprintf("[%s] <%s> %s", m.timestamp.Format(time.TimeOnly), m.nickname, m.message)
+	return m.message
+}
+
+func (m *Message) GetNickname() string {
+	return m.nickname
+}
+
+func (m *Message) GetTimestamp() string {
+	return m.timestamp.Format(time.TimeOnly)
+}
+
+func (m *Message) parseFormatting(message string) string {
+	regex := regexp.MustCompile(`(?P<url>https?://\S+|www\.\S+)`)
+	message = html.EscapeString(message)
+	output := regex.ReplaceAllString(message, `<a target="_blank" href="$url">$url<a>`)
+	return output
 }

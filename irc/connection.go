@@ -24,6 +24,7 @@ type Connection struct {
 	connection        *ircevent.Connection
 	mutex             sync.Mutex
 	callbackHandler   *Handler
+	supportsFileHost  bool
 }
 
 func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) *Connection {
@@ -52,6 +53,7 @@ func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpa
 				"message-tags",
 				"echo-message",
 				"server-time",
+				"soju.im/FILEHOST",
 			},
 			Debug: true,
 		},
@@ -71,6 +73,10 @@ func (c *Connection) GetName() string {
 	return c.hostname
 }
 
+func (c *Connection) GetFileHost() string {
+	return c.connection.ISupport()["soju.im/FILEHOST"]
+}
+
 func (c *Connection) Connect() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -85,6 +91,10 @@ func (c *Connection) Connect() {
 		c.connection.Connect()
 	}
 
+}
+
+func (c *Connection) GetCredentials() (string, string) {
+	return c.saslLogin, c.saslPassword
 }
 
 func (c *Connection) Disconnect() {

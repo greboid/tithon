@@ -15,6 +15,7 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback("PRIVMSG", h.handlePrivMsg)
 	h.connection.connection.AddCallback("332", h.handleRPLTopic)
 	h.connection.connection.AddCallback("TOPIC", h.handleTopic)
+	h.connection.connection.AddConnectCallback(h.handleConnected)
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -86,5 +87,9 @@ func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {
+
+}
+
+func (h *Handler) handleConnected(message ircmsg.Message) {
 
 }

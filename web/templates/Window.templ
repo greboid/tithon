@@ -1,6 +1,8 @@
 package templates
 
-import "github.com/greboid/ircclient/irc"
+import (
+    "github.com/greboid/ircclient/irc"
+)
 
 templ GetWindow(server *irc.Connection, channel *irc.Channel) {
 	if server == nil && channel == nil {
@@ -16,13 +18,19 @@ templ GetWindow(server *irc.Connection, channel *irc.Channel) {
 	} else {
 		<div id="window">
 			<div id="header"><p>{ channel.GetTopic().GetTopic() }</p></div>
-			<div id="text">@messageList(channel.GetMessages())</div>
+			<div id="text">
+			for _, item := range channel.GetMessages() {
+			    <p>
+			        [{ item.GetTimestamp() }]
+			        if item.IsAction() {
+			            * {item.GetNickname()}
+			        } else {
+			            &lt;{ item.GetNickname() }&gt;
+    			    }
+    			    @templ.Raw(item.GetMessage())
+			    </p>
+			}
+			</div>
 		</div>
-	}
-}
-
-templ messageList(messages []string) {
-	for i:= 0; i < len(messages); i++ {
-		<p>{ messages[i] }</p>
 	}
 }

@@ -4,7 +4,7 @@ templ EmptyInput() {
 	<div id="input" data-signals="{files: [], filesMimes: [], filesNames: [], location: ''}">
 		<form data-on-submit="@get('/input', {contentType: 'form'})">
 			<label aria-hidden="true" hidden for="input"></label>
-			<input name="input" data-on-signals-change-location="@clipboard($location)" required/>
+			<input name="input" data-on-signals-change-location="@clipboard($location)" data-on-keydown__window="document.querySelector('#input input[name=input]').focus()" required/>
 		</form>
 		<label data-attr-hidden="$filehost.length == 0" data-signals-filehost__ifmissing="" data-on-signals-change-files__debounce.500ms="$files.length > 0 && @post('/upload')">
 		<input hidden type="file" data-bind="files" />

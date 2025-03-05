@@ -25,7 +25,7 @@ templ GetWindow(server *irc.Connection, channel *irc.Channel) {
 			        if item.IsAction() {
 			            * {item.GetNickname()}
 			        } else {
-			            &lt;{ item.GetNickname() }&gt;
+			            &lt;{ item.GetNickname() }&gt;&nbsp;
     			    }
     			    @templ.Raw(item.GetMessage())
 			    </p>

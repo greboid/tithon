@@ -1,0 +1,14 @@
+package templates
+
+templ JoinDialog() {
+    <div id="dialog" class="dialog">
+    <form data-on-submit="@get('/join', {contentType: 'form'})">
+        <label for="channel">Name</label>
+        <input type="text" name="channel"/>
+        <label for="key">Key</label>
+        <input type="password" name="key" />
+        <button>Join</button>
+    </form>
+    <button data-on-click="@get('/closeDialog')">Close</button>
+    </div>
+}

@@ -13,7 +13,7 @@ templ ServerList(servers []*irc.Connection, activeID string) {
 						}
 						data-on-click={ "@get('/changeWindow/" + item.GetID() + "')" }
 						href={ templ.URL("/#/" + item.GetID()) }
-					>{ item.GetName() }</a>
+					>{ item.GetName() }</a> <span><a href="#" data-on-click="@get('/showJoinChannel')">+</a></span>
 					if len(item.GetChannels()) > 0 {
 						<ul>
 							for _, channel := range item.GetChannels() {

@@ -157,3 +157,7 @@ func (c *Connection) SendMessage(window string, message string) {
 func (c *Connection) CurrentNick() string {
 	return c.connection.CurrentNick()
 }
+
+func (c *Connection) JoinChannel(channel string, password string) error {
+	return c.connection.Join(channel)
+}

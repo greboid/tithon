@@ -33,12 +33,14 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /update", s.handleUpdate)
 	mux.HandleFunc("GET /showSettings", s.handleShowSettings)
 	mux.HandleFunc("GET /showAddServer", s.handleShowAddServer)
+	mux.HandleFunc("GET /showJoinChannel", s.handleShowJoinChannel)
 	mux.HandleFunc("GET /closeDialog", s.handleCloseDialog)
 	mux.HandleFunc("GET /addServer", s.handleAddServer)
 	mux.HandleFunc("GET /changeWindow/{server}", s.handleChangeServer)
 	mux.HandleFunc("GET /changeWindow/{server}/{channel}", s.handleChangeChannel)
 	mux.HandleFunc("GET /input", s.handleInput)
 	mux.HandleFunc("POST /upload", s.handleUpload)
+	mux.HandleFunc("GET /join", s.handleJoin)
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -155,6 +157,18 @@ func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = sse.ExecuteScript("window.history.pushState({}, '', '/#/addserver')")
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleShowJoinChannel(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	sse := datastar.NewSSE(w, r)
+	slog.Debug("Showing join channel")
+	err := sse.MergeFragmentTempl(templates.JoinDialog())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
@@ -326,6 +340,23 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 	err = sse.MergeSignals([]byte("{files: [], filesMimes: [], filesNames: [], location: \"" + uploaded.FileHost + location + "\"}"))
 	if err != nil {
 		slog.Debug("Error removing signals", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
+	if s.connectionManager.GetConnection(s.activeServer) == nil {
+		return
+	}
+	err := s.connectionManager.GetConnection(s.activeServer).JoinChannel(r.URL.Query().Get("channel"), r.URL.Query().Get("key"))
+	if err != nil {
+		slog.Debug("Error joining channel", "error", err)
+		return
+	}
+	sse := datastar.NewSSE(w, r)
+	err = sse.MergeFragmentTempl(templates.EmptyDialog())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
 }

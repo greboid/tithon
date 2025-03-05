@@ -49,10 +49,10 @@ main {
 }
 
 #serverlist {
-  overflow: scroll;
+  overflow-y: scroll;
   flex-grow: 100;
   padding: 0 1em;
-  width: 10em;
+  width: max-content;
   .active {
     font-weight: bold;
   }
@@ -66,6 +66,11 @@ main {
   ul {
     padding: 0;
     li {
+      div {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
       list-style: none;
       padding: 0;
     }

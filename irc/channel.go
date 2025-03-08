@@ -5,6 +5,7 @@ type Channel struct {
 	name     string
 	messages []*Message
 	topic    *Topic
+	users    []*User
 }
 
 func (c *Channel) GetID() string {

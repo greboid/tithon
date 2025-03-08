@@ -1,6 +1,7 @@
 package irc
 
 import (
+	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
 	"strings"
@@ -13,10 +14,11 @@ type Handler struct {
 func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback("JOIN", h.handleJoin)
 	h.connection.connection.AddCallback("PRIVMSG", h.handlePrivMsg)
-	h.connection.connection.AddCallback("332", h.handleRPLTopic)
+	h.connection.connection.AddCallback(ircevent.RPL_TOPIC, h.handleRPLTopic)
 	h.connection.connection.AddCallback("TOPIC", h.handleTopic)
 	h.connection.connection.AddConnectCallback(h.handleConnected)
 	h.connection.connection.AddCallback("PART", h.handlePart)
+	h.connection.connection.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -102,4 +104,22 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
 
+}
+
+func (h *Handler) handleNameReply(message ircmsg.Message) {
+	channel, err := h.connection.GetChannelByName(message.Params[2])
+	if err != nil {
+		slog.Debug("Names reply for unknown channel", "channel", message.Params[2])
+		return
+	}
+	names := strings.Split(message.Params[3], " ")
+	for i := range names {
+		user := h.stripChannelPrefixes(names[i])
+		channel.users = append(channel.users, NewUser(user))
+	}
+}
+
+func (h *Handler) stripChannelPrefixes(name string) string {
+	prefixes := h.connection.GetModePrefixes()
+	return strings.TrimLeft(name, prefixes[1])
 }

@@ -169,3 +169,18 @@ func (c *Connection) JoinChannel(channel string, password string) error {
 func (c *Connection) PartChannel(channel string) error {
 	return c.connection.Part(c.GetChannel(channel).GetName())
 }
+
+func (c *Connection) GetModePrefixes() []string {
+	value, exists := c.connection.ISupport()["PREFIX"]
+	if !exists {
+		slog.Error("No mode prefixes specified, using default")
+		value = "(o)@"
+	}
+	splits := strings.Split(value[1:], ")")
+	if len(splits[0]) != len(splits[1]) {
+		slog.Error("Error parsing mode prefixes", "PREFIX", value)
+		splits[0] = "o"
+		splits[1] = "@"
+	}
+	return splits
+}

@@ -25,6 +25,7 @@ type Connection struct {
 	mutex             sync.Mutex
 	callbackHandler   *Handler
 	supportsFileHost  bool
+	currentModes      string
 }
 
 func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) *Connection {
@@ -54,6 +55,8 @@ func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpa
 				"echo-message",
 				"server-time",
 				"soju.im/FILEHOST",
+				"draft/chathistory",
+				"draft/event-playback",
 			},
 			Debug: true,
 		},

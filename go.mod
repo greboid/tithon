@@ -6,6 +6,7 @@ require (
 	github.com/a-h/templ v0.3.833
 	github.com/albinj12/unique-id v1.1.0
 	github.com/csmith/envflag v1.0.0
+	github.com/enescakir/emoji v1.0.0
 	github.com/ergochat/irc-go v0.4.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/starfederation/datastar v0.21.4

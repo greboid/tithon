@@ -1,10 +1,12 @@
 package irc
 
 import (
+	"fmt"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
 	"strings"
+	"time"
 )
 
 type Handler struct {
@@ -19,6 +21,18 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddConnectCallback(h.handleConnected)
 	h.connection.connection.AddCallback("PART", h.handlePart)
 	h.connection.connection.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
+	h.connection.connection.AddCallback(ircevent.RPL_UMODEIS, h.handleUserMode)
+	h.connection.connection.AddCallback(ircevent.RPL_CHANNELMODEIS, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_TOPICTIME, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_CREATIONTIME, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_NOTOPIC, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_MOTDSTART, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_MOTD, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_ENDOFMOTD, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.ERR_NOMOTD, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_AWAY, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_UNAWAY, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback(ircevent.RPL_NOWAWAY, func(message ircmsg.Message) {})
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -87,6 +101,10 @@ func (h *Handler) handleJoin(message ircmsg.Message) {
 func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 	slog.Debug("Joining channel", "channel", message.Params[0])
 	h.connection.AddChannel(message.Params[0])
+	if h.connection.HasCapability("draft/chathistory") {
+		timestamp := time.Now().AddDate(0, 0, -1)
+		h.connection.connection.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s timestamp=%s 100", message.Params[0], timestamp.Format(v3TimestampFormat)))
+	}
 }
 
 func (h *Handler) handlePart(message ircmsg.Message) {
@@ -122,4 +140,8 @@ func (h *Handler) handleNameReply(message ircmsg.Message) {
 func (h *Handler) stripChannelPrefixes(name string) string {
 	prefixes := h.connection.GetModePrefixes()
 	return strings.TrimLeft(name, prefixes[1])
+}
+
+func (h *Handler) handleUserMode(message ircmsg.Message) {
+	h.connection.currentModes = message.Params[1]
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/enescakir/emoji"
 	"github.com/greboid/ircclient/irc"
 	"github.com/greboid/ircclient/web/templates"
 	datastar "github.com/starfederation/datastar/sdk/go"
@@ -258,6 +259,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("No window selected.  Unsupported")
 		return
 	}
+	input = emoji.Parse(input)
 	//TODO Proper command processing
 	if strings.HasPrefix(input, "/me") {
 		input = strings.TrimPrefix(input, "/me ")

@@ -30,6 +30,6 @@ templ GetWindow(server *irc.Connection, channel *irc.Channel) {
 				</p>
 			}
 		</div>
-		<div id="nicklist"></div>
+		@Nicklist(channel)
 	}
 }

@@ -34,3 +34,11 @@ func (c *Channel) GetTopic() *Topic {
 	}
 	return c.topic
 }
+
+func (c *Channel) GetUsers() []string {
+	var users []string
+	for i := range c.users {
+		users = append(users, c.users[i].nickname)
+	}
+	return users
+}

@@ -57,8 +57,8 @@ func (m *Message) GetTimestamp() string {
 }
 
 func (m *Message) parseFormatting(message string) string {
-	regex := regexp.MustCompile(`(?P<url>https?://\S+|www\.\S+)`)
-	message = html.EscapeString(message)
-	output := regex.ReplaceAllString(message, `<a target="_blank" href="$url">$url<a>`)
+	output := html.EscapeString(message)
+	regex := regexp.MustCompile(`(?P<url>https?://\S+)`)
+	output = regex.ReplaceAllString(output, "<a target='_blank' href='${url}'>${url}</a>")
 	return output
 }

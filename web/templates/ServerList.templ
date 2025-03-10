@@ -4,7 +4,7 @@ import "github.com/greboid/ircclient/irc"
 import "net/url"
 
 templ ServerList(servers []*irc.Connection, activeID string) {
-	<div id="serverlist">
+	<div id="servers">
 		<ul>
 			for _, item := range servers {
 				<li>

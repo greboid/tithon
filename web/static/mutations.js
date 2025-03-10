@@ -1,6 +1,6 @@
 let atBottom = false
 window.addEventListener('scroll', function(event) {
-  if (event.target.id === 'window') {
+  if (event.target.id === 'messages') {
     atBottom = event.target.scrollTop === event.target.scrollTopMax
   }
 }, true)
@@ -20,7 +20,7 @@ const globalCallback = mutations => {
   for (const mutation of mutations) {
     if (mutation.addedNodes.length > 0) {
       for (const node of mutation.addedNodes) {
-        if (node.id === 'text') {
+        if (node.id === 'messages') {
           observer.disconnect()
           observer = new MutationObserver(textCallback)
           observer.observe(node, config)

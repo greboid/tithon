@@ -2,149 +2,121 @@
   color-scheme: light dark;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
+html {
   height: 100vh;
-  width: 100vw;
+}
+
+body {
+  height: 100%;
 }
 
 main {
-  display: flex;
-  flex-direction: row;
+  padding: 1rem;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-areas:
+    ".        windowinfo  nicklist"
+    "servers  messages    nicklist"
+    "settings input       input";
+  grid-template-rows: fit-content(1.5rem) 1fr min-content;
+  grid-template-columns: fit-content(20rem) 1fr max-content;
   height: 100%;
-  width: 100%;
-  padding: 0.5em;
-  gap: 0.5em;
-  overflow: hidden;
 }
 
-#content {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 0.5em;
-}
+#servers {
+  grid-area: servers;
 
-#sidebar {
-  display: flex;
-  flex-direction: column;
+  & ul {
+    padding: 0;
+
+    & li {
+      list-style: none;
+
+      & div {
+        display: flex;
+        align-content: space-between;
+        gap: 1rem;
+
+        & a {
+          flex-grow: 1;
+          &.active {
+            font-weight: bold;
+          }
+        }
+      }
+
+      & ul {
+        & li {
+          padding-left: 1rem;
+        }
+      }
+    }
+  }
 }
 
 #settings {
-  padding: 0.5em;
+  grid-area: settings;
   display: flex;
   flex-direction: row;
-}
-
-#window {
-  flex-grow: 100;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-#text {
-  line-break: anywhere;
-  overflow-y: auto;
-}
-
-#serverlist {
-  overflow-y: scroll;
-  flex-grow: 100;
-  padding: 0 1em;
-  width: max-content;
-  .active {
-    font-weight: bold;
-  }
-  a {
-    color: inherit;
-    text-decoration: none;
-    &:hover {
-      color: light-dark(rgba( 0, 0, 0, 0.6 ), rgba( 255, 255, 255, 0.6 ));
-    }
-  }
-  ul {
-    padding: 0;
-    li {
-      div {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-      }
-      list-style: none;
-      padding: 0;
-    }
-    ul {
-      padding-left: 1em;
-    }
-  }
+  gap: 1rem;
 }
 
 #input {
-  width: 100%;
+  grid-area: input;
   display: flex;
-  gap: 1em;
+  gap: 1rem;
+  flex-direction: row;
+
   & form {
-    flex-grow: 100;
-  }
-}
-#pending {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  align-content: center;
-  height: 100%;
-  width: 100%;
-  padding: 1em;
-}
-.hidden {
-  display: none;
-}
+    display: flex;
+    flex-grow: 1;
 
-.loader:after {
-  content: '';
-  width: 12px;
-  height: 12px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50% , -50%);
-  border-radius: 50%;
-  background-color: #FF3D00;
-  box-shadow: 20px 0 #FF3D00, -20px 0 #FF3D00;
-  animation: flash 0.5s ease-out infinite alternate;
-}
-
-@keyframes flash {
-  0% {
-    background-color: rgba(255, 60, 0, 0.25);
-    box-shadow: 20px 0 rgba(255, 60, 0, 0.25), -20px 0 #FF3D00;
-  }
-  50% {
-    background-color: #FF3D00;
-    box-shadow: 20px 0 rgba(255, 60, 0, 0.25), -20px 0 rgba(255, 60, 0, 0.25);
-  }
-  100% {
-    background-color: rgba(255, 60, 0, 0.25);
-    box-shadow: 20px 0 #FF3D00, -20px 0 rgba(255, 60, 0, 0.25);
+    & input {
+      flex-grow: 1;
+    }
   }
 }
 
-.dialog {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vw;
-  background-color: light-dark(rgba( 255, 255, 255, 0.6 ), rgba( 0, 0, 0, 0.6 ));
-  backdrop-filter: blur(2px);
-  padding: 5em;
-  &> div {
-    background-color: light-dark(white, black);
-    padding: 5em;
-    border-radius: 1em;
+#windowinfo {
+  grid-area: windowinfo;
+}
+
+#nicklist {
+  grid-area: nicklist;
+}
+
+#messages {
+  grid-area: messages;
+  overflow-y: auto;
+}
+
+dialog {
+  inset: 0.5rem;
+  margin: auto;
+  width: 50vw;
+
+  & div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    & :first-child {
+      flex-grow: 1;
+    }
+
+    & form {
+      flex-shrink: 1;
+      justify-items: flex-end;
+
+      & button {
+        width: 5rem;
+      }
+    }
   }
+}
+
+#dialog::backdrop {
+  backdrop-filter: blur(0.5rem);
 }
 
 form {
@@ -153,13 +125,16 @@ form {
   grid-auto-flow: row;
   gap: 1em;
 }
+
 label {
   grid-column: labels;
   grid-row: auto;
 }
+
 input, textarea, button {
   grid-column: controls;
   grid-row: auto;
+
   &[type="checkbox"] {
     justify-self: start;
   }

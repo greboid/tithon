@@ -46,7 +46,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
-	err := templates.Loading().Render(r.Context(), w)
+	err := templates.Base(true, s.connectionManager.GetConnections(), s.activeWindow).Render(r.Context(), w)
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)
 		return
@@ -57,10 +57,7 @@ func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
-	err := sse.MergeFragmentTempl(templates.Index(), func(options *datastar.MergeFragmentOptions) {
-		options.Selector = "body"
-		options.MergeMode = datastar.FragmentMergeModeInner
-	})
+	err := sse.MergeFragmentTempl(templates.Index(s.connectionManager.GetConnections(), s.activeWindow))
 	if err != nil {
 		slog.Debug("Error serving ready", "error", err)
 	}

@@ -89,6 +89,21 @@ main {
 #messages {
   grid-area: messages;
   overflow-y: auto;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-content: end;
+
+  & p {
+    display: contents;
+
+    & span:nth-of-type(1) {
+      padding-right: 1rem;
+    }
+
+    & span:nth-of-type(2) {
+      text-align: right;
+    }
+  }
 }
 
 dialog {

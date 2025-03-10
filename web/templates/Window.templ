@@ -16,13 +16,17 @@ templ GetWindow(server *irc.Connection, channel *irc.Channel) {
 		<div id="messages">
 			for _, item := range channel.GetMessages() {
 				<p>
-					[{ item.GetTimestamp() }]
-					if item.IsAction() {
-						* { item.GetNickname() }
-					} else {
-						&lt;{ item.GetNickname() }&gt;&nbsp;
-					}
-					@templ.Raw(item.GetMessage())
+					<span>[{ item.GetTimestamp() }]</span>
+					<span>
+						if item.IsAction() {
+							* { item.GetNickname() }
+						} else {
+							&lt;{ item.GetNickname() }&gt;&nbsp;
+						}
+					</span>
+					<span>
+						@templ.Raw(item.GetMessage())
+					</span>
 				</p>
 			}
 		</div>

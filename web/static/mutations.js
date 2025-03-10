@@ -5,6 +5,9 @@ window.addEventListener('scroll', function(event) {
   }
 }, true)
 const typingCallback = (e) => {
+  if (e.key === "Tab") {
+    e.preventDefault()
+  }
   if (e.key.length !== 1) {
     return
   }
@@ -19,7 +22,7 @@ const textCallback = mutations => {
     if (mutation.addedNodes.length > 0) {
       for (const node of mutation.addedNodes) {
         if (atBottom) {
-          node.scrollIntoView()
+          node.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" })
         }
       }
     }

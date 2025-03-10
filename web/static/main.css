@@ -15,7 +15,7 @@ main {
   display: grid;
   gap: 0.5rem;
   grid-template-areas:
-    ".        windowinfo  nicklist"
+    "servers  windowinfo  nicklist"
     "servers  messages    nicklist"
     "settings input       input";
   grid-template-rows: fit-content(1.5rem) 1fr min-content;
@@ -39,6 +39,7 @@ main {
 
         & a {
           flex-grow: 1;
+
           &.active {
             font-weight: bold;
           }

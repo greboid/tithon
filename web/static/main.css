@@ -90,10 +90,10 @@ main {
 
 #messages {
   grid-area: messages;
-  overflow-y: auto;
+  overflow-y: scroll;
   display: grid;
   grid-template-columns: auto auto 1fr;
-  align-content: end;
+  align-content: safe end;
 
   & p {
     display: contents;

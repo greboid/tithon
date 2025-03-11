@@ -22,7 +22,7 @@ const textCallback = mutations => {
     if (mutation.addedNodes.length > 0) {
       for (const node of mutation.addedNodes) {
         if (atBottom) {
-          node.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" })
+          setTimeout(() => document.getElementById('messages').scrollTop = document.getElementById('messages').scrollTopMax, 10)
         }
       }
     }

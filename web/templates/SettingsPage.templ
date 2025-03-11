@@ -1,13 +1,18 @@
 package templates
 
 templ SettingsPage() {
-	<div id="dialog" class="dialog">
-		<div
-			data-on-click__outside="@get('/closeDialog')"
-			data-on-keydown__window="evt.key === 'Escape' && @get('/closeDialog')"
-		>
-			<h1>Settings</h1>
-			<button data-on-click="@get('/closeDialog')">Close</button>
+	<dialog
+		id="dialog"
+		data-on-load="document.getElementById('dialog').showModal()"
+		data-on-click="evt.target == document.getElementById('dialog') && document.getElementById('dialog').close()"
+		data-on-keydown__window="evt.key === 'Escape' && document.getElementById('dialog').close()"
+	>
+		<div>
+			<form method="dialog">
+			    <h1>Settings</h1>
+				<button data-on-click="@get('/addServer', {contentType: 'form'})">Save</button>
+			</form>
+			<button data-on-click="document.getElementById('dialog').close()">Close</button>
 		</div>
-	</div>
+	</dialog>
 }

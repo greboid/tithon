@@ -43,6 +43,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /upload", s.handleUpload)
 	mux.HandleFunc("GET /join", s.handleJoin)
 	mux.HandleFunc("GET /part", s.handlePart)
+	mux.HandleFunc("GET /theme/{theme}", s.theme)
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -366,6 +367,22 @@ func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err := s.connectionManager.GetConnection(s.activeServer).PartChannel(r.URL.Query().Get("channel"))
+	if err != nil {
+		slog.Debug("Error parting channel", "error", err)
+		return
+	}
+}
+
+func (s *Server) theme(w http.ResponseWriter, r *http.Request) {
+	theme := r.PathValue("theme")
+	var themeURL string
+	if theme == "light" {
+		themeURL = `<link id="theme" rel="stylesheet" href="/static/main2.css">`
+	} else {
+		themeURL = `<link id="theme" rel="stylesheet" href="/static/main.css">`
+	}
+	sse := datastar.NewSSE(w, r)
+	err := sse.MergeFragments(themeURL)
 	if err != nil {
 		slog.Debug("Error parting channel", "error", err)
 		return

@@ -55,7 +55,6 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
-	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
 	err := sse.MergeFragmentTempl(templates.Index(s.connectionManager.GetConnections(), s.activeWindow))
 	if err != nil {
@@ -64,12 +63,16 @@ func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {
 	err = sse.ExecuteScript("window.history.pushState({}, '', '/#/')")
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
+		s.lock.Unlock()
 		return
 	}
+	s.lock.Unlock()
 	s.UpdateUI(w, r)
 }
 
 func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
 	activeID := ""
 	if s.activeWindow == "nil" {
@@ -80,7 +83,6 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	err := sse.MergeFragmentTempl(templates.ServerList(s.connectionManager.GetConnections(), activeID))
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
-		s.lock.Unlock()
 		return
 	}
 	server := s.connectionManager.GetConnection(s.activeServer)
@@ -93,7 +95,6 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	err = sse.MergeFragmentTempl(templates.GetWindow(server, channel))
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
-		s.lock.Unlock()
 		return
 	}
 	if s.connectionManager.GetConnection(s.activeServer) == nil {
@@ -103,7 +104,6 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		s.connectionManager.GetConnection(s.activeServer).GetFileHost())))
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)
-		s.lock.Unlock()
 		return
 	}
 }
@@ -117,9 +117,7 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 			slog.Debug("Client connection closed")
 			return
 		case <-ticker.C:
-			s.lock.Lock()
 			s.UpdateUI(w, r)
-			s.lock.Unlock()
 		}
 	}
 }
@@ -229,8 +227,6 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	s.activeServer = r.PathValue("server")
 	s.activeWindow = r.PathValue("channel")
 	slog.Debug("Changing Window", "server", s.activeServer, "channel", s.activeWindow)
-	s.lock.Lock()
-	defer s.lock.Unlock()
 	s.UpdateUI(w, r)
 }
 
@@ -238,8 +234,6 @@ func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 	s.activeServer = r.PathValue("server")
 	s.activeWindow = ""
 	slog.Debug("Changing Server", "server", s.activeServer)
-	s.lock.Lock()
-	defer s.lock.Unlock()
 	s.UpdateUI(w, r)
 }
 
@@ -263,12 +257,15 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 		input = fmt.Sprintf("\001ACTION %s\001", input)
 	}
 	s.connectionManager.GetConnection(s.activeServer).SendMessage(s.activeWindow, input)
+	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
 	err := sse.MergeFragmentTempl(templates.EmptyInput())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
+		s.lock.Unlock()
 		return
 	}
+	s.lock.Unlock()
 	s.UpdateUI(w, r)
 }
 
@@ -336,12 +333,14 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 	location = strings.TrimPrefix(location, "/uploads")
 	slog.Info("File uploaded to bouncer", "file", uploaded.FileHost+location)
 
+	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
 	err = sse.MergeSignals([]byte("{files: [], filesMimes: [], filesNames: [], location: \"" + uploaded.FileHost + location + "\"}"))
 	if err != nil {
 		slog.Debug("Error removing signals", "error", err)
 		return
 	}
+	s.lock.Unlock()
 }
 
 func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
@@ -353,6 +352,8 @@ func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error joining channel", "error", err)
 		return
 	}
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
 	err = sse.MergeFragmentTempl(templates.EmptyDialog())
 	if err != nil {
@@ -370,4 +371,5 @@ func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error parting channel", "error", err)
 		return
 	}
+	s.UpdateUI(w, r)
 }

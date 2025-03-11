@@ -1,6 +1,8 @@
 package irc
 
 import (
+	"fmt"
+	"github.com/ergochat/irc-go/ircfmt"
 	"html"
 	"log/slog"
 	"regexp"
@@ -58,7 +60,50 @@ func (m *Message) GetTimestamp() string {
 
 func (m *Message) parseFormatting(message string) string {
 	output := html.EscapeString(message)
+	output = m.parseIRCFormatting(output)
 	regex := regexp.MustCompile(`(?P<url>https?://\S+)`)
 	output = regex.ReplaceAllString(output, "<a target='_blank' href='${url}'>${url}</a>")
 	return output
+}
+
+func (m *Message) parseIRCFormatting(message string) string {
+	split := ircfmt.Split(message)
+	var out strings.Builder
+	for i := range split {
+		var classes []string
+		if split[i].ForegroundColor.IsSet {
+			classes = append(classes, fmt.Sprintf("fg-%d", split[i].ForegroundColor.Value))
+		}
+		if split[i].BackgroundColor.IsSet {
+			classes = append(classes, fmt.Sprintf("bg-%d", split[i].ForegroundColor.Value))
+		}
+		if split[i].Bold {
+			classes = append(classes, "bold")
+		}
+		if split[i].Monospace {
+			classes = append(classes, "monospace")
+		}
+		if split[i].Strikethrough {
+			classes = append(classes, "strikethrough")
+		}
+		if split[i].Underline {
+			classes = append(classes, "underline")
+		}
+		if split[i].Italic {
+			classes = append(classes, "italic")
+		}
+		if split[i].ReverseColor {
+			classes = append(classes, "reverseColour")
+		}
+		if len(classes) > 0 {
+			out.WriteString(`<span class="`)
+			out.WriteString(strings.Join(classes, " "))
+			out.WriteString(`">`)
+		}
+		out.WriteString(split[i].Content)
+		if len(classes) > 0 {
+			out.WriteString("</span>")
+		}
+	}
+	return out.String()
 }

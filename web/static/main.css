@@ -1,5 +1,14 @@
 :root {
   color-scheme: light dark;
+  --light-bg: #ffffff;
+  --light-color: #000000;
+  --light-highlight: #f0f0f0;
+  --light-accent: #a36934;
+
+  --dark-bg: #2b2a33;
+  --dark-color: #ffffff;
+  --dark-highlight: #3f3e47;
+  --dark-accent: #a36934;
 }
 
 html {
@@ -7,7 +16,8 @@ html {
 }
 
 body {
-  height: 100%;
+  height: 100%;background-color: light-dark(var(--light-bg), var(--dark-bg));
+  color: light-dark(var(--light-color), var(--dark-color));
 }
 
 main {
@@ -25,6 +35,8 @@ main {
 
 #servers {
   grid-area: servers;
+  background-color: light-dark(var(--light-bg), var(--dark-bg));
+  color: light-dark(var(--light-color), var(--dark-color));
 
   & ul {
     padding: 0;
@@ -63,6 +75,8 @@ main {
   flex-direction: row;
   gap: 1rem;
   align-items: center;
+  background-color: light-dark(var(--light-bg), var(--dark-bg));
+  color: light-dark(var(--light-accent), var(--dark-accent));
 }
 
 #input {
@@ -71,6 +85,14 @@ main {
   gap: 1rem;
   flex-direction: row;
   align-items: center;
+  background-color: light-dark(var(--light-highlight), var(--dark-highlight));
+  color: light-dark(var(--light-color), var(--dark-color));
+  border-radius: 0.5rem;
+
+  & label {
+    color: light-dark(var(--light-accent), var(--dark-accent));
+    padding-right: 1rem;
+  }
 
   & form {
     display: flex;
@@ -81,6 +103,9 @@ main {
       border: 0;
       padding: 0.5rem;
       border-radius: 0.5rem;
+      background-color: light-dark(var(--light-highlight), var(--dark-highlight));
+      color: light-dark(var(--light-color), var(--dark-color));
+
       &:focus {
         outline: none;
       }
@@ -121,6 +146,8 @@ dialog {
   inset: 0.5rem;
   margin: auto;
   width: 50vw;
+  background-color: light-dark(var(--light-bg), var(--dark-bg));
+  color: light-dark(var(--light-color), var(--dark-color));
 
   & div {
     height: 100%;

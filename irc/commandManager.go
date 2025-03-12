@@ -1,7 +1,6 @@
 package irc
 
 import (
-	"fmt"
 	"log/slog"
 	"strings"
 )
@@ -20,6 +19,7 @@ func NewCommandManager() *CommandManager {
 	return &CommandManager{[]Command{
 		&Action{},
 		&Msg{},
+		&Quit{},
 	}}
 }
 
@@ -27,10 +27,11 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connec
 	if !strings.HasPrefix(input, "/") {
 		input = "/msg " + input
 	}
+	input = strings.TrimPrefix(input, "/")
+	first := strings.Split(input, " ")[0]
 	for i := range cm.commands {
-		prefix := fmt.Sprintf("/%s ", cm.commands[i].GetName())
-		if strings.HasPrefix(input, prefix) {
-			input = strings.TrimPrefix(input, prefix)
+		if first == cm.commands[i].GetName() {
+			input = strings.TrimPrefix(input, first)
 			cm.commands[i].Execute(connections, server, channel, input)
 			return
 		}

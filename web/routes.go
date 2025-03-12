@@ -223,14 +223,6 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	if input == "" {
 		return
 	}
-	if s.activeServer == "" && s.activeWindow == "" {
-		slog.Debug("No server or window selected.  Unsupported")
-		return
-	}
-	if s.activeWindow == "" {
-		slog.Debug("No window selected.  Unsupported")
-		return
-	}
 	input = emoji.Parse(input)
 	activeServer := s.connectionManager.GetConnection(s.activeServer)
 	var activeWindow *irc.Channel

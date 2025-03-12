@@ -11,5 +11,8 @@ func (c Msg) GetHelp() string {
 }
 
 func (c Msg) Execute(_ *ConnectionManager, server *Connection, channel *Channel, input string) {
+	if server == nil || channel == nil {
+		return
+	}
 	server.SendMessage(channel.GetID(), input)
 }

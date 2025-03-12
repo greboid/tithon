@@ -15,6 +15,9 @@ func (c Action) GetHelp() string {
 }
 
 func (c Action) Execute(_ *ConnectionManager, server *Connection, channel *Channel, input string) {
+	if server == nil || channel == nil {
+		return
+	}
 	input = fmt.Sprintf("\001ACTION %s\001", input)
 	server.SendMessage(channel.GetID(), input)
 }

@@ -62,6 +62,7 @@ main {
   display: flex;
   flex-direction: row;
   gap: 1rem;
+  align-items: center;
 }
 
 #input {
@@ -69,6 +70,7 @@ main {
   display: flex;
   gap: 1rem;
   flex-direction: row;
+  align-items: center;
 
   & form {
     display: flex;

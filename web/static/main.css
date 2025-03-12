@@ -15,7 +15,7 @@ main {
   display: grid;
   gap: 0.5rem;
   grid-template-areas:
-    "servers  windowinfo  nicklist"
+    "servers  windowinfo  ."
     "servers  messages    nicklist"
     "settings input       input";
   grid-template-rows: fit-content(1.5rem) 1fr min-content;

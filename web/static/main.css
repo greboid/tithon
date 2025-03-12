@@ -33,6 +33,10 @@ main {
   height: 100%;
 }
 
+h1 {
+  color: light-dark(var(--light-accent), var(--dark-accent));
+}
+
 #servers {
   grid-area: servers;
   background-color: light-dark(var(--light-bg), var(--dark-bg));

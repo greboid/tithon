@@ -1,5 +1,7 @@
 package irc
 
+import "slices"
+
 type Channel struct {
 	id       string
 	name     string
@@ -40,5 +42,6 @@ func (c *Channel) GetUsers() []string {
 	for i := range c.users {
 		users = append(users, c.users[i].nickname)
 	}
+	slices.Sort(users)
 	return users
 }

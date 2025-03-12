@@ -34,7 +34,6 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /update", s.handleUpdate)
 	mux.HandleFunc("GET /showSettings", s.handleShowSettings)
 	mux.HandleFunc("GET /showAddServer", s.handleShowAddServer)
-	mux.HandleFunc("GET /showJoinChannel", s.handleShowJoinChannel)
 	mux.HandleFunc("GET /addServer", s.handleAddServer)
 	mux.HandleFunc("GET /changeWindow/{server}", s.handleChangeServer)
 	mux.HandleFunc("GET /changeWindow/{server}/{channel}", s.handleChangeChannel)
@@ -153,18 +152,6 @@ func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = sse.ExecuteScript("window.history.pushState({}, '', '/#/addserver')")
-	if err != nil {
-		slog.Debug("Error merging fragments", "error", err)
-		return
-	}
-}
-
-func (s *Server) handleShowJoinChannel(w http.ResponseWriter, r *http.Request) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	sse := datastar.NewSSE(w, r)
-	slog.Debug("Showing join channel")
-	err := sse.MergeFragmentTempl(templates.JoinDialog())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return

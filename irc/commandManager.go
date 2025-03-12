@@ -31,7 +31,7 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connec
 	first := strings.Split(input, " ")[0]
 	for i := range cm.commands {
 		if first == cm.commands[i].GetName() {
-			input = strings.TrimPrefix(input, first)
+			input = strings.TrimPrefix(input, first+" ")
 			cm.commands[i].Execute(connections, server, channel, input)
 			return
 		}

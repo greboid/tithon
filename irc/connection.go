@@ -139,6 +139,7 @@ func (c *Connection) AddChannel(name string) *Channel {
 }
 
 func (c *Connection) RemoveChannel(s string) {
+	c.PartChannel(s)
 	delete(c.channels, s)
 }
 

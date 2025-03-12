@@ -20,6 +20,8 @@ func NewCommandManager() *CommandManager {
 		&Action{},
 		&Msg{},
 		&Quit{},
+		&Join{},
+		&Part{},
 	}}
 }
 

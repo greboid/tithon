@@ -132,6 +132,10 @@ h1 {
   grid-template-columns: auto auto 1fr;
   align-content: safe end;
 
+  & a {
+    color: light-dark(var(--light-accent), var(--dark-accent));
+  }
+
   & p {
     display: contents;
 

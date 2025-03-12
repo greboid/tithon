@@ -120,7 +120,7 @@ func (c *Connection) GetChannel(id string) *Channel {
 
 func (c *Connection) GetChannelByName(name string) (*Channel, error) {
 	for _, channel := range c.GetChannels() {
-		if channel.name == name {
+		if strings.ToLower(channel.name) == strings.ToLower(name) {
 			return channel, nil
 		}
 	}

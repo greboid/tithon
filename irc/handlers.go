@@ -5,6 +5,7 @@ import (
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
+	"slices"
 	"strings"
 	"time"
 )
@@ -135,6 +136,9 @@ func (h *Handler) handleNameReply(message ircmsg.Message) {
 		user := h.stripChannelPrefixes(names[i])
 		channel.users = append(channel.users, NewUser(user))
 	}
+	slices.SortFunc(channel.users, func(a, b *User) int {
+		return strings.Compare(a.nickname, b.nickname)
+	})
 }
 
 func (h *Handler) stripChannelPrefixes(name string) string {

@@ -104,6 +104,7 @@ main {
 
     & span.nickname {
       text-align: right;
+      padding-right: 0.2rem;
     }
   }
 }

@@ -12,12 +12,14 @@ import (
 )
 
 type ConnectionManager struct {
-	connections map[string]*Connection
+	connections    map[string]*Connection
+	commandManager *CommandManager
 }
 
 func NewConnectionManager() *ConnectionManager {
 	return &ConnectionManager{
-		connections: map[string]*Connection{},
+		connections:    map[string]*Connection{},
+		commandManager: NewCommandManager(),
 	}
 }
 

@@ -23,12 +23,13 @@ type Server struct {
 	lock              sync.Mutex
 	httpServer        *http.Server
 	connectionManager *irc.ConnectionManager
+	commands          *irc.CommandManager
 	activeServer      string
 	activeWindow      string
 	fixedPort         int
 }
 
-func NewServer(cm *irc.ConnectionManager, fixedPort int) *Server {
+func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int) *Server {
 	mux := http.NewServeMux()
 	server := &Server{
 		fixedPort: fixedPort,
@@ -37,6 +38,7 @@ func NewServer(cm *irc.ConnectionManager, fixedPort int) *Server {
 			Handler: mux,
 		},
 		connectionManager: cm,
+		commands:          commands,
 	}
 	server.addRoutes(mux)
 	return server

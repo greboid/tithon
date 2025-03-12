@@ -232,12 +232,12 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	input = emoji.Parse(input)
-	//TODO Proper command processing
-	if strings.HasPrefix(input, "/me") {
-		input = strings.TrimPrefix(input, "/me ")
-		input = fmt.Sprintf("\001ACTION %s\001", input)
+	activeServer := s.connectionManager.GetConnection(s.activeServer)
+	var activeWindow *irc.Channel
+	if activeServer != nil {
+		activeWindow = activeServer.GetChannel(s.activeWindow)
 	}
-	s.connectionManager.GetConnection(s.activeServer).SendMessage(s.activeWindow, input)
+	s.commands.Execute(s.connectionManager, activeServer, activeWindow, input)
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
 	err := sse.MergeFragmentTempl(templates.EmptyInput())

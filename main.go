@@ -39,7 +39,7 @@ func main() {
 		slog.Error("Unable to load config", "error", err)
 		return
 	}
-	server := web.NewServer(connectionManager, *FixedPort)
+	server := web.NewServer(connectionManager, irc.NewCommandManager(), *FixedPort)
 	defer server.Stop()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)

@@ -12,7 +12,8 @@ templ Base(loading bool, servers []*irc.Connection, activeID string) {
 			<link rel="stylesheet" href="/static/loading.css"/>
 			<link id="theme" rel="stylesheet" href="/static/main.css"/>
 			<script type="module" src="/static/datastar.js"></script>
-			<script src="/static/mutations.js"></script>
+			<script src="/static/autoscroll.js"></script>
+			<script src="/static/keybinds.js"></script>
 		</head>
 		<body>
 			<main id="main" data-on-load="@get('/ready')">

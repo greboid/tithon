@@ -4,18 +4,7 @@ window.addEventListener('scroll', function(event) {
     atBottom = event.target.scrollTop === event.target.scrollTopMax
   }
 }, true)
-const typingCallback = (e) => {
-  if (e.key === "Tab") {
-    e.preventDefault()
-  }
-  if (e.key.length !== 1) {
-    return
-  }
-  if (e.key === "c") {
-    return
-  }
-  document.getElementById("textInput").focus()
-}
+
 const config = {childList: true, subtree: true}
 const textCallback = mutations => {
   for (const mutation of mutations) {
@@ -43,4 +32,3 @@ const globalCallback = mutations => {
 }
 let observer = new MutationObserver(globalCallback)
 observer.observe(document, config)
-window.addEventListener('keydown', typingCallback)

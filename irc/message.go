@@ -12,38 +12,49 @@ import (
 
 const v3TimestampFormat = "2006-01-02T15:04:05.000Z"
 
+type MessageType int
+
+const (
+	Normal = iota
+	Notice
+	Action
+	Event
+	Error
+)
+
 type Message struct {
-	timestamp time.Time
-	nickname  string
-	message   string
-	isAction  bool
+	timestamp   time.Time
+	nickname    string
+	message     string
+	messageType MessageType
 }
 
-func NewMessage(nickname string, message string) *Message {
-	return NewMessageWithTime(time.Now().Format(v3TimestampFormat), nickname, message)
+func NewMessage(nickname string, message string, messageType MessageType) *Message {
+	return NewMessageWithTime(time.Now().Format(v3TimestampFormat), nickname, message, messageType)
 }
 
-func NewMessageWithTime(messageTime string, nickname string, message string) *Message {
+func NewMessageWithTime(messageTime string, nickname string, message string, messageType MessageType) *Message {
 	parsedTime, err := time.Parse(v3TimestampFormat, messageTime)
 	if err != nil {
 		slog.Error("Error parsing time from server", "time", messageTime, "error", err)
 		parsedTime = time.Now()
 	}
 	ircmsg := &Message{
-		timestamp: parsedTime,
-		nickname:  nickname,
+		timestamp:   parsedTime,
+		nickname:    nickname,
+		messageType: messageType,
 	}
-	if strings.HasPrefix(message, "\001ACTION") && strings.HasSuffix(message, "\001") {
+	if messageType == Normal && strings.HasPrefix(message, "\001ACTION") && strings.HasSuffix(message, "\001") {
 		message = strings.TrimPrefix(message, "\001ACTION")
 		message = strings.TrimSuffix(message, "\001")
-		ircmsg.isAction = true
+		ircmsg.messageType = Action
 	}
 	ircmsg.message = ircmsg.parseFormatting(message)
 	return ircmsg
 }
 
-func (m *Message) IsAction() bool {
-	return m.isAction
+func (m *Message) GetType() MessageType {
+	return m.messageType
 }
 
 func (m *Message) GetMessage() string {

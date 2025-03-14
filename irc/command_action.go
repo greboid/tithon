@@ -4,17 +4,17 @@ import (
 	"fmt"
 )
 
-type Action struct{}
+type SendAction struct{}
 
-func (c Action) GetName() string {
+func (c SendAction) GetName() string {
 	return "me"
 }
 
-func (c Action) GetHelp() string {
+func (c SendAction) GetHelp() string {
 	return "Performs an action in a channel or private message"
 }
 
-func (c Action) Execute(_ *ConnectionManager, server *Connection, channel *Channel, input string) {
+func (c SendAction) Execute(_ *ConnectionManager, server *Connection, channel *Channel, input string) {
 	if server == nil || channel == nil {
 		return
 	}

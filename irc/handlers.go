@@ -75,9 +75,9 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 	var mess *Message
 	if found, messageTime := message.GetTag("time"); found {
-		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "))
+		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "), Normal)
 	} else {
-		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "))
+		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "), Normal)
 	}
 	if h.isChannel(message.Params[0]) {
 		channel, err := h.connection.GetChannelByName(message.Params[0])
@@ -114,15 +114,21 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 		slog.Warn("Received part for unknown channel", "channel", message.Params[0])
 		return
 	}
-	h.connection.RemoveChannel(channel.id)
+	if message.Nick() == h.connection.CurrentNick() {
+		h.connection.RemoveChannel(channel.id)
+		return
+	}
+	slices.DeleteFunc(channel.users, func(user *User) bool {
+		return user.nickname == message.Nick()
+	})
+	channel.messages = append(channel.messages, NewMessage(message.Nick(), "Parted the channel", Event))
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {
-
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
-
+	h.connection.messages = append(h.connection.messages, NewMessage("", "Server connected", Event))
 }
 
 func (h *Handler) handleNameReply(message ircmsg.Message) {

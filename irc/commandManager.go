@@ -17,7 +17,7 @@ type CommandManager struct {
 
 func NewCommandManager() *CommandManager {
 	return &CommandManager{[]Command{
-		&Action{},
+		&SendAction{},
 		&Msg{},
 		&Quit{},
 		&Join{},
@@ -38,5 +38,11 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connec
 			return
 		}
 	}
-	slog.Error("Unable to find command", "input", input)
+	if channel != nil {
+		channel.messages = append(channel.messages, NewMessage("", "Unknown command: "+input, Error))
+	} else if server != nil {
+		server.messages = append(server.messages, NewMessage("", "Unknown command: "+input, Error))
+	} else {
+		slog.Error("Unknown command", "input", input)
+	}
 }

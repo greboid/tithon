@@ -26,6 +26,7 @@ type Connection struct {
 	callbackHandler   *Handler
 	supportsFileHost  bool
 	currentModes      string
+	messages          []*Message
 }
 
 func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) *Connection {
@@ -154,7 +155,7 @@ func (c *Connection) SendMessage(window string, message string) {
 		return
 	}
 	if !c.HasCapability("echo-message") {
-		channel.messages = append(channel.messages, NewMessage(c.connection.CurrentNick(), message))
+		channel.messages = append(channel.messages, NewMessage(c.connection.CurrentNick(), message, Normal))
 	}
 	err := c.connection.Send("PRIVMSG", channel.name, message)
 	if err != nil {
@@ -187,4 +188,12 @@ func (c *Connection) GetModePrefixes() []string {
 		splits[1] = "@"
 	}
 	return splits
+}
+
+func (c *Connection) GetMessages() []*Message {
+	var messages []*Message
+	for _, message := range c.messages {
+		messages = append(messages, message)
+	}
+	return messages
 }

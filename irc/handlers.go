@@ -17,6 +17,7 @@ type Handler struct {
 func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback("JOIN", h.handleJoin)
 	h.connection.connection.AddCallback("PRIVMSG", h.handlePrivMsg)
+	h.connection.connection.AddCallback("NOTICE", h.handleNotice)
 	h.connection.connection.AddCallback(ircevent.RPL_TOPIC, h.handleRPLTopic)
 	h.connection.connection.AddCallback("TOPIC", h.handleTopic)
 	h.connection.connection.AddConnectCallback(h.handleConnected)
@@ -159,4 +160,25 @@ func (h *Handler) handleUserMode(message ircmsg.Message) {
 
 func (h *Handler) handleError(message ircmsg.Message) {
 	h.connection.messages = append(h.connection.messages, NewMessage("", strings.Join(message.Params, " "), Event))
+}
+
+func (h *Handler) handleNotice(message ircmsg.Message) {
+	var mess *Message
+	if found, messageTime := message.GetTag("time"); found {
+		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "), Notice)
+	} else {
+		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "), Notice)
+	}
+	if !strings.Contains(message.Source, "@") {
+		h.connection.messages = append(h.connection.messages, mess)
+	} else if h.isChannel(message.Params[0]) {
+		channel, err := h.connection.GetChannelByName(message.Params[0])
+		if err != nil {
+			slog.Warn("Notice for unknown channel", "notice", message)
+			return
+		}
+		channel.messages = append(channel.messages, mess)
+	} else {
+		slog.Warn("Unsupported DN", "notice", message)
+	}
 }

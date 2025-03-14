@@ -9,11 +9,13 @@ templ GetWindow(server *irc.Connection, channel *irc.Channel) {
 		<div id="nicklist"></div>
 	} else if channel == nil {
 		<div id="windowinfo"><p>Server: { server.GetName() }</p></div>
-		<div id="messages">@MessageList(server.GetMessages())</div>
+		<div id="messages">@MessageList(server.GetMessages())
+</div>
 		<div id="nicklist"></div>
 	} else {
 		<div id="windowinfo"><p>{ channel.GetTopic().GetTopic() }</p></div>
-		<div id="messages">@MessageList(channel.GetMessages())</div>
+		<div id="messages">@MessageList(channel.GetMessages())
+</div>
 		@Nicklist(channel)
 	}
 }
@@ -23,11 +25,13 @@ templ MessageList(messages []*irc.Message) {
 		<p>
 			<span class="timestamp">[{ item.GetTimestamp() }]</span>
 			<span class="nickname">
-			    switch item.GetType() {
-			        case irc.Action:
-			            * { item.GetNickname() }
-			        case irc.Normal:
-			            &lt;{ item.GetNickname() }&gt;&nbsp;
+				switch item.GetType() {
+					case irc.Action:
+						* { item.GetNickname() }
+					case irc.Normal:
+						&lt;{ item.GetNickname() }&gt;&nbsp;
+					case irc.Notice:
+						-{ item.GetNickname() }-&nbsp;
 				}
 			</span>
 			<span class="message">

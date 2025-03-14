@@ -175,7 +175,8 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	nickname := r.URL.Query().Get("nickname")
 	sasllogin := r.URL.Query().Get("sasllogin")
 	saslpassword := r.URL.Query().Get("saslpassword")
-	id := s.connectionManager.AddConnection(hostname, portInt, tlsBool, sasllogin, saslpassword, irc.NewProfile(nickname))
+	password := r.URL.Query().Get("password")
+	id := s.connectionManager.AddConnection(hostname, portInt, tlsBool, password, sasllogin, saslpassword, irc.NewProfile(nickname))
 	go func() {
 		s.connectionManager.GetConnection(id).Connect()
 	}()

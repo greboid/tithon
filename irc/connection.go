@@ -17,6 +17,7 @@ type Connection struct {
 	hostname          string
 	port              int
 	tls               bool
+	password          string
 	saslLogin         string
 	saslPassword      string
 	preferredNickname string
@@ -29,7 +30,7 @@ type Connection struct {
 	messages          []*Message
 }
 
-func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) *Connection {
+func NewConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile) *Connection {
 	s, _ := uniqueid.Generateid("a", 5, "s")
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
@@ -38,6 +39,7 @@ func NewConnection(hostname string, port int, tls bool, sasllogin string, saslpa
 		hostname:          hostname,
 		port:              port,
 		tls:               tls,
+		password:          password,
 		saslLogin:         sasllogin,
 		saslPassword:      saslpassword,
 		preferredNickname: profile.nickname,

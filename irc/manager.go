@@ -23,8 +23,8 @@ func NewConnectionManager() *ConnectionManager {
 	}
 }
 
-func (cm *ConnectionManager) AddConnection(hostname string, port int, tls bool, sasllogin string, saslpassword string, profile *Profile) string {
-	connection := NewConnection(hostname, port, tls, sasllogin, saslpassword, profile)
+func (cm *ConnectionManager) AddConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile) string {
+	connection := NewConnection(hostname, port, tls, password, sasllogin, saslpassword, profile)
 	cm.connections[connection.id] = connection
 	return connection.id
 }
@@ -74,7 +74,7 @@ func (cm *ConnectionManager) Load() error {
 		return err
 	}
 	for _, server := range conf.Servers {
-		cm.AddConnection(server.Hostname, server.Port, server.TLS, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname))
+		cm.AddConnection(server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname))
 	}
 	return nil
 }
@@ -87,6 +87,7 @@ func (cm *ConnectionManager) Save() {
 			Hostname:     server.hostname,
 			Port:         server.port,
 			TLS:          server.tls,
+			Password:     server.password,
 			SASLLogin:    server.saslLogin,
 			SASLPassword: server.saslPassword,
 			Profile: config.Profile{

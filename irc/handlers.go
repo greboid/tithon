@@ -34,6 +34,7 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback(ircevent.RPL_AWAY, func(message ircmsg.Message) {})
 	h.connection.connection.AddCallback(ircevent.RPL_UNAWAY, func(message ircmsg.Message) {})
 	h.connection.connection.AddCallback(ircevent.RPL_NOWAWAY, func(message ircmsg.Message) {})
+	h.connection.connection.AddCallback("ERROR", h.handleError)
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -154,4 +155,8 @@ func (h *Handler) stripChannelPrefixes(name string) string {
 
 func (h *Handler) handleUserMode(message ircmsg.Message) {
 	h.connection.currentModes = message.Params[1]
+}
+
+func (h *Handler) handleError(message ircmsg.Message) {
+	h.connection.messages = append(h.connection.messages, NewMessage("", strings.Join(message.Params, " "), Event))
 }

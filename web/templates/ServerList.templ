@@ -7,27 +7,27 @@ templ ServerList(servers []*irc.Connection, activeServer *irc.Connection, active
 		<ul>
 			for _, item := range servers {
 				<li>
-				<div>
-					<a
-						if activeServer == item {
-							class="active"
-						}
-						data-on-click={ "@get('/changeWindow/" + item.GetID() + "')" }
-						href="#"
-					>{ item.GetName() }</a>
+					<div>
+						<a
+							if activeServer == item {
+								class="active"
+							}
+							data-on-click={ "@get('/changeWindow/" + item.GetID() + "')" }
+							href="#"
+						>{ item.GetName() }</a>
 					</div>
 					if len(item.GetChannels()) > 0 {
 						<ul>
 							for _, channel := range item.GetChannels() {
 								<li>
-								<div>
-									<a
-										if activeChannel == channel {
-											class="active"
-										}
-										data-on-click={ "@get('/changeWindow/" + item.GetID() + "/" + channel.GetID() + "')" }
-										href="#"
-									>{ channel.GetName() }</a>
+									<div>
+										<a
+											if activeChannel == channel {
+												class="active"
+											}
+											data-on-click={ "@get('/changeWindow/" + item.GetID() + "/" + channel.GetID() + "')" }
+											href="#"
+										>{ channel.GetName() }</a>
 									</div>
 								</li>
 							}

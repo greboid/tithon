@@ -73,7 +73,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
 	activeID := ""
-	if s.activeWindow == "nil" {
+	if s.activeWindow == "" {
 		activeID = s.activeServer
 	} else {
 		activeID = s.activeWindow

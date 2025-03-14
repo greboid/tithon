@@ -37,6 +37,9 @@ func (cm *ConnectionManager) RemoveConnection(id string) {
 func (cm *ConnectionManager) GetConnections() []*Connection {
 	connections := slices.Collect(maps.Values(cm.connections))
 	slices.SortStableFunc(connections, func(a, b *Connection) int {
+		if a.GetName() == b.GetName() {
+			return strings.Compare(a.GetID(), b.GetID())
+		}
 		return strings.Compare(strings.ToLower(a.GetName()), strings.ToLower(b.GetName()))
 	})
 	return connections

@@ -57,6 +57,23 @@ func (m *Message) GetType() MessageType {
 	return m.messageType
 }
 
+func (m *Message) GetTypeDisplay() string {
+	switch m.messageType {
+	case Normal:
+		return "normal"
+	case Notice:
+		return "notice"
+	case Action:
+		return "action"
+	case Event:
+		return "event"
+	case Error:
+		return "error"
+	default:
+		return "unknown"
+	}
+}
+
 func (m *Message) GetMessage() string {
 	return m.message
 }

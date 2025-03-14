@@ -1,6 +1,8 @@
 const typingCallback = (e) => {
   if (e.key === "Tab") {
-    e.preventDefault()
+    if (e.target.id === "#textInput") {
+      e.preventDefault()
+    }
   }
   if (e.key.length !== 1) {
     return

@@ -92,6 +92,7 @@ func (c *Connection) Connect() {
 		}
 		c.callbackHandler.addCallbacks()
 	}
+	c.messages = append(c.messages, NewMessage("", fmt.Sprintf("Connecting to %s", c.connection.Server), Event))
 	//TODO Need to store a connection state
 	if !c.connection.Connected() {
 		c.connection.Connect()

@@ -36,6 +36,9 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback(ircevent.RPL_UNAWAY, func(message ircmsg.Message) {})
 	h.connection.connection.AddCallback(ircevent.RPL_NOWAWAY, func(message ircmsg.Message) {})
 	h.connection.connection.AddCallback("ERROR", h.handleError)
+	h.connection.connection.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
+		h.addEvent("Nickname (" + message.Params[1] + ") already in use")
+	})
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -130,7 +133,7 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
-	h.connection.messages = append(h.connection.messages, NewMessage("", "Server connected", Event))
+	h.connection.messages = append(h.connection.messages, NewMessage("", fmt.Sprintf("Connected to %s", h.connection.connection.Server), Event))
 }
 
 func (h *Handler) handleNameReply(message ircmsg.Message) {
@@ -181,4 +184,8 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 	} else {
 		slog.Warn("Unsupported DN", "notice", message)
 	}
+}
+
+func (h *Handler) addEvent(message string) {
+	h.connection.messages = append(h.connection.messages, NewMessage("", message, Event))
 }

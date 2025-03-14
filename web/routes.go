@@ -58,12 +58,6 @@ func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Debug("Error serving ready", "error", err)
 	}
-	err = sse.ExecuteScript("window.history.pushState({}, '', '/#/')")
-	if err != nil {
-		slog.Debug("Error merging fragments", "error", err)
-		s.lock.Unlock()
-		return
-	}
 	s.lock.Unlock()
 	s.UpdateUI(w, r)
 }
@@ -119,11 +113,6 @@ func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
-	err = sse.ExecuteScript("window.history.pushState({}, '', '/#/settings')")
-	if err != nil {
-		slog.Debug("Error merging fragments", "error", err)
-		return
-	}
 }
 
 func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
@@ -134,11 +123,6 @@ func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
 	err := sse.MergeFragmentTempl(templates.AddServerPage(), func(options *datastar.MergeFragmentOptions) {
 		options.Selector = "#dialog"
 	})
-	if err != nil {
-		slog.Debug("Error merging fragments", "error", err)
-		return
-	}
-	err = sse.ExecuteScript("window.history.pushState({}, '', '/#/addserver')")
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return

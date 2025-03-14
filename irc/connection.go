@@ -132,13 +132,8 @@ func (c *Connection) GetChannelByName(name string) (*Channel, error) {
 }
 
 func (c *Connection) AddChannel(name string) *Channel {
-	s, _ := uniqueid.Generateid("a", 5, "h")
-	channel := &Channel{
-		id:       s,
-		name:     name,
-		messages: make([]*Message, 0),
-	}
-	c.channels[s] = channel
+	channel := NewChannel(c, name)
+	c.channels[channel.id] = channel
 	return channel
 }
 

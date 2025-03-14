@@ -44,7 +44,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
-	err := templates.Base(true, s.connectionManager.GetConnections(), s.activeWindow).Render(r.Context(), w)
+	err := templates.Base().Render(r.Context(), w)
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)
 		return
@@ -54,7 +54,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
-	err := sse.MergeFragmentTempl(templates.Index(s.connectionManager.GetConnections(), s.activeWindow))
+	err := sse.MergeFragmentTempl(templates.Index(s.connectionManager.GetConnections(), s.activeServer, s.activeChannel))
 	if err != nil {
 		slog.Debug("Error serving ready", "error", err)
 	}
@@ -72,34 +72,21 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
-	activeID := ""
-	if s.activeWindow == "" {
-		activeID = s.activeServer
-	} else {
-		activeID = s.activeWindow
-	}
-	err := sse.MergeFragmentTempl(templates.ServerList(s.connectionManager.GetConnections(), activeID))
+	err := sse.MergeFragmentTempl(templates.ServerList(s.connectionManager.GetConnections(), s.activeServer, s.activeChannel))
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
-	server := s.connectionManager.GetConnection(s.activeServer)
-	var channel *irc.Channel
-	if server == nil {
-		channel = nil
-	} else {
-		channel = server.GetChannel(s.activeWindow)
-	}
-	err = sse.MergeFragmentTempl(templates.GetWindow(server, channel))
+	err = sse.MergeFragmentTempl(templates.GetWindow(s.activeServer, s.activeChannel))
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
-	if s.connectionManager.GetConnection(s.activeServer) == nil {
+	if s.activeServer == nil {
 		return
 	}
 	err = sse.MergeSignals([]byte(fmt.Sprintf("{filehost: '%s'}",
-		s.connectionManager.GetConnection(s.activeServer).GetFileHost())))
+		s.activeServer.GetFileHost())))
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)
 		return
@@ -176,10 +163,7 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	sasllogin := r.URL.Query().Get("sasllogin")
 	saslpassword := r.URL.Query().Get("saslpassword")
 	password := r.URL.Query().Get("password")
-	id := s.connectionManager.AddConnection(hostname, portInt, tlsBool, password, sasllogin, saslpassword, irc.NewProfile(nickname))
-	go func() {
-		s.connectionManager.GetConnection(id).Connect()
-	}()
+	s.connectionManager.AddConnection(hostname, portInt, tlsBool, password, sasllogin, saslpassword, irc.NewProfile(nickname), true)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -193,16 +177,32 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
-	s.activeServer = r.PathValue("server")
-	s.activeWindow = r.PathValue("channel")
-	slog.Debug("Changing Window", "server", s.activeServer, "channel", s.activeWindow)
+	serverID := r.PathValue("server")
+	channelID := r.PathValue("channel")
+	connection := s.connectionManager.GetConnection(serverID)
+	if connection == nil {
+		slog.Debug("Invalid change channel call, unknown server", "server", serverID)
+		return
+	}
+	channel := connection.GetChannel(channelID)
+	if channel == nil {
+		slog.Debug("Invalid change channel call, unknown channel", "server", serverID, "channel", channelID)
+		return
+	}
+	s.setActiveChannel(channel)
+	slog.Debug("Changing Window", "server", s.activeServer.GetID(), "channel", s.activeChannel.GetID())
 	s.UpdateUI(w, r)
 }
 
 func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
-	s.activeServer = r.PathValue("server")
-	s.activeWindow = ""
-	slog.Debug("Changing Server", "server", s.activeServer)
+	serverID := r.PathValue("server")
+	connection := s.connectionManager.GetConnection(serverID)
+	if connection == nil {
+		slog.Debug("Invalid change server call, unknown server", "server", serverID)
+		return
+	}
+	s.setActiveServer(connection)
+	slog.Debug("Changing Server", "server", s.activeServer.GetID())
 	s.UpdateUI(w, r)
 }
 
@@ -212,12 +212,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	input = emoji.Parse(input)
-	activeServer := s.connectionManager.GetConnection(s.activeServer)
-	var activeWindow *irc.Channel
-	if activeServer != nil {
-		activeWindow = activeServer.GetChannel(s.activeWindow)
-	}
-	s.commands.Execute(s.connectionManager, activeServer, activeWindow, input)
+	s.commands.Execute(s.connectionManager, s.activeServer, s.activeChannel, input)
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
 	err := sse.MergeFragmentTempl(templates.EmptyInput())
@@ -231,7 +226,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
-	if s.connectionManager.GetConnection(s.activeServer) == nil {
+	if s.activeServer == nil {
 		return
 	}
 	type uploadBody struct {
@@ -260,7 +255,7 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dataReader := bytes.NewReader(data)
-	username, password := s.connectionManager.GetConnection(s.activeServer).GetCredentials()
+	username, password := s.activeServer.GetCredentials()
 	if strings.Contains(username, "/") {
 		username = strings.Split(username, "/")[0]
 	}
@@ -305,10 +300,10 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
-	if s.connectionManager.GetConnection(s.activeServer) == nil {
+	if s.activeServer == nil {
 		return
 	}
-	err := s.connectionManager.GetConnection(s.activeServer).JoinChannel(r.URL.Query().Get("channel"), r.URL.Query().Get("key"))
+	err := s.activeServer.JoinChannel(r.URL.Query().Get("channel"), r.URL.Query().Get("key"))
 	if err != nil {
 		slog.Debug("Error joining channel", "error", err)
 		return
@@ -324,10 +319,10 @@ func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
-	if s.connectionManager.GetConnection(s.activeServer) == nil {
+	if s.activeServer == nil {
 		return
 	}
-	err := s.connectionManager.GetConnection(s.activeServer).PartChannel(r.URL.Query().Get("channel"))
+	err := s.activeServer.PartChannel(r.URL.Query().Get("channel"))
 	if err != nil {
 		slog.Debug("Error parting channel", "error", err)
 		return

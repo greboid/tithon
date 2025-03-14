@@ -20,13 +20,14 @@ var (
 )
 
 type Server struct {
-	lock              sync.Mutex
-	httpServer        *http.Server
-	connectionManager *irc.ConnectionManager
-	commands          *irc.CommandManager
-	activeServer      string
-	activeWindow      string
-	fixedPort         int
+	lock                 sync.Mutex
+	httpServer           *http.Server
+	connectionManager    *irc.ConnectionManager
+	commands             *irc.CommandManager
+	activeServer         *irc.Connection
+	activeChannel        *irc.Channel
+	activePrivateMessage *irc.PrivateMessage
+	fixedPort            int
 }
 
 func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int) *Server {
@@ -87,4 +88,14 @@ func (s *Server) getPort() (net.IP, int, error) {
 	defer func() { _ = listen.Close() }()
 	lp := listen.Addr().(*net.TCPAddr)
 	return lp.IP, lp.Port, nil
+}
+
+func (s *Server) setActiveChannel(channel *irc.Channel) {
+	s.activeChannel = channel
+	s.activeServer = channel.GetServer()
+}
+
+func (s *Server) setActiveServer(server *irc.Connection) {
+	s.activeChannel = nil
+	s.activeServer = server
 }

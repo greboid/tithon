@@ -1,11 +1,25 @@
 package irc
 
+import uniqueid "github.com/albinj12/unique-id"
+
 type Channel struct {
-	id       string
-	name     string
-	messages []*Message
-	topic    *Topic
-	users    []*User
+	id        string
+	name      string
+	messages  []*Message
+	topic     *Topic
+	users     []*User
+	conection *Connection
+}
+
+func NewChannel(connection *Connection, name string) *Channel {
+	s, _ := uniqueid.Generateid("a", 5, "h")
+	channel := &Channel{
+		id:        s,
+		conection: connection,
+		name:      name,
+		messages:  make([]*Message, 0),
+	}
+	return channel
 }
 
 func (c *Channel) GetID() string {
@@ -41,4 +55,8 @@ func (c *Channel) GetUsers() []string {
 		users = append(users, c.users[i].nickname)
 	}
 	return users
+}
+
+func (c *Channel) GetServer() *Connection {
+	return c.conection
 }

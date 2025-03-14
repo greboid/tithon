@@ -2,10 +2,10 @@ package templates
 
 import "github.com/greboid/ircclient/irc"
 
-templ Index(servers []*irc.Connection, activeID string) {
+templ Index(servers []*irc.Connection, activeServer *irc.Connection, activeChannel *irc.Channel) {
 	<main id="main" data-on-load="@get('/update', {openWhenHidden: true})">
-		@ServerList(servers, activeID)
-		@GetWindow(nil, nil)
+		@ServerList(servers, activeServer, activeChannel)
+		@GetWindow(activeServer, activeChannel)
 		@EmptyInput()
 		<div id="settings">
 			<span data-on-click="@get('/showAddServer')">

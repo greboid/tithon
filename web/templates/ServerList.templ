@@ -2,14 +2,14 @@ package templates
 
 import "github.com/greboid/ircclient/irc"
 
-templ ServerList(servers []*irc.Connection, activeID string) {
+templ ServerList(servers []*irc.Connection, activeServer *irc.Connection, activeChannel *irc.Channel) {
 	<div id="servers">
 		<ul>
 			for _, item := range servers {
 				<li>
 				<div>
 					<a
-						if activeID == item.GetID() {
+						if activeServer == item {
 							class="active"
 						}
 						data-on-click={ "@get('/changeWindow/" + item.GetID() + "')" }
@@ -22,7 +22,7 @@ templ ServerList(servers []*irc.Connection, activeID string) {
 								<li>
 								<div>
 									<a
-										if activeID == channel.GetID() {
+										if activeChannel == channel {
 											class="active"
 										}
 										data-on-click={ "@get('/changeWindow/" + item.GetID() + "/" + channel.GetID() + "')" }

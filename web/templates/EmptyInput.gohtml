@@ -8,6 +8,7 @@
                 data-signals-input__ifmissing=""
                 data-bind-input=""
                 data-on-signals-change-location="@clipboard($location)"
+                autocomplete="off"
         />
     </form>
     <label data-attr-hidden="$filehost.length == 0" data-signals-filehost__ifmissing="" data-on-signals-change-files__debounce.500ms="$files.length > 0 && @post('/upload')">

@@ -86,7 +86,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /part", s.handlePart)
 }
 
-func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	err := s.templates.ExecuteTemplate(w, "Base.gohtml", nil)
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)

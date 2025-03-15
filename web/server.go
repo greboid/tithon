@@ -95,11 +95,31 @@ func (s *Server) getPort() (net.IP, int, error) {
 }
 
 func (s *Server) setActiveChannel(channel *irc.Channel) {
+	if s.activeChannel != nil {
+		s.activeChannel.SetActive(false)
+	}
+	if s.activeServer != nil {
+		s.activeServer.SetActive(false)
+	}
+	if channel != nil {
+		channel.SetActive(true)
+		channel.SetUnread(false)
+	}
 	s.activeChannel = channel
 	s.activeServer = channel.GetServer()
 }
 
 func (s *Server) setActiveServer(server *irc.Connection) {
+	if s.activeChannel != nil {
+		s.activeChannel.SetActive(false)
+	}
+	if s.activeServer != nil {
+		s.activeServer.SetActive(false)
+	}
+	if server != nil {
+		server.SetActive(true)
+		server.SetUnread(false)
+	}
 	s.activeChannel = nil
 	s.activeServer = server
 }

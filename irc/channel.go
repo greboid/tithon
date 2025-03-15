@@ -10,6 +10,7 @@ type Channel struct {
 	users     []*User
 	conection *Connection
 	unread    bool
+	active    bool
 }
 
 func NewChannel(connection *Connection, name string) *Channel {
@@ -32,6 +33,9 @@ func (c *Channel) GetName() string {
 }
 
 func (c *Channel) AddMessage(message *Message) {
+	if !c.active {
+		c.unread = true
+	}
 	c.messages = append(c.messages, message)
 }
 
@@ -64,4 +68,20 @@ func (c *Channel) GetUsers() []string {
 
 func (c *Channel) GetServer() *Connection {
 	return c.conection
+}
+
+func (c *Channel) SetActive(b bool) {
+	c.active = b
+}
+
+func (c *Channel) IsActive() bool {
+	return c.active
+}
+
+func (c *Channel) SetUnread(b bool) {
+	c.unread = b
+}
+
+func (c *Channel) IsUnread() bool {
+	return c.unread
 }

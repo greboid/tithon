@@ -4,10 +4,12 @@
         {{ range $connection := .Connections }}
             <li>
                 <div>
-                    <a
-                            {{ if and (not $.ActiveChannel) (eq $.ActiveServer $connection )}}class="active"{{ end }}
-                            data-on-click="@get('/changeWindow/{{ $connection.GetID }}')"
-                            href="#"
+                    <a class="
+                            {{ if $connection.IsActive }}active{{ end }}
+                            {{ if $connection.IsUnread }}unread{{ end }}
+                            "
+                       data-on-click="@get('/changeWindow/{{ $connection.GetID }}')"
+                       href="#"
                     >{{ $connection.GetName }}</a>
                 </div>
                 {{ if gt (len $connection.GetChannels) 0 }}
@@ -15,10 +17,12 @@
                         {{ range $channel := $connection.GetChannels }}
                             <li>
                                 <div>
-                                    <a
-                                            {{ if eq $.ActiveChannel $channel }}class="active"{{ end }}
-                                            data-on-click="@get('/changeWindow/{{$connection.GetID}}/{{$channel.GetID}}')"
-                                            href="#"
+                                    <a class="
+                                            {{ if $channel.IsActive }}active{{ end }}
+                                            {{ if $channel.IsUnread }}unread{{ end }}
+                                            "
+                                       data-on-click="@get('/changeWindow/{{$connection.GetID}}/{{$channel.GetID}}')"
+                                       href="#"
                                     >{{ $channel.GetName }}</a>
                                 </div>
                             </li>

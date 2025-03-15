@@ -29,6 +29,7 @@ type Connection struct {
 	currentModes      string
 	messages          []*Message
 	unread            bool
+	active            bool
 }
 
 func NewConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile) *Connection {
@@ -191,6 +192,9 @@ func (c *Connection) GetModePrefixes() []string {
 }
 
 func (c *Connection) AddMessage(message *Message) {
+	if !c.active {
+		c.unread = true
+	}
 	c.messages = append(c.messages, message)
 }
 
@@ -200,4 +204,20 @@ func (c *Connection) GetMessages() []*Message {
 		messages = append(messages, message)
 	}
 	return messages
+}
+
+func (c *Connection) SetActive(b bool) {
+	c.active = b
+}
+
+func (c *Connection) IsActive() bool {
+	return c.active
+}
+
+func (c *Connection) SetUnread(b bool) {
+	c.unread = b
+}
+
+func (c *Connection) IsUnread() bool {
+	return c.unread
 }

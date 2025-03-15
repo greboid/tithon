@@ -1,0 +1,31 @@
+{{- /*gotype: github.com/greboid/ircclient/web/templates.ServerList */ -}}
+<div id="servers">
+    <ul>
+        {{ range $connection := .Connections }}
+            <li>
+                <div>
+                    <a
+                            {{ if and (not $.ActiveChannel) (eq $.ActiveServer $connection )}}class="active"{{ end }}
+                            data-on-click="@get('/changeWindow/{{ $connection.GetID }}')"
+                            href="#"
+                    >{{ $connection.GetName }}</a>
+                </div>
+                {{ if gt (len $connection.GetChannels) 0 }}
+                    <ul>
+                        {{ range $channel := $connection.GetChannels }}
+                            <li>
+                                <div>
+                                    <a
+                                            {{ if eq $.ActiveChannel $channel }}class="active"{{ end }}
+                                            data-on-click="@get('/changeWindow/{{$connection.GetID}}/{{$channel.GetID}}')"
+                                            href="#"
+                                    >{{ $channel.GetName }}</a>
+                                </div>
+                            </li>
+                        {{ end }}
+                    </ul>
+                {{ end }}
+            </li>
+        {{ end }}
+    </ul>
+</div>

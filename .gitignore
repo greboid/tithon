@@ -1,4 +1,2 @@
 test
-web/templates/*.go
-web/templates/*.txt
 config.yaml

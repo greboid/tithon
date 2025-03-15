@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/greboid/ircclient/irc"
+	"html/template"
 	"log/slog"
 	"net"
 	"net/http"
@@ -15,8 +16,10 @@ import (
 )
 
 var (
-	//go:embed static/*
+	//go:embed static
 	staticFS embed.FS
+	//go:embed templates
+	templateFS embed.FS
 )
 
 type Server struct {
@@ -28,6 +31,7 @@ type Server struct {
 	activeChannel        *irc.Channel
 	activePrivateMessage *irc.PrivateMessage
 	fixedPort            int
+	templates            *template.Template
 }
 
 func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int) *Server {

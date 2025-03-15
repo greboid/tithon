@@ -82,6 +82,19 @@ func (m *Message) GetNickname() string {
 	return m.nickname
 }
 
+func (m *Message) GetNicknameForMessage() string {
+	switch m.GetType() {
+	case Action:
+		return fmt.Sprintf("* %s", m.GetNickname())
+	case Normal:
+		return fmt.Sprintf("<%s>", m.GetNickname())
+	case Notice:
+		return fmt.Sprintf("-%s-", m.GetNickname())
+	default:
+		return ""
+	}
+}
+
 func (m *Message) GetTimestamp() string {
 	return m.timestamp.Format(time.TimeOnly)
 }

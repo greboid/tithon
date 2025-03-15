@@ -1,0 +1,16 @@
+<dialog
+        id="dialog"
+        data-on-load="document.getElementById('dialog').showModal()"
+        data-on-click="evt.target == document.getElementById('dialog') && document.getElementById('dialog').close()"
+        data-on-keydown__window="evt.key === 'Escape' && document.getElementById('dialog').close()"
+>
+    <div>
+        <form method="dialog">
+            <div>
+                <h1>Settings</h1>
+                <button data-on-click="@get('/addServer', {contentType: 'form'})">Save</button>
+            </div>
+        </form>
+        <button data-on-click="document.getElementById('dialog').close()">Close</button>
+    </div>
+</dialog>

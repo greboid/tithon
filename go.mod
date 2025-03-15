@@ -3,7 +3,6 @@ module github.com/greboid/ircclient
 go 1.23.3
 
 require (
-	github.com/a-h/templ v0.3.833
 	github.com/albinj12/unique-id v1.1.0
 	github.com/csmith/envflag v1.0.0
 	github.com/enescakir/emoji v1.0.0
@@ -15,6 +14,7 @@ require (
 )
 
 require (
+	github.com/a-h/templ v0.3.833 // indirect
 	github.com/delaneyj/gostar v0.8.0 // indirect
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/igrmk/treemap/v2 v2.0.1 // indirect

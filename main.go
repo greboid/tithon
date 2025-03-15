@@ -13,8 +13,6 @@ import (
 	"syscall"
 )
 
-//go:generate go run github.com/a-h/templ/cmd/templ@latest generate
-
 var (
 	debug       = flag.Bool("debug", false, "Show debugging")
 	OpenBrowser = flag.Bool("openbrowser", false, "Should we open the browser")

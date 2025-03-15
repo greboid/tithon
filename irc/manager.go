@@ -91,7 +91,7 @@ func (cm *ConnectionManager) Load() error {
 		return err
 	}
 	for _, server := range conf.Servers {
-		cm.AddConnection(server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), true)
+		cm.AddConnection(server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
 	}
 	return nil
 }

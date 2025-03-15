@@ -79,8 +79,11 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	if s.activeServer == nil {
 		return
 	}
-	err = sse.MergeSignals([]byte(fmt.Sprintf("{filehost: '%s'}",
-		s.activeServer.GetFileHost())))
+	type FileHost struct {
+		Url string `json:"filehost"`
+	}
+	data, _ := json.Marshal(FileHost{Url: s.activeServer.GetFileHost()})
+	err = sse.MergeSignals(data)
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)
 		return
@@ -226,6 +229,7 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error uploading file", "error", err)
 		return
 	}
+	fmt.Println(uploaded.FileHost)
 	if len(uploaded.Files) != 1 && len(uploaded.Mimes) != 1 && len(uploaded.Names) != 1 {
 		slog.Debug("Error wrong number of files uploaded")
 		return

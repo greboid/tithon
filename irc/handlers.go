@@ -39,6 +39,7 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
 		h.addEvent("Nickname (" + message.Params[1] + ") already in use")
 	})
+	h.connection.connection.AddCallback("NICK", h.handleNick)
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -188,4 +189,12 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 
 func (h *Handler) addEvent(message string) {
 	h.connection.AddMessage(NewMessage("", message, Event))
+}
+
+func (h *Handler) handleNick(message ircmsg.Message) {
+	if message.Nick() == h.connection.CurrentNick() {
+		newNick := message.Params[0]
+		h.connection.AddMessage(NewMessage("", "Nickname changed: "+newNick, Event))
+	}
+	// TODO: Change other nicknames
 }

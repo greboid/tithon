@@ -104,9 +104,9 @@ func (s *Server) setActiveChannel(channel *irc.Channel) {
 	if channel != nil {
 		channel.SetActive(true)
 		channel.SetUnread(false)
+		s.activeServer = channel.GetServer()
 	}
 	s.activeChannel = channel
-	s.activeServer = channel.GetServer()
 }
 
 func (s *Server) setActiveServer(server *irc.Connection) {

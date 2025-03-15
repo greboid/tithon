@@ -142,6 +142,10 @@ h1 {
   & p {
     display: contents;
 
+    &.highlight > .message{
+      color: light-dark(var(--light-accent), var(--dark-accent));
+    }
+
     & span.timestamp {
       padding-right: 1rem;
     }

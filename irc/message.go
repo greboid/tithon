@@ -20,6 +20,8 @@ const (
 	Action
 	Event
 	Error
+	Highlight
+	HighlightAction
 )
 
 type Message struct {
@@ -49,6 +51,13 @@ func NewMessageWithTime(messageTime string, nickname string, message string, mes
 		message = strings.TrimSuffix(message, "\001")
 		ircmsg.messageType = Action
 	}
+	if ircmsg.isHighlight(message) {
+		if ircmsg.messageType == Action {
+			ircmsg.messageType = HighlightAction
+		} else if ircmsg.messageType == Normal {
+			ircmsg.messageType = Highlight
+		}
+	}
 	ircmsg.message = ircmsg.parseFormatting(message)
 	return ircmsg
 }
@@ -69,6 +78,10 @@ func (m *Message) GetTypeDisplay() string {
 		return "event"
 	case Error:
 		return "error"
+	case Highlight:
+		return "highlight"
+	case HighlightAction:
+		return "highlight action"
 	default:
 		return "unknown"
 	}
@@ -84,9 +97,9 @@ func (m *Message) GetNickname() string {
 
 func (m *Message) GetNicknameForMessage() string {
 	switch m.GetType() {
-	case Action:
+	case Action, HighlightAction:
 		return fmt.Sprintf("* %s", m.GetNickname())
-	case Normal:
+	case Normal, Highlight:
 		return fmt.Sprintf("<%s>", m.GetNickname())
 	case Notice:
 		return fmt.Sprintf("-%s-", m.GetNickname())
@@ -97,6 +110,10 @@ func (m *Message) GetNicknameForMessage() string {
 
 func (m *Message) GetTimestamp() string {
 	return m.timestamp.Format(time.TimeOnly)
+}
+
+func (m *Message) isHighlight(message string) bool {
+	return false
 }
 
 func (m *Message) parseFormatting(message string) string {

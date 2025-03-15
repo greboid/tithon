@@ -1,7 +1,7 @@
 let atBottom = true
 window.addEventListener('scroll', function(event) {
   if (event.target.id === 'messages') {
-    atBottom = event.target.scrollTop === event.target.scrollTopMax
+    atBottom = event.target.scrollTop === (event.target.scrollHeight-event.target.clientHeight)
   }
 }, true)
 
@@ -11,7 +11,7 @@ const textCallback = mutations => {
     if (mutation.addedNodes.length > 0) {
       for (const node of mutation.addedNodes) {
         if (atBottom) {
-          setTimeout(() => document.getElementById('messages').scrollTop = document.getElementById('messages').scrollTopMax, 10)
+          setTimeout(() => document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight-document.getElementById('messages').clientHeight, 10)
         }
       }
     }

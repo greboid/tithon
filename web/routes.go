@@ -87,7 +87,11 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
-	err := s.templates.ExecuteTemplate(w, "Base.gohtml", nil)
+	err := s.templates.ExecuteTemplate(w, "Index.gohtml", templates.Index{
+		Connections:   s.connectionManager.GetConnections(),
+		ActiveServer:  s.activeServer,
+		ActiveChannel: s.activeChannel,
+	})
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)
 		return

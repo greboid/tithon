@@ -73,7 +73,6 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	s.templates = allParsedTemplates
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(static))))
 	mux.HandleFunc("GET /{$}", s.handleIndex)
-	mux.HandleFunc("GET /ready", s.handleReady)
 	mux.HandleFunc("GET /update", s.handleUpdate)
 	mux.HandleFunc("GET /showSettings", s.handleShowSettings)
 	mux.HandleFunc("GET /showAddServer", s.handleShowAddServer)
@@ -87,44 +86,12 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
-	err := s.templates.ExecuteTemplate(w, "Index.gohtml", templates.Index{
-		Connections:   s.connectionManager.GetConnections(),
-		ActiveServer:  s.activeServer,
-		ActiveChannel: s.activeChannel,
-	})
-	if err != nil {
-		slog.Debug("Error serving index", "error", err)
-		return
-	}
-}
-
-func (s *Server) handleReady(w http.ResponseWriter, r *http.Request) {
-	s.lock.Lock()
-	sse := datastar.NewSSE(w, r)
-	var data bytes.Buffer
-	err := s.templates.ExecuteTemplate(&data, "Index.gohtml", templates.Index{
-		Connections:   s.connectionManager.GetConnections(),
-		ActiveServer:  s.activeServer,
-		ActiveChannel: s.activeChannel,
-	})
-	if err != nil {
-		slog.Debug("Error generating template", "error", err)
-	}
-	err = sse.MergeFragments(data.String())
-	if err != nil {
-		slog.Debug("Error serving ready", "error", err)
-	}
-	s.lock.Unlock()
-	s.UpdateUI(w, r)
-}
-
-func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	sse := datastar.NewSSE(w, r)
-	var data bytes.Buffer
-	var err error
-	info := templates.Window{}
+	info := templates.Index{}
+	info.Connections = s.connectionManager.GetConnections()
+	info.ActiveServer = s.activeServer
+	info.ActiveChannel = s.activeChannel
 	if s.activeChannel != nil {
 		info.WindowInfo = s.activeChannel.GetTopic().GetTopic()
 		info.Messages = s.activeChannel.GetMessages()
@@ -135,19 +102,43 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	} else {
 		info.WindowInfo = ""
 	}
-	err = s.templates.ExecuteTemplate(&data, "Serverlist.gohtml", templates.ServerList{
+	err := s.templates.ExecuteTemplate(w, "Index.gohtml", info)
+	if err != nil {
+		slog.Debug("Error serving index", "error", err)
+		return
+	}
+}
+
+func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	sse := datastar.NewSSE(w, r)
+	var data bytes.Buffer
+	info := templates.Index{}
+	info.Connections = s.connectionManager.GetConnections()
+	info.ActiveServer = s.activeServer
+	info.ActiveChannel = s.activeChannel
+	s.outputTemplate(&data, "Serverlist.gohtml", templates.ServerList{
 		Connections:   s.connectionManager.GetConnections(),
 		ActiveServer:  s.activeServer,
 		ActiveChannel: s.activeChannel,
 	})
-	if err != nil {
-		slog.Debug("Error generating template", "error", err)
+	if s.activeChannel != nil {
+		s.outputTemplate(&data, "WindowInfo.gohtml", s.activeChannel.GetTopic().GetTopic())
+		s.outputTemplate(&data, "Messages.gohtml", s.activeChannel.GetMessages())
+		s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{
+			Users: s.activeChannel.GetUsers(),
+		})
+	} else if s.activeServer != nil {
+		s.outputTemplate(&data, "WindowInfo.gohtml", s.activeServer.GetName())
+		s.outputTemplate(&data, "Messages.gohtml", s.activeServer.GetMessages())
+		s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{})
+	} else {
+		s.outputTemplate(&data, "WindowInfo.gohtml", "")
+		s.outputTemplate(&data, "Messages.gohtml", nil)
+		s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{})
 	}
-	err = s.templates.ExecuteTemplate(&data, "Window.gohtml", info)
-	if err != nil {
-		slog.Debug("Error generating template", "error", err)
-	}
-	err = sse.MergeFragments(data.String())
+	err := sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
@@ -162,6 +153,14 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	err = sse.MergeSignals(jsonData)
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)
+		return
+	}
+}
+
+func (s *Server) outputTemplate(wr io.Writer, name string, data any) {
+	err := s.templates.ExecuteTemplate(wr, name, data)
+	if err != nil {
+		slog.Debug("Error generating name", "error", err)
 		return
 	}
 }
@@ -299,6 +298,12 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error generating template", "error", err)
 	}
 	err = sse.MergeFragments(data.String())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		s.lock.Unlock()
+		return
+	}
+	err = sse.MergeSignals([]byte("{input: ''}"))
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		s.lock.Unlock()

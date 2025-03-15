@@ -6,4 +6,7 @@ type Index struct {
 	Connections   []*irc.Connection
 	ActiveServer  *irc.Connection
 	ActiveChannel *irc.Channel
+	WindowInfo    string
+	Messages      []*irc.Message
+	Users         []string
 }

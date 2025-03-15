@@ -1,0 +1,9 @@
+<div id="messages">
+    {{ range . }}
+        <p class={{.GetTypeDisplay}}>
+            <span class="timestamp">[{{ .GetTimestamp }}]</span>
+            <span class="nickname">{{ .GetNicknameForMessage }}</span>
+            <span class="message">{{ .GetMessage | unsafe }}</span>
+        </p>
+    {{end}}
+</div>

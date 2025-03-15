@@ -120,57 +120,28 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
 	var err error
+	info := templates.Window{}
 	if s.activeChannel != nil {
-		err = s.templates.ExecuteTemplate(&data, "Serverlist.gohtml", templates.ServerList{
-			Connections:   s.connectionManager.GetConnections(),
-			ActiveServer:  s.activeServer,
-			ActiveChannel: s.activeChannel,
-		})
-		if err != nil {
-			slog.Debug("Error generating template", "error", err)
-		}
-		err = s.templates.ExecuteTemplate(&data, "Window.gohtml", templates.Window{
-			WindowInfo: s.activeChannel.GetTopic().GetTopic(),
-			Messages:   s.activeChannel.GetMessages(),
-			Users:      s.activeChannel.GetUsers(),
-		})
-		if err != nil {
-			slog.Debug("Error generating template", "error", err)
-		}
+		info.WindowInfo = s.activeChannel.GetTopic().GetTopic()
+		info.Messages = s.activeChannel.GetMessages()
+		info.Users = s.activeChannel.GetUsers()
 	} else if s.activeServer != nil {
-		err = s.templates.ExecuteTemplate(&data, "Serverlist.gohtml", templates.ServerList{
-			Connections:   s.connectionManager.GetConnections(),
-			ActiveServer:  s.activeServer,
-			ActiveChannel: s.activeChannel,
-		})
-		if err != nil {
-			slog.Debug("Error generating template", "error", err)
-		}
-		err = s.templates.ExecuteTemplate(&data, "Window.gohtml", templates.Window{
-			WindowInfo: s.activeServer.GetName(),
-			Messages:   s.activeServer.GetMessages(),
-			Users:      nil,
-		})
-		if err != nil {
-			slog.Debug("Error generating template", "error", err)
-		}
+		info.WindowInfo = s.activeServer.GetName()
+		info.Messages = s.activeServer.GetMessages()
 	} else {
-		err = s.templates.ExecuteTemplate(&data, "Serverlist.gohtml", templates.ServerList{
-			Connections:   s.connectionManager.GetConnections(),
-			ActiveServer:  s.activeServer,
-			ActiveChannel: s.activeChannel,
-		})
-		if err != nil {
-			slog.Debug("Error generating template", "error", err)
-		}
-		err = s.templates.ExecuteTemplate(&data, "Window.gohtml", templates.Window{
-			WindowInfo: "",
-			Messages:   nil,
-			Users:      nil,
-		})
-		if err != nil {
-			slog.Debug("Error generating template", "error", err)
-		}
+		info.WindowInfo = ""
+	}
+	err = s.templates.ExecuteTemplate(&data, "Serverlist.gohtml", templates.ServerList{
+		Connections:   s.connectionManager.GetConnections(),
+		ActiveServer:  s.activeServer,
+		ActiveChannel: s.activeChannel,
+	})
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = s.templates.ExecuteTemplate(&data, "Window.gohtml", info)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
 	}
 	err = sse.MergeFragments(data.String())
 	if err != nil {

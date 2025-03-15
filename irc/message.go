@@ -113,7 +113,7 @@ func (m *Message) GetTimestamp() string {
 }
 
 func (m *Message) isHighlight(message string) bool {
-	return false
+	return strings.Contains(strings.ToLower(message), "greboid")
 }
 
 func (m *Message) parseFormatting(message string) string {

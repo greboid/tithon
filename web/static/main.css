@@ -1,14 +1,16 @@
 :root {
   color-scheme: light dark;
-  --light-bg: #ffffff;
+  --light-bg: #F6F4F4;
   --light-color: #000000;
-  --light-highlight: #f0f0f0;
-  --light-accent: #a36934;
+  --light-highlight: #EADEDA;
+  --light-accent: #5D251D;
+  --light-accent2: #C5595D;
 
   --dark-bg: #2b2a33;
   --dark-color: #ffffff;
   --dark-highlight: #3f3e47;
   --dark-accent: #a36934;
+  --dark-accent2: #A5B68D;
 }
 
 html {
@@ -143,7 +145,7 @@ h1 {
     display: contents;
 
     &.highlight > .message{
-      color: light-dark(var(--light-accent), var(--dark-accent));
+      color: light-dark(var(--light-accent2), var(--dark-accent2));
     }
 
     & span.timestamp {

@@ -9,6 +9,7 @@ type Channel struct {
 	topic     *Topic
 	users     []*User
 	conection *Connection
+	unread    bool
 }
 
 func NewChannel(connection *Connection, name string) *Channel {
@@ -28,6 +29,10 @@ func (c *Channel) GetID() string {
 
 func (c *Channel) GetName() string {
 	return c.name
+}
+
+func (c *Channel) AddMessage(message *Message) {
+	c.messages = append(c.messages, message)
 }
 
 func (c *Channel) GetMessages() []*Message {

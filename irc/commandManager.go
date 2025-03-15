@@ -39,9 +39,9 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connec
 		}
 	}
 	if channel != nil {
-		channel.messages = append(channel.messages, NewMessage("", "Unknown command: "+input, Error))
+		channel.AddMessage(NewMessage("", "Unknown command: "+input, Error))
 	} else if server != nil {
-		server.messages = append(server.messages, NewMessage("", "Unknown command: "+input, Error))
+		server.AddMessage(NewMessage("", "Unknown command: "+input, Error))
 	} else {
 		slog.Error("Unknown command", "input", input)
 	}

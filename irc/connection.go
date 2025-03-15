@@ -28,6 +28,7 @@ type Connection struct {
 	supportsFileHost  bool
 	currentModes      string
 	messages          []*Message
+	unread            bool
 }
 
 func NewConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile) *Connection {
@@ -64,6 +65,7 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 			Debug: true,
 		},
 		channels: map[string]*Channel{},
+		messages: make([]*Message, 0),
 	}
 }
 
@@ -92,7 +94,7 @@ func (c *Connection) Connect() {
 		}
 		c.callbackHandler.addCallbacks()
 	}
-	c.messages = append(c.messages, NewMessage("", fmt.Sprintf("Connecting to %s", c.connection.Server), Event))
+	c.AddMessage(NewMessage("", fmt.Sprintf("Connecting to %s", c.connection.Server), Event))
 	//TODO Need to store a connection state
 	if !c.connection.Connected() {
 		c.connection.Connect()
@@ -153,7 +155,7 @@ func (c *Connection) SendMessage(window string, message string) {
 		return
 	}
 	if !c.HasCapability("echo-message") {
-		channel.messages = append(channel.messages, NewMessage(c.connection.CurrentNick(), message, Normal))
+		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message, Normal))
 	}
 	err := c.connection.Send("PRIVMSG", channel.name, message)
 	if err != nil {
@@ -186,6 +188,10 @@ func (c *Connection) GetModePrefixes() []string {
 		splits[1] = "@"
 	}
 	return splits
+}
+
+func (c *Connection) AddMessage(message *Message) {
+	c.messages = append(c.messages, message)
 }
 
 func (c *Connection) GetMessages() []*Message {

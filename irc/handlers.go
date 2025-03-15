@@ -90,7 +90,7 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 			slog.Warn("Message for unknown channel", "message", message)
 			return
 		}
-		channel.messages = append(channel.messages, mess)
+		channel.AddMessage(mess)
 	} else {
 		slog.Warn("Unsupported DM", "message", message)
 	}
@@ -126,14 +126,14 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 	slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.messages = append(channel.messages, NewMessage(message.Nick(), "Parted the channel", Event))
+	channel.AddMessage(NewMessage(message.Nick(), "Parted the channel", Event))
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
-	h.connection.messages = append(h.connection.messages, NewMessage("", fmt.Sprintf("Connected to %s", h.connection.connection.Server), Event))
+	h.connection.AddMessage(NewMessage("", fmt.Sprintf("Connected to %s", h.connection.connection.Server), Event))
 }
 
 func (h *Handler) handleNameReply(message ircmsg.Message) {
@@ -162,7 +162,7 @@ func (h *Handler) handleUserMode(message ircmsg.Message) {
 }
 
 func (h *Handler) handleError(message ircmsg.Message) {
-	h.connection.messages = append(h.connection.messages, NewMessage("", strings.Join(message.Params, " "), Event))
+	h.connection.AddMessage(NewMessage("", strings.Join(message.Params, " "), Event))
 }
 
 func (h *Handler) handleNotice(message ircmsg.Message) {
@@ -173,19 +173,19 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "), Notice)
 	}
 	if !strings.Contains(message.Source, "@") {
-		h.connection.messages = append(h.connection.messages, mess)
+		h.connection.AddMessage(mess)
 	} else if h.isChannel(message.Params[0]) {
 		channel, err := h.connection.GetChannelByName(message.Params[0])
 		if err != nil {
 			slog.Warn("Notice for unknown channel", "notice", message)
 			return
 		}
-		channel.messages = append(channel.messages, mess)
+		channel.AddMessage(mess)
 	} else {
 		slog.Warn("Unsupported DN", "notice", message)
 	}
 }
 
 func (h *Handler) addEvent(message string) {
-	h.connection.messages = append(h.connection.messages, NewMessage("", message, Event))
+	h.connection.AddMessage(NewMessage("", message, Event))
 }

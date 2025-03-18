@@ -79,6 +79,8 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /addServer", s.handleAddServer)
 	mux.HandleFunc("GET /changeWindow/{server}", s.handleChangeServer)
 	mux.HandleFunc("GET /changeWindow/{server}/{channel}", s.handleChangeChannel)
+	mux.HandleFunc("GET /s/{server}", s.handleServer)
+	mux.HandleFunc("GET /s/{server}/{channel}", s.handleChannel)
 	mux.HandleFunc("GET /input", s.handleInput)
 	mux.HandleFunc("POST /upload", s.handleUpload)
 	mux.HandleFunc("GET /join", s.handleJoin)
@@ -253,6 +255,24 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
+	serverID := r.PathValue("server")
+	channelID := r.PathValue("channel")
+	connection := s.connectionManager.GetConnection(serverID)
+	if connection == nil {
+		slog.Debug("Invalid change channel call, unknown server", "server", serverID)
+		return
+	}
+	channel := connection.GetChannel(channelID)
+	if channel == nil {
+		slog.Debug("Invalid change channel call, unknown channel", "server", serverID, "channel", channelID)
+		return
+	}
+	s.setActiveChannel(channel)
+	slog.Debug("Changing Window", "server", s.activeServer.GetID(), "channel", s.activeChannel.GetID())
+	s.handleIndex(w, r)
+}
+
 func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	serverID := r.PathValue("server")
 	channelID := r.PathValue("channel")
@@ -268,7 +288,21 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	s.setActiveChannel(channel)
 	slog.Debug("Changing Window", "server", s.activeServer.GetID(), "channel", s.activeChannel.GetID())
+	sse := datastar.NewSSE(w, r)
+	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"/"+channelID+"')", datastar.WithExecuteScriptAutoRemove(true))
 	s.UpdateUI(w, r)
+}
+
+func (s *Server) handleServer(w http.ResponseWriter, r *http.Request) {
+	serverID := r.PathValue("server")
+	connection := s.connectionManager.GetConnection(serverID)
+	if connection == nil {
+		slog.Debug("Invalid change server call, unknown server", "server", serverID)
+		return
+	}
+	s.setActiveServer(connection)
+	slog.Debug("Changing Server", "server", s.activeServer.GetID())
+	s.handleIndex(w, r)
 }
 
 func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
@@ -280,6 +314,9 @@ func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 	}
 	s.setActiveServer(connection)
 	slog.Debug("Changing Server", "server", s.activeServer.GetID())
+	sse := datastar.NewSSE(w, r)
+	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"')", datastar.WithExecuteScriptAutoRemove(true))
+
 	s.UpdateUI(w, r)
 }
 

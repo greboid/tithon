@@ -8,8 +8,8 @@
                             {{ if $connection.IsActive }}active{{ end }}
                             {{ if $connection.IsUnread }}unread{{ end }}
                             "
-                       data-on-click="@get('/changeWindow/{{ $connection.GetID }}')"
-                       href="#"
+                       data-on-click="@get('/changeWindow/{{ $connection.GetID }}'); evt.preventDefault()"
+                       href="/s/{{$connection.GetID}}"
                     >{{ $connection.GetName }}</a>
                 </div>
                 {{ if gt (len $connection.GetChannels) 0 }}
@@ -21,8 +21,8 @@
                                             {{ if $channel.IsActive }}active{{ end }}
                                             {{ if $channel.IsUnread }}unread{{ end }}
                                             "
-                                       data-on-click="@get('/changeWindow/{{$connection.GetID}}/{{$channel.GetID}}')"
-                                       href="#"
+                                       data-on-click="@get('/changeWindow/{{$connection.GetID}}/{{$channel.GetID}}'); evt.preventDefault()"
+                                       href="/s/{{$connection.GetID}}/{{$channel.GetID}}"
                                     >{{ $channel.GetName }}</a>
                                 </div>
                             </li>

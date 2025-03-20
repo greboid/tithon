@@ -1,3 +1,8 @@
+@font-face {
+  font-family: 'JetBrainsMono';
+  src:  url('/static/JetBrainsMono-Regular.woff2') format('woff2')
+}
+
 :root {
   color-scheme: light dark;
   --light-bg: #F6F4F4;
@@ -11,6 +16,13 @@
   --dark-highlight: #3f3e47;
   --dark-accent: #a36934;
   --dark-accent2: #A5B68D;
+
+  --background: light-dark(var(--light-bg), var(--dark-bg));
+  --foreground: light-dark(var(--light-color), var(--dark-color));
+  --background2: light-dark(var(--light-highlight), var(--dark-highlight));
+  --headings: light-dark(var(--light-accent), var(--dark-accent));
+  --unread: light-dark(var(--light-accent), var(--dark-accent));
+  --highlight: light-dark(var(--light-accent2), var(--dark-accent2));
 }
 
 html {
@@ -18,8 +30,9 @@ html {
 }
 
 body {
-  height: 100%;background-color: light-dark(var(--light-bg), var(--dark-bg));
-  color: light-dark(var(--light-color), var(--dark-color));
+  height: 100%;background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'JetBrainsMono', sans-serif;
 }
 
 main {
@@ -36,13 +49,11 @@ main {
 }
 
 h1 {
-  color: light-dark(var(--light-accent), var(--dark-accent));
+  color: var(--headings);
 }
 
 #servers {
   grid-area: servers;
-  background-color: light-dark(var(--light-bg), var(--dark-bg));
-  color: light-dark(var(--light-color), var(--dark-color));
 
   & ul {
     padding: 0;
@@ -64,7 +75,7 @@ h1 {
             font-weight: bold;
           }
           &.unread {
-            color: light-dark(var(--light-accent), var(--dark-accent));
+            color: var(--unread);
           }
         }
       }
@@ -84,8 +95,8 @@ h1 {
   flex-direction: row;
   gap: 1rem;
   align-items: center;
-  background-color: light-dark(var(--light-bg), var(--dark-bg));
-  color: light-dark(var(--light-accent), var(--dark-accent));
+  background-color: var(--background);
+  color: var(--headings);
 }
 
 #input {
@@ -94,12 +105,12 @@ h1 {
   gap: 1rem;
   flex-direction: row;
   align-items: center;
-  background-color: light-dark(var(--light-highlight), var(--dark-highlight));
-  color: light-dark(var(--light-color), var(--dark-color));
+  background-color: var(--background2);
+  color: var(--highlight);
   border-radius: 0.5rem;
 
   & label {
-    color: light-dark(var(--light-accent), var(--dark-accent));
+    color: var(--headings);
     padding-right: 1rem;
   }
 
@@ -112,8 +123,8 @@ h1 {
       border: 0;
       padding: 0.5rem;
       border-radius: 0.5rem;
-      background-color: light-dark(var(--light-highlight), var(--dark-highlight));
-      color: light-dark(var(--light-color), var(--dark-color));
+      background-color: var(--background2);
+      color: var(--foreground);
 
       &:focus {
         outline: none;
@@ -138,14 +149,14 @@ h1 {
   align-content: safe end;
 
   & a {
-    color: light-dark(var(--light-accent), var(--dark-accent));
+    color: var(--headings);
   }
 
   & p {
     display: contents;
 
     &.highlight > .message{
-      color: light-dark(var(--light-accent2), var(--dark-accent2));
+      color: var(--highlight);
     }
 
     & span.timestamp {
@@ -163,8 +174,8 @@ dialog {
   inset: 0.5rem;
   margin: auto;
   width: 50vw;
-  background-color: light-dark(var(--light-bg), var(--dark-bg));
-  color: light-dark(var(--light-color), var(--dark-color));
+  background-color: var(--background);
+  color: var(--foreground);
 
   & div {
     height: 100%;

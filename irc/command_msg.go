@@ -1,7 +1,5 @@
 package irc
 
-import "errors"
-
 type Msg struct{}
 
 func (c Msg) GetName() string {
@@ -13,8 +11,11 @@ func (c Msg) GetHelp() string {
 }
 
 func (c Msg) Execute(_ *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil || channel == nil {
-		return errors.New("not on a server")
+	if server == nil {
+		return NoServerError
+	}
+	if channel == nil {
+		return NoChannelError
 	}
 	server.SendMessage(channel.GetID(), input)
 	return nil

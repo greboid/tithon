@@ -1,7 +1,5 @@
 package irc
 
-import "errors"
-
 type Quit struct{}
 
 func (c Quit) GetName() string {
@@ -14,7 +12,7 @@ func (c Quit) GetHelp() string {
 
 func (c Quit) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
 	if server == nil {
-		return errors.New("not on a server")
+		return NoServerError
 	}
 	cm.RemoveConnection(server.GetID())
 	return nil

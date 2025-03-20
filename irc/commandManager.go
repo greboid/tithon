@@ -1,8 +1,14 @@
 package irc
 
 import (
+	"errors"
 	"log/slog"
 	"strings"
+)
+
+var (
+	NoServerError  = errors.New("no server specified")
+	NoChannelError = errors.New("no channel specified")
 )
 
 type Command interface {

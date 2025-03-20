@@ -1,9 +1,5 @@
 package irc
 
-import (
-	"errors"
-)
-
 type Part struct{}
 
 func (c Part) GetName() string {
@@ -15,8 +11,11 @@ func (c Part) GetHelp() string {
 }
 
 func (c Part) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil || channel == nil {
-		return errors.New("not on a server or channel")
+	if server == nil {
+		return NoServerError
+	}
+	if channel == nil {
+		return NoChannelError
 	}
 	server.RemoveChannel(channel.id)
 	return nil

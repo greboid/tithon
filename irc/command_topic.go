@@ -1,7 +1,6 @@
 package irc
 
 import (
-	"errors"
 	"strings"
 )
 
@@ -17,11 +16,11 @@ func (c ChangeTopic) GetHelp() string {
 
 func (c ChangeTopic) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
 	if server == nil {
-		return errors.New("not on a server")
+		return NoServerError
 	}
 	split := strings.SplitN(input, " ", 2)
 	if len(split) != 2 {
-		return errors.New("no channel specified")
+		return NoChannelError
 	}
 	return server.connection.Send("TOPIC", split[0], split[1])
 }

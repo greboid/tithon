@@ -123,7 +123,7 @@ func (m *Message) parseFormatting(message string) string {
 	output = m.parseIRCFormatting(output)
 	//imageRegex := regexp.MustCompile(`(?P<url>https?://\S+\.(?:jpg|png|gif|webp))`)
 	//output = imageRegex.ReplaceAllString(output, "<img src='${url}' />")
-	urlRegex := regexp.MustCompile(`(?P<url> https?://\S+)`)
+	urlRegex := regexp.MustCompile(`(?P<url>(^| )https?://\S+)`)
 	output = urlRegex.ReplaceAllString(output, "<a target='_blank' href='${url}'>${url}</a>")
 	return output
 }

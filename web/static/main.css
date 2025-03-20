@@ -17,6 +17,8 @@
   --dark-accent: #a36934;
   --dark-accent2: #A5B68D;
 
+  font-variant-ligatures: normal;
+
   --background: light-dark(var(--light-bg), var(--dark-bg));
   --foreground: light-dark(var(--light-color), var(--dark-color));
   --background2: light-dark(var(--light-highlight), var(--dark-highlight));
@@ -165,7 +167,7 @@ h1 {
 
     & span.nickname {
       text-align: right;
-      padding-right: 0.2rem;
+      padding-right: 1rem;
     }
   }
 }

@@ -23,6 +23,7 @@ func NewCommandManager() *CommandManager {
 		&Join{},
 		&Part{},
 		&Nick{},
+		&ChangeTopic{},
 	}}
 }
 

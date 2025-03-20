@@ -100,7 +100,7 @@ func (m *Message) GetNicknameForMessage() string {
 	case Action, HighlightAction:
 		return fmt.Sprintf("* %s", m.GetNickname())
 	case Normal, Highlight:
-		return fmt.Sprintf("<%s>", m.GetNickname())
+		return fmt.Sprintf("<​%s​>", m.GetNickname())
 	case Notice:
 		return fmt.Sprintf("-%s-", m.GetNickname())
 	default:

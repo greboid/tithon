@@ -44,22 +44,24 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connec
 			input = strings.TrimPrefix(input, first+" ")
 			err := cm.commands[i].Execute(connections, server, channel, input)
 			if err != nil {
-				if channel != nil {
-					channel.AddMessage(NewMessage("", err.Error(), Error))
-				} else if server != nil {
-					server.AddMessage(NewMessage("", err.Error(), Error))
-				} else {
-					slog.Error("Command error", "input", input, "error", err)
-				}
+				cm.showCommandError(server, channel, cm.commands[i], err.Error())
 			}
 			return
 		}
 	}
+	cm.showError(server, channel, "Unknown command: "+input)
+}
+
+func (cm *CommandManager) showCommandError(server *Connection, channel *Channel, command Command, message string) {
+	cm.showError(server, channel, "Command Error: "+command.GetName()+": "+message)
+}
+
+func (cm *CommandManager) showError(server *Connection, channel *Channel, message string) {
 	if channel != nil {
-		channel.AddMessage(NewMessage("", "Unknown command: "+input, Error))
+		channel.AddMessage(NewMessage("", message, Error))
 	} else if server != nil {
-		server.AddMessage(NewMessage("", "Unknown command: "+input, Error))
+		server.AddMessage(NewMessage("", message, Error))
 	} else {
-		slog.Error("Unknown command", "input", input)
+		slog.Error("Command error", "message", message)
 	}
 }

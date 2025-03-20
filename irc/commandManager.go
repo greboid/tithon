@@ -2,6 +2,7 @@ package irc
 
 import (
 	"errors"
+	"github.com/enescakir/emoji"
 	"log/slog"
 	"strings"
 )
@@ -42,6 +43,7 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connec
 	for i := range cm.commands {
 		if first == cm.commands[i].GetName() {
 			input = strings.TrimPrefix(input, first+" ")
+			input = emoji.Parse(input)
 			err := cm.commands[i].Execute(connections, server, channel, input)
 			if err != nil {
 				cm.showCommandError(server, channel, cm.commands[i], err.Error())

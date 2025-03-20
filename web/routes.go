@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/enescakir/emoji"
 	"github.com/greboid/ircclient/irc"
 	"github.com/greboid/ircclient/web/templates"
 	datastar "github.com/starfederation/datastar/sdk/go"
@@ -325,7 +324,6 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	if input == "" {
 		return
 	}
-	input = emoji.Parse(input)
 	s.commands.Execute(s.connectionManager, s.activeServer, s.activeChannel, input)
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)

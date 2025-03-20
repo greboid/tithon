@@ -56,23 +56,23 @@ func (h *Handler) isChannel(target string) bool {
 }
 
 func (h *Handler) handleTopic(message ircmsg.Message) {
-	slog.Debug("Handling topic", "message", message)
-	for _, channel := range h.connection.GetChannels() {
-		if channel.name == message.Params[0] {
-			topic := NewTopic(strings.Join(message.Params[1:], " "))
-			slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
-			channel.SetTopic(topic)
-			return
-		}
+	channel, err := h.connection.GetChannelByName(message.Params[0])
+	if err != nil {
+		slog.Warn("Topic for unknown channel", "message", message)
+		return
 	}
+	topic := NewTopic(strings.Join(message.Params[1:], " "))
+	slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
+	channel.SetTopic(topic)
+	channel.AddMessage(NewMessage("", message.Nick()+" changed the topic: "+topic.GetTopic(), Event))
 }
 
 func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 	for _, channel := range h.connection.GetChannels() {
 		if channel.name == message.Params[1] {
 			topic := NewTopic(strings.Join(message.Params[2:], " "))
-			slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
 			channel.SetTopic(topic)
+			slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
 			return
 		}
 	}

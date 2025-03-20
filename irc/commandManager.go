@@ -8,7 +8,7 @@ import (
 type Command interface {
 	GetName() string
 	GetHelp() string
-	Execute(*ConnectionManager, *Connection, *Channel, string)
+	Execute(*ConnectionManager, *Connection, *Channel, string) error
 }
 
 type CommandManager struct {
@@ -36,7 +36,16 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connec
 	for i := range cm.commands {
 		if first == cm.commands[i].GetName() {
 			input = strings.TrimPrefix(input, first+" ")
-			cm.commands[i].Execute(connections, server, channel, input)
+			err := cm.commands[i].Execute(connections, server, channel, input)
+			if err != nil {
+				if channel != nil {
+					channel.AddMessage(NewMessage("", err.Error(), Error))
+				} else if server != nil {
+					server.AddMessage(NewMessage("", err.Error(), Error))
+				} else {
+					slog.Error("Command error", "input", input, "error", err)
+				}
+			}
 			return
 		}
 	}

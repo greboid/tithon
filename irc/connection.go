@@ -150,18 +150,15 @@ func (c *Connection) HasCapability(name string) bool {
 	return exists
 }
 
-func (c *Connection) SendMessage(window string, message string) {
+func (c *Connection) SendMessage(window string, message string) error {
 	channel := c.GetChannel(window)
 	if channel == nil {
-		return
+		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
 		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message, Normal))
 	}
-	err := c.connection.Send("PRIVMSG", channel.name, message)
-	if err != nil {
-		slog.Error("Unable to send message", "server", c.GetName(), "channel", channel.name, "message", message)
-	}
+	return c.connection.Send("PRIVMSG", channel.name, message)
 }
 
 func (c *Connection) CurrentNick() string {

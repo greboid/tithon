@@ -1,5 +1,7 @@
 package irc
 
+import "errors"
+
 type Join struct{}
 
 func (c Join) GetName() string {
@@ -10,9 +12,9 @@ func (c Join) GetHelp() string {
 	return "Joins a channel"
 }
 
-func (c Join) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) {
+func (c Join) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
 	if server == nil {
-		return
+		return errors.New("not on a server")
 	}
-	server.JoinChannel(input, "")
+	return server.JoinChannel(input, "")
 }

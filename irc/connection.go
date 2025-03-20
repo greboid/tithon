@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 type Connection struct {
@@ -27,9 +28,10 @@ type Connection struct {
 	callbackHandler   *Handler
 	supportsFileHost  bool
 	currentModes      string
+	messageLock       sync.Mutex
 	messages          []*Message
-	unread            bool
-	active            bool
+	unread            atomic.Bool
+	active            atomic.Bool
 }
 
 func NewConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile) *Connection {
@@ -189,32 +191,36 @@ func (c *Connection) GetModePrefixes() []string {
 }
 
 func (c *Connection) AddMessage(message *Message) {
-	if !c.active {
-		c.unread = true
+	if !c.active.Load() {
+		c.unread.Store(true)
 	}
+	c.messageLock.Lock()
 	c.messages = append(c.messages, message)
+	c.messageLock.Unlock()
 }
 
 func (c *Connection) GetMessages() []*Message {
 	var messages []*Message
+	c.messageLock.Lock()
 	for _, message := range c.messages {
 		messages = append(messages, message)
 	}
+	c.messageLock.Unlock()
 	return messages
 }
 
 func (c *Connection) SetActive(b bool) {
-	c.active = b
+	c.active.Store(b)
 }
 
 func (c *Connection) IsActive() bool {
-	return c.active
+	return c.active.Load()
 }
 
 func (c *Connection) SetUnread(b bool) {
-	c.unread = b
+	c.unread.Store(b)
 }
 
 func (c *Connection) IsUnread() bool {
-	return c.unread
+	return c.unread.Load()
 }

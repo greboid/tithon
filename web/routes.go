@@ -91,15 +91,15 @@ func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	defer s.lock.Unlock()
 	info := templates.Index{}
 	info.Connections = s.connectionManager.GetConnections()
-	info.ActiveServer = s.activeServer
-	info.ActiveChannel = s.activeChannel
-	if s.activeChannel != nil {
-		info.WindowInfo = s.activeChannel.GetTopic().GetTopic()
-		info.Messages = s.activeChannel.GetMessages()
-		info.Users = s.activeChannel.GetUsers()
-	} else if s.activeServer != nil {
-		info.WindowInfo = s.activeServer.GetName()
-		info.Messages = s.activeServer.GetMessages()
+	info.ActiveServer = s.getActiveServer()
+	info.ActiveChannel = s.getActiveChannel()
+	if info.ActiveChannel != nil {
+		info.WindowInfo = info.ActiveChannel.GetTopic().GetTopic()
+		info.Messages = info.ActiveChannel.GetMessages()
+		info.Users = info.ActiveChannel.GetUsers()
+	} else if info.ActiveServer != nil {
+		info.WindowInfo = info.ActiveServer.GetName()
+		info.Messages = info.ActiveServer.GetMessages()
 	} else {
 		info.WindowInfo = ""
 	}
@@ -117,22 +117,22 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	var data bytes.Buffer
 	info := templates.Index{}
 	info.Connections = s.connectionManager.GetConnections()
-	info.ActiveServer = s.activeServer
-	info.ActiveChannel = s.activeChannel
+	info.ActiveServer = s.getActiveServer()
+	info.ActiveChannel = s.getActiveChannel()
 	s.outputTemplate(&data, "Serverlist.gohtml", templates.ServerList{
 		Connections:   s.connectionManager.GetConnections(),
-		ActiveServer:  s.activeServer,
-		ActiveChannel: s.activeChannel,
+		ActiveServer:  info.ActiveServer,
+		ActiveChannel: info.ActiveChannel,
 	})
-	if s.activeChannel != nil {
-		s.outputTemplate(&data, "WindowInfo.gohtml", s.activeChannel.GetTopic().GetTopic())
-		s.outputTemplate(&data, "Messages.gohtml", s.activeChannel.GetMessages())
+	if info.ActiveChannel != nil {
+		s.outputTemplate(&data, "WindowInfo.gohtml", info.ActiveChannel.GetTopic().GetTopic())
+		s.outputTemplate(&data, "Messages.gohtml", info.ActiveChannel.GetMessages())
 		s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{
-			Users: s.activeChannel.GetUsers(),
+			Users: info.ActiveChannel.GetUsers(),
 		})
-	} else if s.activeServer != nil {
-		s.outputTemplate(&data, "WindowInfo.gohtml", s.activeServer.GetName())
-		s.outputTemplate(&data, "Messages.gohtml", s.activeServer.GetMessages())
+	} else if info.ActiveServer != nil {
+		s.outputTemplate(&data, "WindowInfo.gohtml", info.ActiveServer.GetName())
+		s.outputTemplate(&data, "Messages.gohtml", info.ActiveServer.GetMessages())
 		s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{})
 	} else {
 		s.outputTemplate(&data, "WindowInfo.gohtml", "")
@@ -144,13 +144,13 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
-	if s.activeServer == nil {
+	if info.ActiveServer == nil {
 		return
 	}
 	type FileHost struct {
 		Url string `json:"filehost"`
 	}
-	jsonData, _ := json.Marshal(FileHost{Url: s.activeServer.GetFileHost()})
+	jsonData, _ := json.Marshal(FileHost{Url: info.ActiveServer.GetFileHost()})
 	err = sse.MergeSignals(jsonData)
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)
@@ -268,7 +268,7 @@ func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setActiveChannel(channel)
-	slog.Debug("Changing Window", "server", s.activeServer.GetID(), "channel", s.activeChannel.GetID())
+	slog.Debug("Changing Window", "server", s.getActiveServer().GetID(), "channel", channel.GetID())
 	s.handleIndex(w, r)
 }
 
@@ -286,7 +286,7 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setActiveChannel(channel)
-	slog.Debug("Changing Window", "server", s.activeServer.GetID(), "channel", s.activeChannel.GetID())
+	slog.Debug("Changing Window", "server", s.getActiveServer().GetID(), "channel", s.getActiveChannel().GetID())
 	sse := datastar.NewSSE(w, r)
 	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"/"+channelID+"')", datastar.WithExecuteScriptAutoRemove(true))
 	s.UpdateUI(w, r)
@@ -300,7 +300,7 @@ func (s *Server) handleServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setActiveServer(connection)
-	slog.Debug("Changing Server", "server", s.activeServer.GetID())
+	slog.Debug("Changing Server", "server", connection.GetID())
 	s.handleIndex(w, r)
 }
 
@@ -312,7 +312,7 @@ func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setActiveServer(connection)
-	slog.Debug("Changing Server", "server", s.activeServer.GetID())
+	slog.Debug("Changing Server", "server", connection.GetID())
 	sse := datastar.NewSSE(w, r)
 	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"')", datastar.WithExecuteScriptAutoRemove(true))
 
@@ -324,7 +324,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	if input == "" {
 		return
 	}
-	s.commands.Execute(s.connectionManager, s.activeServer, s.activeChannel, input)
+	s.commands.Execute(s.connectionManager, s.getActiveServer(), s.getActiveChannel(), input)
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
@@ -349,7 +349,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
-	if s.activeServer == nil {
+	if s.getActiveServer() == nil {
 		return
 	}
 	type uploadBody struct {
@@ -379,7 +379,7 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dataReader := bytes.NewReader(data)
-	username, password := s.activeServer.GetCredentials()
+	username, password := s.getActiveServer().GetCredentials()
 	if strings.Contains(username, "/") {
 		username = strings.Split(username, "/")[0]
 	}
@@ -424,10 +424,10 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
-	if s.activeServer == nil {
+	if s.getActiveServer() == nil {
 		return
 	}
-	err := s.activeServer.JoinChannel(r.URL.Query().Get("channel"), r.URL.Query().Get("key"))
+	err := s.getActiveServer().JoinChannel(r.URL.Query().Get("channel"), r.URL.Query().Get("key"))
 	if err != nil {
 		slog.Debug("Error joining channel", "error", err)
 		return
@@ -448,10 +448,10 @@ func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
-	if s.activeServer == nil {
+	if s.getActiveServer() == nil {
 		return
 	}
-	err := s.activeServer.PartChannel(r.URL.Query().Get("channel"))
+	err := s.getActiveServer().PartChannel(r.URL.Query().Get("channel"))
 	if err != nil {
 		slog.Debug("Error parting channel", "error", err)
 		return

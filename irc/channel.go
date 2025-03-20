@@ -1,6 +1,10 @@
 package irc
 
-import uniqueid "github.com/albinj12/unique-id"
+import (
+	uniqueid "github.com/albinj12/unique-id"
+	"sync"
+	"sync/atomic"
+)
 
 type Channel struct {
 	id        string
@@ -9,8 +13,9 @@ type Channel struct {
 	topic     *Topic
 	users     []*User
 	conection *Connection
-	unread    bool
-	active    bool
+	unread    atomic.Bool
+	active    atomic.Bool
+	state     sync.Mutex
 }
 
 func NewChannel(connection *Connection, name string) *Channel {
@@ -33,17 +38,21 @@ func (c *Channel) GetName() string {
 }
 
 func (c *Channel) AddMessage(message *Message) {
-	if !c.active {
-		c.unread = true
+	if !c.active.Load() {
+		c.unread.Store(true)
 	}
+	c.state.Lock()
 	c.messages = append(c.messages, message)
+	c.state.Unlock()
 }
 
 func (c *Channel) GetMessages() []*Message {
 	var messages []*Message
+	c.state.Lock()
 	for _, message := range c.messages {
 		messages = append(messages, message)
 	}
+	c.state.Unlock()
 	return messages
 }
 
@@ -71,17 +80,17 @@ func (c *Channel) GetServer() *Connection {
 }
 
 func (c *Channel) SetActive(b bool) {
-	c.active = b
+	c.active.Store(b)
 }
 
 func (c *Channel) IsActive() bool {
-	return c.active
+	return c.active.Load()
 }
 
 func (c *Channel) SetUnread(b bool) {
-	c.unread = b
+	c.unread.Store(b)
 }
 
 func (c *Channel) IsUnread() bool {
-	return c.unread
+	return c.unread.Load()
 }

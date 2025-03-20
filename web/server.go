@@ -32,6 +32,7 @@ type Server struct {
 	activePrivateMessage *irc.PrivateMessage
 	fixedPort            int
 	templates            *template.Template
+	activeLock           sync.Mutex
 }
 
 func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int) *Server {
@@ -95,6 +96,8 @@ func (s *Server) getPort() (net.IP, int, error) {
 }
 
 func (s *Server) setActiveChannel(channel *irc.Channel) {
+	s.activeLock.Lock()
+	defer s.activeLock.Unlock()
 	if s.activeChannel != nil {
 		s.activeChannel.SetActive(false)
 	}
@@ -110,6 +113,8 @@ func (s *Server) setActiveChannel(channel *irc.Channel) {
 }
 
 func (s *Server) setActiveServer(server *irc.Connection) {
+	s.activeLock.Lock()
+	defer s.activeLock.Unlock()
 	if s.activeChannel != nil {
 		s.activeChannel.SetActive(false)
 	}
@@ -122,4 +127,16 @@ func (s *Server) setActiveServer(server *irc.Connection) {
 	}
 	s.activeChannel = nil
 	s.activeServer = server
+}
+
+func (s *Server) getActiveServer() *irc.Connection {
+	s.activeLock.Lock()
+	defer s.activeLock.Unlock()
+	return s.activeServer
+}
+
+func (s *Server) getActiveChannel() *irc.Channel {
+	s.activeLock.Lock()
+	defer s.activeLock.Unlock()
+	return s.activeChannel
 }

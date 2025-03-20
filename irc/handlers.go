@@ -124,13 +124,20 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 		h.connection.RemoveChannel(channel.id)
 		return
 	}
-	slices.DeleteFunc(channel.users, func(user *User) bool {
+	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.AddMessage(NewMessage(message.Nick(), "Parted the channel", Event))
+	channel.AddMessage(NewMessage("", message.Source+" has parted "+channel.GetName(), Event))
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {
+	channel, err := h.connection.GetChannelByName(message.Params[0])
+	if err != nil {
+		slog.Error("Error getting channel for join", "message", message)
+		return
+	}
+	channel.users = append(channel.users, NewUser(message.Nick()))
+	channel.AddMessage(NewMessage("", message.Source+" has joined "+channel.GetName(), Event))
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {

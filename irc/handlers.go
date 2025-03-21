@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"slices"
 	"strings"
-	"time"
 )
 
 type Handler struct {
@@ -99,8 +98,7 @@ func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 	slog.Debug("Joining channel", "channel", message.Params[0])
 	h.connection.AddChannel(message.Params[0])
 	if h.connection.HasCapability("draft/chathistory") {
-		timestamp := time.Now().AddDate(0, 0, -1)
-		h.connection.connection.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s timestamp=%s 100", message.Params[0], timestamp.Format(v3TimestampFormat)))
+		h.connection.connection.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s 100", message.Params[0]))
 	}
 }
 

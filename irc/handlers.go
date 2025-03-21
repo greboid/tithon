@@ -29,6 +29,9 @@ func (h *Handler) addCallbacks() {
 	})
 	h.connection.connection.AddCallback("NICK", h.handleNick)
 	h.connection.connection.AddCallback("QUIT", h.handleQuit)
+	h.connection.connection.AddCallback(ircevent.ERR_PASSWDMISMATCH, func(message ircmsg.Message) {
+		h.addEvent("Password Mismatch: " + strings.Join(message.Params, " "))
+	})
 }
 
 func (h *Handler) isChannel(target string) bool {

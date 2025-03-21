@@ -1,5 +1,7 @@
 package templates
 
+import "github.com/greboid/ircclient/irc"
+
 type Nicklist struct {
-	Users []string
+	Users []*irc.User
 }

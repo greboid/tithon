@@ -67,10 +67,16 @@ func (c *Channel) GetTopic() *Topic {
 	return c.topic
 }
 
-func (c *Channel) GetUsers() []string {
-	var users []string
+func (c *Channel) SetUsers(users []*User) {
+	c.state.Lock()
+	defer c.state.Unlock()
+	c.users = users
+}
+
+func (c *Channel) GetUsers() []*User {
+	var users []*User
 	for i := range c.users {
-		users = append(users, c.users[i].nickname)
+		users = append(users, c.users[i])
 	}
 	return users
 }

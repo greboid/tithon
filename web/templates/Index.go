@@ -8,5 +8,5 @@ type Index struct {
 	ActiveChannel *irc.Channel
 	WindowInfo    string
 	Messages      []*irc.Message
-	Users         []string
+	Users         []*irc.User
 }

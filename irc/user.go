@@ -7,3 +7,7 @@ type User struct {
 func NewUser(nickname string) *User {
 	return &User{nickname}
 }
+
+func (u *User) GetNickListDisplay() string {
+	return u.nickname
+}

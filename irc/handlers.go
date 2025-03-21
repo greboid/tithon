@@ -24,22 +24,12 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback("PART", h.handlePart)
 	h.connection.connection.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
 	h.connection.connection.AddCallback(ircevent.RPL_UMODEIS, h.handleUserMode)
-	h.connection.connection.AddCallback(ircevent.RPL_CHANNELMODEIS, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_TOPICTIME, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_CREATIONTIME, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_NOTOPIC, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_MOTDSTART, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_MOTD, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_ENDOFMOTD, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.ERR_NOMOTD, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_AWAY, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_UNAWAY, func(message ircmsg.Message) {})
-	h.connection.connection.AddCallback(ircevent.RPL_NOWAWAY, func(message ircmsg.Message) {})
 	h.connection.connection.AddCallback("ERROR", h.handleError)
 	h.connection.connection.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
 		h.addEvent("Nickname (" + message.Params[1] + ") already in use")
 	})
 	h.connection.connection.AddCallback("NICK", h.handleNick)
+	h.connection.connection.AddCallback("QUIT", h.handleQuit)
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -204,4 +194,24 @@ func (h *Handler) handleNick(message ircmsg.Message) {
 		h.connection.AddMessage(NewMessage("", "Nickname changed: "+newNick, Event))
 	}
 	// TODO: Change other nicknames
+}
+
+func (h *Handler) handleQuit(message ircmsg.Message) {
+	channels := h.connection.GetChannels()
+	for i := range channels {
+		changed := false
+		users := channels[i].GetUsers()
+		users = slices.DeleteFunc(users, func(user *User) bool {
+			if user.nickname == message.Nick() {
+				changed = true
+				return true
+			}
+			return false
+		})
+		if changed {
+			channels[i].SetUsers(users)
+			nuh, _ := message.NUH()
+			channels[i].AddMessage(NewMessage("", nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " "), Event))
+		}
+	}
 }

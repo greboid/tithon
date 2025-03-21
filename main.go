@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	debug       = flag.Bool("debug", false, "Show debugging")
+	debug       = flag.Bool("debug", true, "Show debugging")
 	OpenBrowser = flag.Bool("openbrowser", false, "Should we open the browser")
-	OpenUI      = flag.Bool("openui", true, "Should the UI launch")
-	FixedPort   = flag.Int("port", 0, "Fixed port to use, 0 will use a random port")
+	OpenUI      = flag.Bool("openui", false, "Should the UI launch")
+	FixedPort   = flag.Int("port", 8081, "Fixed port to use, 0 will use a random port")
 )
 
 func main() {

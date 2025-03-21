@@ -98,7 +98,7 @@ func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 	slog.Debug("Joining channel", "channel", message.Params[0])
 	h.connection.AddChannel(message.Params[0])
 	if h.connection.HasCapability("draft/chathistory") {
-		h.connection.connection.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s 100", message.Params[0]))
+		h.connection.connection.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
 	}
 }
 

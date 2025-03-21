@@ -7,6 +7,7 @@ require (
 	github.com/csmith/envflag v1.0.0
 	github.com/enescakir/emoji v1.0.0
 	github.com/ergochat/irc-go v0.4.0
+	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/starfederation/datastar v0.21.4
 	github.com/webview/webview_go v0.0.0-20240831120633-6173450d4dd6

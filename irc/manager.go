@@ -3,10 +3,12 @@ package irc
 import (
 	"errors"
 	"github.com/greboid/ircclient/config"
+	"github.com/kirsle/configdir"
 	"gopkg.in/yaml.v3"
 	"log/slog"
 	"maps"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -77,10 +79,16 @@ func (cm *ConnectionManager) Stop() {
 }
 
 func (cm *ConnectionManager) Load() error {
+	configPath := configdir.LocalConfig("ircclient")
+	err := configdir.MakePath(configPath)
+	if err != nil {
+		return err
+	}
+
 	slog.Info("Loading config")
 	conf := &config.Config{}
 
-	yamlData, err := os.ReadFile("./config.yaml")
+	yamlData, err := os.ReadFile(filepath.Join(configPath, "config.yaml"))
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		slog.Error("Unable to load config", "error", err)
 		return err
@@ -97,6 +105,12 @@ func (cm *ConnectionManager) Load() error {
 }
 
 func (cm *ConnectionManager) Save() {
+	configPath := configdir.LocalConfig("ircclient")
+	err := configdir.MakePath(configPath)
+	if err != nil {
+		return
+	}
+
 	slog.Info("Saving config")
 	conf := &config.Config{}
 	for _, server := range cm.connections {
@@ -116,7 +130,7 @@ func (cm *ConnectionManager) Save() {
 	if err != nil {
 		slog.Error("Unable to save config", "error", err)
 	}
-	err = os.WriteFile("./config.yaml", data, 0644)
+	err = os.WriteFile(filepath.Join(configPath, "config.yaml"), data, 0644)
 	if err != nil {
 		slog.Error("Unable to save config", "error", err)
 	}

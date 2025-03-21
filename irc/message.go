@@ -110,6 +110,16 @@ func (m *Message) GetNicknameForMessage() string {
 	}
 }
 
+func (m *Message) GetNameColour() string {
+	nameColours := []string{"#E90E7F", "#8E55E9", "#B30E0E", "#18B33C", "#58ADB3", "#9E54B3", "#B39875", "#3176B3"}
+	count := 0
+	for i := range m.nickname {
+		count += int(m.nickname[i])
+	}
+	count = count % len(nameColours)
+	return nameColours[count]
+}
+
 func (m *Message) GetTimestamp() string {
 	return m.timestamp.Format(time.TimeOnly)
 }

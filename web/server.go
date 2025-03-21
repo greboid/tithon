@@ -82,7 +82,7 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) getPort() (net.IP, int, error) {
-	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf(":%d", s.fixedPort))
+	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("[::1]:%d", s.fixedPort))
 	if err != nil {
 		return nil, -1, err
 	}

@@ -162,6 +162,10 @@ h1 {
       color: var(--highlight);
     }
 
+    & .message {
+      word-wrap: anywhere;
+    }
+
     & span.timestamp {
       padding-right: 1rem;
     }
@@ -169,7 +173,7 @@ h1 {
     & span.nickname {
       text-align: right;
       padding-right: 1rem;
-      word-break: manual;
+      word-break: keep-all;
     }
   }
 }

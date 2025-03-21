@@ -141,6 +141,7 @@ h1 {
 
 #nicklist {
   grid-area: nicklist;
+  overflow-y: scroll;
 }
 
 #messages {

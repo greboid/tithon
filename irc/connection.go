@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type Connection struct {
@@ -48,6 +49,7 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 		saslPassword:      saslpassword,
 		preferredNickname: profile.nickname,
 		connection: &ircevent.Connection{
+			Timeout:      10 * time.Second,
 			Server:       fmt.Sprintf("%s:%d", hostname, port),
 			Nick:         profile.nickname,
 			SASLLogin:    sasllogin,
@@ -100,7 +102,10 @@ func (c *Connection) Connect() {
 	c.AddMessage(NewMessage("", fmt.Sprintf("Connecting to %s", c.connection.Server), Event))
 	//TODO Need to store a connection state
 	if !c.connection.Connected() {
-		c.connection.Connect()
+		err := c.connection.Connect()
+		if err != nil {
+			c.AddMessage(NewMessage("", "Connection error: "+err.Error(), Event))
+		}
 	}
 
 }

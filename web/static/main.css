@@ -173,7 +173,7 @@ h1 {
     & span.nickname {
       text-align: right;
       padding-right: 1rem;
-      word-break: keep-all;
+      white-space: pre;
     }
   }
 }

@@ -130,13 +130,13 @@ func (h *Handler) handleKick(message ircmsg.Message) {
 	}
 	if message.Params[1] == h.connection.CurrentNick() {
 		h.connection.RemoveChannel(channel.id)
-		h.connection.AddMessage(NewMessage(message.Nick(), "has kicked you from "+message.Params[0]+" ("+strings.Join(message.Params[2:], " ")+")", Event))
+		h.connection.AddMessage(NewMessage("", message.Nick()+" has kicked you from "+message.Params[0]+" ("+strings.Join(message.Params[2:], " ")+")", Event))
 		return
 	}
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.AddMessage(NewMessage("", message.Source+" has been kicked "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")", Event))
+	channel.AddMessage(NewMessage("", message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")", Event))
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {

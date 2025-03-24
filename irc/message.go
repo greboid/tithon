@@ -116,7 +116,6 @@ func (m *Message) isHighlight(message string) bool {
 func (m *Message) parseFormatting(message string) string {
 	output := html.EscapeString(message)
 	urlRegex := regexp.MustCompile(`(?P<url>https?://[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+)`)
-	fmt.Println(output)
 	output = urlRegex.ReplaceAllString(output, "<a target='_blank' href='${url}'>${url}</a>")
 	output = m.parseIRCFormatting(output)
 	return output

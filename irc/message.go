@@ -95,23 +95,8 @@ func (m *Message) GetNickname() string {
 	return m.nickname
 }
 
-func (m *Message) GetNicknameForMessage() string {
-	switch m.GetType() {
-	case Action, HighlightAction:
-		return fmt.Sprintf("* %s", m.GetNickname())
-	case Normal, Highlight:
-		return fmt.Sprintf("<​%s​>", m.GetNickname())
-	case Notice:
-		return fmt.Sprintf("-​%s​-", m.GetNickname())
-	case Event:
-		return fmt.Sprintf("*** %s", m.GetNickname())
-	default:
-		return ""
-	}
-}
-
 func (m *Message) GetNameColour() string {
-	nameColours := []string{"#E90E7F", "#8E55E9", "#B30E0E", "#18B33C", "#58ADB3", "#9E54B3", "#B39875", "#3176B3"}
+	nameColours := []string{"nickcolour1", "nickcolour2", "nickcolour3", "nickcolour4", "nickcolour5", "nickcolour6", "nickcolour7", "nickcolour8"}
 	count := 0
 	for i := range m.nickname {
 		count += int(m.nickname[i])
@@ -131,8 +116,6 @@ func (m *Message) isHighlight(message string) bool {
 func (m *Message) parseFormatting(message string) string {
 	output := html.EscapeString(message)
 	output = m.parseIRCFormatting(output)
-	//imageRegex := regexp.MustCompile(`(?P<url>https?://\S+\.(?:jpg|png|gif|webp))`)
-	//output = imageRegex.ReplaceAllString(output, "<img src='${url}' />")
 	urlRegex := regexp.MustCompile(`(?P<url>(^| )https?://\S+)`)
 	output = urlRegex.ReplaceAllString(output, "<a target='_blank' href='${url}'>${url}</a>")
 	return output

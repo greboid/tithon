@@ -1,10 +1,9 @@
-@font-face {
-  font-family: 'JetBrainsMono';
-  src:  url('/static/JetBrainsMono-Regular.woff2') format('woff2')
-}
-
 :root {
   color-scheme: light dark;
+
+  --font: 'JetBrainsMono';
+  --fontLigatures: normal;
+
   --light-bg: #F6F4F4;
   --light-color: #000000;
   --light-highlight: #EADEDA;
@@ -17,24 +16,39 @@
   --dark-accent: #a36934;
   --dark-accent2: #A5B68D;
 
-  font-variant-ligatures: normal;
-
   --background: light-dark(var(--light-bg), var(--dark-bg));
   --foreground: light-dark(var(--light-color), var(--dark-color));
   --background2: light-dark(var(--light-highlight), var(--dark-highlight));
   --headings: light-dark(var(--light-accent), var(--dark-accent));
   --unread: light-dark(var(--light-accent), var(--dark-accent));
   --highlight: light-dark(var(--light-accent2), var(--dark-accent2));
+
+  --nickColour1: #E90E7F;
+  --nickColour2: #8E55E9;
+  --nickColour3: #B30E0E;
+  --nickColour4: #18B33C;
+  --nickColour5: #58ADB3;
+  --nickColour6: #9E54B3;
+  --nickColour7: #B39875;
+  --nickColour8: #3176B3;
+}
+
+@font-face {
+  font-family: 'JetBrainsMono';
+  src: url('/static/JetBrainsMono-Regular.woff2') format('woff2');
+  font-display: block;
 }
 
 html {
   height: 100vh;
+  font-variant-ligatures: var(--fontLigatures);
 }
 
 body {
-  height: 100%;background-color: var(--background);
+  height: 100%;
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: 'JetBrainsMono', sans-serif;
+  font-family: var(--font), sans-serif;
 }
 
 main {
@@ -76,6 +90,7 @@ h1 {
           &.active {
             font-weight: bold;
           }
+
           &.unread {
             color: var(--unread);
           }
@@ -151,6 +166,40 @@ h1 {
   grid-template-columns: auto auto 1fr;
   align-content: safe end;
 
+
+
+  .nickcolour1 {
+    color: var(--nickColour1)
+  }
+
+  .nickcolour2 {
+    color: var(--nickColour2)
+  }
+
+  .nickcolour3 {
+    color: var(--nickColour3)
+  }
+
+  .nickcolour4 {
+    color: var(--nickColour4)
+  }
+
+  .nickcolour5 {
+    color: var(--nickColour5)
+  }
+
+  .nickcolour6 {
+    color: var(--nickColour6)
+  }
+
+  .nickcolour7 {
+    color: var(--nickColour7)
+  }
+
+  .nickcolour8 {
+    color: var(--nickColour8)
+  }
+
   & a {
     color: var(--headings);
   }
@@ -158,24 +207,54 @@ h1 {
   & p {
     display: contents;
 
-    &.highlight > .message{
-      color: var(--highlight);
+    &.normal, .highlight {
+      & span.nickname {
+        &::before {
+          content: "<"
+        }
+
+        &::after {
+          content: ">"
+        }
+      }
+    }
+    &.action {
+      & span.nickname {
+        &::before {
+          content: "* "
+        }
+      }
+    }
+    &.notice {
+      & span.nickname {
+        &::before {
+          content: "-"
+        }
+        &::after {
+          content: "-"
+        }
+      }
     }
 
-    & .message {
-      word-wrap: anywhere;
-    }
-
-    & span.timestamp {
-      padding-right: 1rem;
-    }
-
-    & span.nickname {
-      text-align: right;
-      padding-right: 1rem;
-      white-space: pre;
-    }
+  &.highlight > .message {
+    color: var(--highlight);
   }
+
+  & .message {
+    word-wrap: anywhere;
+  }
+
+  & span.timestamp {
+    padding-right: 1rem;
+  }
+
+  & span.nickname {
+    text-align: right;
+    padding-right: 1rem;
+    white-space: pre;
+  }
+}
+
 }
 
 dialog {
@@ -202,6 +281,7 @@ dialog {
         width: 5rem;
       }
     }
+
     & button {
       width: 5rem;
       align-self: flex-end;

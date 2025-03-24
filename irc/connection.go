@@ -168,6 +168,17 @@ func (c *Connection) SendMessage(window string, message string) error {
 	return c.connection.Send("PRIVMSG", channel.name, message)
 }
 
+func (c *Connection) SendNotice(window string, message string) error {
+	channel := c.GetChannel(window)
+	if channel == nil {
+		return errors.New("not on a channel")
+	}
+	if !c.HasCapability("echo-message") {
+		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message, Notice))
+	}
+	return c.connection.Send("NOTICE", channel.name, message)
+}
+
 func (c *Connection) CurrentNick() string {
 	return c.connection.CurrentNick()
 }

@@ -17,6 +17,5 @@ func (c Msg) Execute(_ *ConnectionManager, server *Connection, channel *Channel,
 	if channel == nil {
 		return NoChannelError
 	}
-	server.SendMessage(channel.GetID(), input)
-	return nil
+	return server.SendMessage(channel.GetID(), input)
 }

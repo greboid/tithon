@@ -171,7 +171,7 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 	} else {
 		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "), Notice)
 	}
-	if strings.Contains(message.Source, ".") {
+	if strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@") {
 		h.connection.AddMessage(mess)
 	} else if h.isChannel(message.Params[0]) {
 		channel, err := h.connection.GetChannelByName(message.Params[0])

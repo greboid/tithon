@@ -31,6 +31,7 @@ func NewCommandManager() *CommandManager {
 		&Part{},
 		&Nick{},
 		&ChangeTopic{},
+		&SendNotice{},
 	}}
 }
 

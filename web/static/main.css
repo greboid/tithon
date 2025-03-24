@@ -31,6 +31,24 @@
   --nickColour6: #9E54B3;
   --nickColour7: #B39875;
   --nickColour8: #3176B3;
+
+  --irccolour0: #ffffff;
+  --irccolour1: #000000;
+  --irccolour2: #001f3f;
+  --irccolour3: #2ecc40;
+  --irccolour4: #ff4136;
+  --irccolour5: #85144b;
+  --irccolour6: #b10dc9;
+  --irccolour7: #ff851b;
+  --irccolour8: #ffdc00;
+  --irccolour9: #01ff70;
+  --irccolour10: #39cccc;
+  --irccolour11: #7fdbff;
+  --irccolour12: #0074d9;
+  --irccolour13: #f012be;
+  --irccolour14: #aaaaaa;
+  --irccolour15: #dddddd;
+
 }
 
 @font-face {
@@ -166,7 +184,138 @@ h1 {
   grid-template-columns: auto auto 1fr;
   align-content: safe end;
 
+  .bold {
+    font-weight: bold;
+  }
 
+  .strikethrough {
+    text-decoration: line-through;
+  }
+
+  .underline {
+    text-decoration: underline;
+  }
+
+  .italic {
+    font-style: italic;
+  }
+
+  .fg-0 {
+    color: var(--irccolour0);
+  }
+
+  .fg-1 {
+    color: var(--irccolour1);
+  }
+
+  .fg-2 {
+    color: var(--irccolour2);
+  }
+
+  .fg-3 {
+    color: var(--irccolour3);
+  }
+
+  .fg-4 {
+    color: var(--irccolour4);
+  }
+
+  .fg-5 {
+    color: var(--irccolour5);
+  }
+
+  .fg-6 {
+    color: var(--irccolour6);
+  }
+
+  .fg-7 {
+    color: var(--irccolour7);
+  }
+
+  .fg-8 {
+    color: var(--irccolour8);
+  }
+
+  .fg-9 {
+    color: var(--irccolour9);
+  }
+
+  .fg-10 {
+    color: var(--irccolour10);
+  }
+  .fg-11 {
+    color: var(--irccolour11);
+  }
+  .fg-12 {
+    color: var(--irccolour12);
+  }
+  .fg-13 {
+    color: var(--irccolour13);
+  }
+  .fg-14 {
+    color: var(--irccolour14);
+  }
+  .fg-15 {
+    color: var(--irccolour15);
+  }
+
+  .bg-0 {
+    background-color: var(--irccolour0);
+  }
+
+  .bg-1 {
+    background-color: var(--irccolour1);
+  }
+
+  .bg-2 {
+    background-color: var(--irccolour2);
+  }
+
+  .bg-3 {
+    background-color: var(--irccolour3);
+  }
+
+  .bg-4 {
+    background-color: var(--irccolour4);
+  }
+
+  .bg-5 {
+    background-color: var(--irccolour5);
+  }
+
+  .bg-6 {
+    background-color: var(--irccolour6);
+  }
+  .bg-7 {
+    background-color: var(--irccolour7);
+  }
+
+  .bg-8 {
+    background-color: var(--irccolour8);
+  }
+
+  .bg-9 {
+    background-color: var(--irccolour9);
+  }
+
+  .bg-10 {
+    background-color: var(--irccolour10);
+  }
+  .bg-11 {
+    background-color: var(--irccolour11);
+  }
+  .bg-12 {
+    background-color: var(--irccolour12);
+  }
+  .bg-13 {
+    background-color: var(--irccolour13);
+  }
+  .bg-14 {
+    background-color: var(--irccolour14);
+  }
+  .bg-15 {
+    background-color: var(--irccolour15);
+  }
 
   .nickcolour1 {
     color: var(--nickColour1)

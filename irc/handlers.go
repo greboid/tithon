@@ -21,6 +21,7 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback("TOPIC", h.handleTopic)
 	h.connection.connection.AddConnectCallback(h.handleConnected)
 	h.connection.connection.AddCallback("PART", h.handlePart)
+	h.connection.connection.AddCallback("KICK", h.handleKick)
 	h.connection.connection.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
 	h.connection.connection.AddCallback(ircevent.RPL_UMODEIS, h.handleUserMode)
 	h.connection.connection.AddCallback("ERROR", h.handleError)
@@ -119,6 +120,23 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 		return user.nickname == message.Nick()
 	})
 	channel.AddMessage(NewMessage("", message.Source+" has parted "+channel.GetName(), Event))
+}
+
+func (h *Handler) handleKick(message ircmsg.Message) {
+	channel, err := h.connection.GetChannelByName(message.Params[0])
+	if err != nil {
+		slog.Warn("Received kick for unknown channel", "channel", message.Params[0])
+		return
+	}
+	if message.Params[1] == h.connection.CurrentNick() {
+		h.connection.RemoveChannel(channel.id)
+		h.connection.AddMessage(NewMessage(message.Nick(), "has kicked you from "+message.Params[0]+" ("+strings.Join(message.Params[2:], " ")+")", Event))
+		return
+	}
+	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
+		return user.nickname == message.Nick()
+	})
+	channel.AddMessage(NewMessage("", message.Source+" has been kicked "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")", Event))
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {

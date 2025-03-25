@@ -2,6 +2,8 @@ package irc
 
 import (
 	uniqueid "github.com/albinj12/unique-id"
+	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -71,6 +73,14 @@ func (c *Channel) SetUsers(users []*User) {
 	c.state.Lock()
 	defer c.state.Unlock()
 	c.users = users
+	c.sortUsers()
+}
+
+func (c *Channel) AddUser(user *User) {
+	c.state.Lock()
+	defer c.state.Unlock()
+	c.users = append(c.users, user)
+	c.sortUsers()
 }
 
 func (c *Channel) GetUsers() []*User {
@@ -79,6 +89,16 @@ func (c *Channel) GetUsers() []*User {
 		users = append(users, c.users[i])
 	}
 	return users
+}
+
+func (c *Channel) sortUsers() {
+	slices.SortFunc(c.users, func(a, b *User) int {
+		modeCmp := strings.Compare(b.modes, a.modes)
+		if modeCmp != 0 {
+			return modeCmp
+		}
+		return strings.Compare(a.nickname, b.nickname)
+	})
 }
 
 func (c *Channel) GetServer() *Connection {

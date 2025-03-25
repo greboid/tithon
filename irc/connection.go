@@ -33,6 +33,7 @@ type Connection struct {
 	messages          []*Message
 	unread            atomic.Bool
 	active            atomic.Bool
+	possibleUserModes []*UserMode
 }
 
 func NewConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile) *Connection {

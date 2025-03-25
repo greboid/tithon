@@ -1,6 +1,6 @@
 {{- /*gotype: github.com/greboid/ircclient/web/templates.Nicklist */ -}}
 <div id="nicklist">
     {{ range .Users }}
-        <p>{{ .GetNickListDisplay }}</p>
+        <p>{{.GetNickListModes }}{{ .GetNickListDisplay }}</p>
     {{end}}
 </div>

@@ -33,6 +33,7 @@ func (h *Handler) addCallbacks() {
 	h.connection.connection.AddCallback(ircevent.ERR_PASSWDMISMATCH, func(message ircmsg.Message) {
 		h.addEvent("Password Mismatch: " + strings.Join(message.Params, " "))
 	})
+	h.connection.connection.AddCallback("MODE", h.handleMode)
 }
 
 func (h *Handler) isChannel(target string) bool {
@@ -145,7 +146,7 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 		slog.Error("Error getting channel for join", "message", message)
 		return
 	}
-	channel.users = append(channel.users, NewUser(message.Nick()))
+	channel.users = append(channel.users, NewUser(message.Nick(), ""))
 	channel.AddMessage(NewMessage("", message.Source+" has joined "+channel.GetName(), Event))
 }
 
@@ -161,21 +162,21 @@ func (h *Handler) handleNameReply(message ircmsg.Message) {
 	}
 	names := strings.Split(message.Params[3], " ")
 	for i := range names {
-		user := h.stripChannelPrefixes(names[i])
-		channel.users = append(channel.users, NewUser(user))
+		modes, user := h.stripChannelPrefixes(names[i])
+		channel.AddUser(NewUser(user, modes))
 	}
-	slices.SortFunc(channel.users, func(a, b *User) int {
-		return strings.Compare(a.nickname, b.nickname)
-	})
 }
 
-func (h *Handler) stripChannelPrefixes(name string) string {
+func (h *Handler) stripChannelPrefixes(name string) (string, string) {
 	prefixes := h.connection.GetModePrefixes()
-	return strings.TrimLeft(name, prefixes[1])
+	nickname := strings.TrimLeft(name, prefixes[1])
+	modes := name[:len(name)-len(nickname)]
+	return modes, nickname
 }
 
 func (h *Handler) handleUserMode(message ircmsg.Message) {
 	h.connection.currentModes = message.Params[1]
+	h.connection.AddMessage(NewMessage("", "Your modes changed: "+message.Params[1], Event))
 }
 
 func (h *Handler) handleError(message ircmsg.Message) {
@@ -242,4 +243,8 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 			channels[i].AddMessage(NewMessage("", nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " "), Event))
 		}
 	}
+}
+
+func (h *Handler) handleMode(message ircmsg.Message) {
+
 }

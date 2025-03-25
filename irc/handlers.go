@@ -212,7 +212,16 @@ func (h *Handler) handleNick(message ircmsg.Message) {
 		newNick := message.Params[0]
 		h.connection.AddMessage(NewMessage("", "Nickname changed: "+newNick, Event))
 	}
-	// TODO: Change other nicknames
+	channels := h.connection.GetChannels()
+	for i := range channels {
+		users := channels[i].GetUsers()
+		for j := range users {
+			if users[j].nickname == message.Nick() {
+				channels[i].AddMessage(NewMessage("", message.Nick()+" is now known as "+message.Params[0], Event))
+				users[j].nickname = message.Params[0]
+			}
+		}
+	}
 }
 
 func (h *Handler) handleQuit(message ircmsg.Message) {

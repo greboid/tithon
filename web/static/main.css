@@ -355,7 +355,7 @@ h1 {
   & p {
     display: contents;
 
-    &.normal, .highlight {
+    &.normal, &.highlight {
       & span.nickname {
         &::before {
           content: "<"

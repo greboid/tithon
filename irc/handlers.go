@@ -246,5 +246,49 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 }
 
 func (h *Handler) handleMode(message ircmsg.Message) {
+	channel, err := h.connection.GetChannelByName(message.Params[0])
+	if err != nil {
+		slog.Warn("Received mode for unknown channel", "channel", message.Params[0])
+		return
+	}
+	// TODO: Need to check the modes are in prefixes or channel modes and act accordingly, rather than assume
+	// all modes are user modes
+	type modeChange struct {
+		mode     string
+		change   bool
+		nickname string
+	}
+	var ops []modeChange
+	var add bool
+	param := 2
+	for i := 0; i < len(message.Params[1]); i++ {
+		switch message.Params[1][i] {
+		case '+':
+			add = true
+		case '-':
+			add = false
+		default:
 
+			ops = append(ops, modeChange{
+				mode:     string(message.Params[1][i]),
+				change:   add,
+				nickname: message.Params[param],
+			})
+			param++
+		}
+	}
+	for i := range ops {
+		users := channel.GetUsers()
+		for j := range users {
+			if users[j].nickname == ops[i].nickname {
+				mode := h.connection.GetModeNameForMode(ops[i].mode)
+				if ops[i].change {
+					users[j].modes += mode
+				} else {
+					users[j].modes = strings.Replace(users[j].modes, mode, "", -1)
+				}
+			}
+		}
+	}
+	channel.SortUsers()
 }

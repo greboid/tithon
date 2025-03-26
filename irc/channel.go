@@ -73,14 +73,14 @@ func (c *Channel) SetUsers(users []*User) {
 	c.state.Lock()
 	defer c.state.Unlock()
 	c.users = users
-	c.sortUsers()
+	c.SortUsers()
 }
 
 func (c *Channel) AddUser(user *User) {
 	c.state.Lock()
 	defer c.state.Unlock()
 	c.users = append(c.users, user)
-	c.sortUsers()
+	c.SortUsers()
 }
 
 func (c *Channel) GetUsers() []*User {
@@ -91,7 +91,7 @@ func (c *Channel) GetUsers() []*User {
 	return users
 }
 
-func (c *Channel) sortUsers() {
+func (c *Channel) SortUsers() {
 	slices.SortFunc(c.users, func(a, b *User) int {
 		modeCmp := strings.Compare(b.modes, a.modes)
 		if modeCmp != 0 {

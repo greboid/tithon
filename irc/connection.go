@@ -207,6 +207,15 @@ func (c *Connection) GetModePrefixes() []string {
 	return splits
 }
 
+func (c *Connection) GetModeNameForMode(mode string) string {
+	modes := c.GetModePrefixes()
+	index := strings.Index(modes[0], mode)
+	if index == -1 {
+		return ""
+	}
+	return modes[1][index : index+1]
+}
+
 func (c *Connection) AddMessage(message *Message) {
 	if !c.active.Load() {
 		c.unread.Store(true)

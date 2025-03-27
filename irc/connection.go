@@ -24,6 +24,7 @@ type Connection struct {
 	saslPassword      string
 	preferredNickname string
 	channels          map[string]*Channel
+	pms               map[string]*PrivateMessage
 	connection        *ircevent.Connection
 	mutex             sync.Mutex
 	callbackHandler   *Handler
@@ -71,6 +72,7 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 			Debug: true,
 		},
 		channels: map[string]*Channel{},
+		pms:      map[string]*PrivateMessage{},
 		messages: make([]*Message, 0),
 	}
 }

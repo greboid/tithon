@@ -14,10 +14,10 @@
 </head>
 <body>
 <main id="main" data-on-load="@get('/update', {openWhenHidden: true})">
-    {{ template "Serverlist.gohtml" (map "Connections" .Connections "ActiveWindow" .ActiveWindow)}}
-    {{ template "WindowInfo.gohtml" .WindowInfo}}
-    {{ template "Messages.gohtml" .Messages }}
-    {{ template "Nicklist.gohtml" .Users }}
+    <div id="servers"></div>
+    <div id="windowinfo"></div>
+    <div id="messages"></div>
+    <div id="nicklist"></div>
     {{ template "EmptyInput.gohtml"}}
     {{ template "Settings.gohtml"}}
     {{ template "EmptyDialog.gohtml"}}

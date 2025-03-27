@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/greboid/ircclient/irc"
-	"github.com/greboid/ircclient/web/templates"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
 	"io"
@@ -89,24 +88,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	var err error
-	if s.getActiveWindow() == nil {
-		err = s.templates.ExecuteTemplate(w, "Index.gohtml", templates.Index{
-			Connections:  s.connectionManager.GetConnections(),
-			ActiveWindow: s.getActiveWindow(),
-			WindowInfo:   "",
-			Messages:     nil,
-			Users:        nil,
-		})
-	} else {
-		err = s.templates.ExecuteTemplate(w, "Index.gohtml", templates.Index{
-			Connections:  s.connectionManager.GetConnections(),
-			ActiveWindow: s.getActiveWindow(),
-			WindowInfo:   s.getActiveWindow().GetTitle(),
-			Messages:     s.getActiveWindow().GetMessages(),
-			Users:        s.getActiveWindow().GetUsers(),
-		})
-	}
+	err := s.templates.ExecuteTemplate(w, "Index.gohtml", nil)
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)
 		return
@@ -118,38 +100,31 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
-	info := templates.Index{
-		Connections:  s.connectionManager.GetConnections(),
-		ActiveWindow: s.getActiveWindow(),
-	}
-	if s.getActiveWindow() == nil {
-		info.WindowInfo = ""
-		info.Messages = nil
-		info.Users = nil
-	} else {
-		info.WindowInfo = s.getActiveWindow().GetTitle()
-		info.Messages = s.getActiveWindow().GetMessages()
-		info.Users = s.getActiveWindow().GetUsers()
-	}
-	s.outputTemplate(&data, "Serverlist.gohtml", templates.ServerList{
-		Connections:  s.connectionManager.GetConnections(),
-		ActiveWindow: info.ActiveWindow,
+	s.outputTemplate(&data, "Serverlist.gohtml", map[string]any{
+		"Connections":  s.connectionManager.GetConnections(),
+		"ActiveWindow": s.activeWindow,
 	})
-	s.outputTemplate(&data, "WindowInfo.gohtml", info.WindowInfo)
-	s.outputTemplate(&data, "Messages.gohtml", info.Messages)
-	s.outputTemplate(&data, "Nicklist.gohtml", info.Users)
+	if s.getActiveWindow() == nil {
+		s.outputTemplate(&data, "WindowInfo.gohtml", "")
+		s.outputTemplate(&data, "Messages.gohtml", nil)
+		s.outputTemplate(&data, "Nicklist.gohtml", nil)
+	} else {
+		s.outputTemplate(&data, "WindowInfo.gohtml", s.getActiveWindow().GetTitle())
+		s.outputTemplate(&data, "Messages.gohtml", s.getActiveWindow().GetMessages())
+		s.outputTemplate(&data, "Nicklist.gohtml", s.getActiveWindow().GetUsers())
+	}
 	err := sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
-	if info.ActiveWindow == nil || info.ActiveWindow.GetServer() == nil {
+	if s.getActiveWindow() == nil || s.getActiveWindow().GetServer() == nil {
 		return
 	}
 	type FileHost struct {
 		Url string `json:"filehost"`
 	}
-	jsonData, _ := json.Marshal(FileHost{Url: info.ActiveWindow.GetServer().GetFileHost()})
+	jsonData, _ := json.Marshal(FileHost{Url: s.getActiveWindow().GetServer().GetFileHost()})
 	err = sse.MergeSignals(jsonData)
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)

@@ -173,7 +173,8 @@ h1 {
 
 #nicklist {
   grid-area: nicklist;
-  overflow-y: scroll;
+  overflow-y: auto;
+  padding-right: 1rem;
 }
 
 #messages {

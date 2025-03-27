@@ -143,7 +143,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
-	if info.ActiveWindow == nil {
+	if info.ActiveWindow == nil || info.ActiveWindow.GetServer() == nil {
 		return
 	}
 	type FileHost struct {

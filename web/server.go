@@ -44,6 +44,7 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 		},
 		connectionManager: cm,
 		commands:          commands,
+		activeWindow:      nil,
 	}
 	server.addRoutes(mux)
 	return server

@@ -457,8 +457,10 @@ label {
 input, textarea, button {
   grid-column: controls;
   grid-row: auto;
+  width: 100%;
 
   &[type="checkbox"] {
     justify-self: start;
+    width: auto;
   }
 }

@@ -21,7 +21,7 @@ type Channel struct {
 }
 
 func NewChannel(connection *Connection, name string) *Channel {
-	s, _ := uniqueid.Generateid("a", 5, "h")
+	s, _ := uniqueid.Generateid("a", 5, "c")
 	channel := &Channel{
 		id:        s,
 		conection: connection,

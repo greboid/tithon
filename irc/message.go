@@ -6,6 +6,7 @@ import (
 	"html"
 	"log/slog"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -96,13 +97,12 @@ func (m *Message) GetNickname() string {
 }
 
 func (m *Message) GetNameColour() string {
-	nameColours := []string{"nickcolour1", "nickcolour2", "nickcolour3", "nickcolour4", "nickcolour5", "nickcolour6", "nickcolour7", "nickcolour8"}
 	count := 0
 	for i := range m.nickname {
 		count += int(m.nickname[i])
 	}
-	count = count % len(nameColours)
-	return nameColours[count]
+	count = 1 + (count % 32)
+	return "nickcolour" + strconv.Itoa(count)
 }
 
 func (m *Message) GetTimestamp() string {

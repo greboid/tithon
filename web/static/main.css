@@ -23,14 +23,38 @@
   --unread: light-dark(var(--light-accent), var(--dark-accent));
   --highlight: light-dark(var(--light-accent2), var(--dark-accent2));
 
-  --nickColour1: #E90E7F;
-  --nickColour2: #8E55E9;
-  --nickColour3: #B30E0E;
-  --nickColour4: #18B33C;
-  --nickColour5: #58ADB3;
-  --nickColour6: #9E54B3;
-  --nickColour7: #B39875;
-  --nickColour8: #3176B3;
+  --nickColour1: #556b2f;
+  --nickColour2: #228b22;
+  --nickColour3: #8b0000;
+  --nickColour4: #483d8b;
+  --nickColour5: #b8860b;
+  --nickColour6: #008b8b;
+  --nickColour7: #4682b4;
+  --nickColour8: #000080;
+  --nickColour9: #32cd32;
+  --nickColour10: #7f007f;
+  --nickColour11: #ff0000;
+  --nickColour12: #00ff00
+  --nickColour13: #8a2be2;
+  --nickColour14: #00ffff;
+  --nickColour15: #0000ff;
+  --nickColour16: #adff2f;
+  --nickColour17: #ff6347;
+  --nickColour18: #da70d6;
+  --nickColour19: #ff00ff;
+  --nickColour20: #1e90ff;
+  --nickColour21: #db7093;
+  --nickColour22: #f0e68c;
+  --nickColour23: #ffff54;
+  --nickColour24: #b0e0e6;
+  --nickColour25: #ff1493;
+  --nickColour26: #7b68ee;
+  --nickColour27: #ffa07a;
+  --nickColour28: #98fb98;
+  --nickColour29: #ffc0cb;
+  --nickColour30: #98fb98;
+  --nickColour31: #3176b3;
+  --nickColour32: #b39875;
 
   --irccolour0: #ffffff;
   --irccolour1: #000000;
@@ -105,7 +129,8 @@ h1 {
           flex-grow: 1;
 
           &.active {
-            font-weight: bold;
+            font-weight: bolder;
+            font-style: italic;
           }
 
           &.unread {
@@ -347,6 +372,83 @@ h1 {
 
   .nickcolour8 {
     color: var(--nickColour8)
+  }
+
+  .nickcolour9 {
+    color: var(--nickColour9)
+  }
+
+  .nickcolour10 {
+    color: var(--nickColour10)
+  }
+
+  .nickcolour11 {
+    color: var(--nickColour11)
+  }
+  .nickcolour12 {
+    color: var(--nickColour12)
+  }
+  .nickcolour13 {
+    color: var(--nickColour13)
+  }
+  .nickcolour14 {
+    color: var(--nickColour14)
+  }
+  .nickcolour15 {
+    color: var(--nickColour15)
+  }
+  .nickcolour16 {
+    color: var(--nickColour16)
+  }
+  .nickcolour17 {
+    color: var(--nickColour17)
+  }
+  .nickcolour18 {
+    color: var(--nickColour18)
+  }
+  .nickcolour19 {
+    color: var(--nickColour19)
+  }
+
+  .nickcolour20 {
+    color: var(--nickColour20)
+  }
+
+  .nickcolour21 {
+    color: var(--nickColour21)
+  }
+  .nickcolour22 {
+    color: var(--nickColour22)
+  }
+  .nickcolour23 {
+    color: var(--nickColour23)
+  }
+  .nickcolour24 {
+    color: var(--nickColour24)
+  }
+  .nickcolour25 {
+    color: var(--nickColour25)
+  }
+  .nickcolour26 {
+    color: var(--nickColour26)
+  }
+  .nickcolour27 {
+    color: var(--nickColour27)
+  }
+  .nickcolour28 {
+    color: var(--nickColour28)
+  }
+  .nickcolour29 {
+    color: var(--nickColour29)
+  }
+  .nickcolour30 {
+    color: var(--nickColour30)
+  }
+  .nickcolour31 {
+    color: var(--nickColour31)
+  }
+  .nickcolour32 {
+    color: var(--nickColour32)
   }
 
   & a {

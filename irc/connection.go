@@ -79,14 +79,6 @@ func (c *Connection) GetID() string {
 	return c.id
 }
 
-func (c *Connection) GetName() string {
-	network := c.connection.ISupport()["NETWORK"]
-	if c.connection.Connected() && len(network) > 0 {
-		return network
-	}
-	return c.hostname
-}
-
 func (c *Connection) GetFileHost() string {
 	return c.connection.ISupport()["soju.im/FILEHOST"]
 }

@@ -152,6 +152,10 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
 	h.connection.AddMessage(NewMessage("", fmt.Sprintf("Connected to %s", h.connection.connection.Server), Event))
+	network := h.connection.connection.ISupport()["NETWORK"]
+	if len(network) > 0 {
+		h.connection.Window.SetName(network)
+	}
 }
 
 func (h *Handler) handleNameReply(message ircmsg.Message) {

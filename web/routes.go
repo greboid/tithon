@@ -245,7 +245,7 @@ func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setActiveWindow(channel.Window)
-	slog.Debug("Changing Window", "server", "window", channel.Window.GetID())
+	slog.Debug("Changing Window", "window", channel.Window.GetID())
 	s.handleIndex(w, r)
 }
 

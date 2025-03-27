@@ -118,13 +118,16 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
+	var fileHost string
 	if s.getActiveWindow() == nil || s.getActiveWindow().GetServer() == nil {
-		return
+		fileHost = ""
+	} else {
+		fileHost = s.getActiveWindow().GetServer().GetFileHost()
 	}
 	type FileHost struct {
 		Url string `json:"filehost"`
 	}
-	jsonData, _ := json.Marshal(FileHost{Url: s.getActiveWindow().GetServer().GetFileHost()})
+	jsonData, _ := json.Marshal(FileHost{Url: fileHost})
 	err = sse.MergeSignals(jsonData)
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)

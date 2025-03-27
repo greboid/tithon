@@ -10,12 +10,9 @@ func (c Msg) GetHelp() string {
 	return "Performs an action in a channel or private message"
 }
 
-func (c Msg) Execute(_ *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil {
+func (c Msg) Execute(_ *ConnectionManager, window *Window, input string) error {
+	if window == nil {
 		return NoServerError
 	}
-	if channel == nil {
-		return NoChannelError
-	}
-	return server.SendMessage(channel.GetID(), input)
+	return window.connection.SendMessage(window.GetID(), input)
 }

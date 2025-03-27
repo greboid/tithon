@@ -10,10 +10,10 @@ func (c Nick) GetHelp() string {
 	return "Changes your nickname"
 }
 
-func (c Nick) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil {
+func (c Nick) Execute(_ *ConnectionManager, window *Window, input string) error {
+	if window == nil {
 		return NoServerError
 	}
-	server.connection.SetNick(input)
+	window.connection.connection.SetNick(input)
 	return nil
 }

@@ -89,21 +89,24 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	info := templates.Index{}
-	info.Connections = s.connectionManager.GetConnections()
-	info.ActiveServer = s.getActiveServer()
-	info.ActiveChannel = s.getActiveChannel()
-	if info.ActiveChannel != nil {
-		info.WindowInfo = info.ActiveChannel.GetTopic().GetTopic()
-		info.Messages = info.ActiveChannel.GetMessages()
-		info.Users = info.ActiveChannel.GetUsers()
-	} else if info.ActiveServer != nil {
-		info.WindowInfo = info.ActiveServer.GetName()
-		info.Messages = info.ActiveServer.GetMessages()
+	var err error
+	if s.getActiveWindow() == nil {
+		err = s.templates.ExecuteTemplate(w, "Index.gohtml", templates.Index{
+			Connections:  s.connectionManager.GetConnections(),
+			ActiveWindow: s.getActiveWindow(),
+			WindowInfo:   "",
+			Messages:     nil,
+			Users:        nil,
+		})
 	} else {
-		info.WindowInfo = ""
+		err = s.templates.ExecuteTemplate(w, "Index.gohtml", templates.Index{
+			Connections:  s.connectionManager.GetConnections(),
+			ActiveWindow: s.getActiveWindow(),
+			WindowInfo:   s.getActiveWindow().GetTitle(),
+			Messages:     s.getActiveWindow().GetMessages(),
+			Users:        s.getActiveWindow().GetUsers(),
+		})
 	}
-	err := s.templates.ExecuteTemplate(w, "Index.gohtml", info)
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)
 		return
@@ -115,42 +118,38 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
-	info := templates.Index{}
-	info.Connections = s.connectionManager.GetConnections()
-	info.ActiveServer = s.getActiveServer()
-	info.ActiveChannel = s.getActiveChannel()
-	s.outputTemplate(&data, "Serverlist.gohtml", templates.ServerList{
-		Connections:   s.connectionManager.GetConnections(),
-		ActiveServer:  info.ActiveServer,
-		ActiveChannel: info.ActiveChannel,
-	})
-	if info.ActiveChannel != nil {
-		s.outputTemplate(&data, "WindowInfo.gohtml", info.ActiveChannel.GetTopic().GetTopic())
-		s.outputTemplate(&data, "Messages.gohtml", info.ActiveChannel.GetMessages())
-		s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{
-			Users: info.ActiveChannel.GetUsers(),
-		})
-	} else if info.ActiveServer != nil {
-		s.outputTemplate(&data, "WindowInfo.gohtml", info.ActiveServer.GetName())
-		s.outputTemplate(&data, "Messages.gohtml", info.ActiveServer.GetMessages())
-		s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{})
-	} else {
-		s.outputTemplate(&data, "WindowInfo.gohtml", "")
-		s.outputTemplate(&data, "Messages.gohtml", nil)
-		s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{})
+	info := templates.Index{
+		Connections:  s.connectionManager.GetConnections(),
+		ActiveWindow: s.getActiveWindow(),
 	}
+	if s.getActiveWindow() == nil {
+		info.WindowInfo = ""
+		info.Messages = nil
+		info.Users = nil
+	} else {
+		info.WindowInfo = s.getActiveWindow().GetTitle()
+		info.Messages = s.getActiveWindow().GetMessages()
+		info.Users = s.getActiveWindow().GetUsers()
+	}
+	s.outputTemplate(&data, "Serverlist.gohtml", templates.ServerList{
+		Connections:  s.connectionManager.GetConnections(),
+		ActiveWindow: info.ActiveWindow,
+	})
+	s.outputTemplate(&data, "WindowInfo.gohtml", info.WindowInfo)
+	s.outputTemplate(&data, "Messages.gohtml", info.Messages)
+	s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{Users: info.Users})
 	err := sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
-	if info.ActiveServer == nil {
+	if info.ActiveWindow == nil {
 		return
 	}
 	type FileHost struct {
 		Url string `json:"filehost"`
 	}
-	jsonData, _ := json.Marshal(FileHost{Url: info.ActiveServer.GetFileHost()})
+	jsonData, _ := json.Marshal(FileHost{Url: info.ActiveWindow.GetServer().GetFileHost()})
 	err = sse.MergeSignals(jsonData)
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)
@@ -267,8 +266,8 @@ func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Invalid change channel call, unknown channel", "server", serverID, "channel", channelID)
 		return
 	}
-	s.setActiveChannel(channel)
-	slog.Debug("Changing Window", "server", s.getActiveServer().GetID(), "channel", channel.GetID())
+	s.setActiveWindow(channel.Window)
+	slog.Debug("Changing Window", "server", "window", channel.Window.GetID())
 	s.handleIndex(w, r)
 }
 
@@ -282,11 +281,11 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	channel := connection.GetChannel(channelID)
 	if channel == nil {
-		slog.Debug("Invalid change channel call, unknown channel", "server", serverID, "channel", channelID)
+		slog.Debug("Changing Window", "window", s.getActiveWindow().GetID())
 		return
 	}
-	s.setActiveChannel(channel)
-	slog.Debug("Changing Window", "server", s.getActiveServer().GetID(), "channel", s.getActiveChannel().GetID())
+	s.setActiveWindow(channel.Window)
+	slog.Debug("Changing Window", "window", channel.Window.GetID())
 	sse := datastar.NewSSE(w, r)
 	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"/"+channelID+"')", datastar.WithExecuteScriptAutoRemove(true))
 	s.UpdateUI(w, r)
@@ -299,8 +298,8 @@ func (s *Server) handleServer(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Invalid change server call, unknown server", "server", serverID)
 		return
 	}
-	s.setActiveServer(connection)
-	slog.Debug("Changing Server", "server", connection.GetID())
+	s.setActiveWindow(connection.Window)
+	slog.Debug("Changing Window", "window", s.getActiveWindow().GetID())
 	s.handleIndex(w, r)
 }
 
@@ -311,8 +310,8 @@ func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Invalid change server call, unknown server", "server", serverID)
 		return
 	}
-	s.setActiveServer(connection)
-	slog.Debug("Changing Server", "server", connection.GetID())
+	s.setActiveWindow(connection.Window)
+	slog.Debug("Changing Window", "window", connection.Window.GetID())
 	sse := datastar.NewSSE(w, r)
 	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"')", datastar.WithExecuteScriptAutoRemove(true))
 
@@ -324,7 +323,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	if input == "" {
 		return
 	}
-	s.commands.Execute(s.connectionManager, s.getActiveServer(), s.getActiveChannel(), input)
+	s.commands.Execute(s.connectionManager, s.getActiveWindow(), input)
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
@@ -349,7 +348,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
-	if s.getActiveServer() == nil {
+	if s.getActiveWindow() == nil {
 		return
 	}
 	type uploadBody struct {
@@ -379,7 +378,7 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dataReader := bytes.NewReader(data)
-	username, password := s.getActiveServer().GetCredentials()
+	username, password := s.getActiveWindow().GetServer().GetCredentials()
 	if strings.Contains(username, "/") {
 		username = strings.Split(username, "/")[0]
 	}
@@ -424,10 +423,10 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
-	if s.getActiveServer() == nil {
+	if s.getActiveWindow() == nil {
 		return
 	}
-	err := s.getActiveServer().JoinChannel(r.URL.Query().Get("channel"), r.URL.Query().Get("key"))
+	err := s.getActiveWindow().GetServer().JoinChannel(r.URL.Query().Get("channel"), r.URL.Query().Get("key"))
 	if err != nil {
 		slog.Debug("Error joining channel", "error", err)
 		return
@@ -448,10 +447,10 @@ func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
-	if s.getActiveServer() == nil {
+	if s.getActiveWindow() == nil {
 		return
 	}
-	err := s.getActiveServer().PartChannel(r.URL.Query().Get("channel"))
+	err := s.getActiveWindow().GetServer().PartChannel(r.URL.Query().Get("channel"))
 	if err != nil {
 		slog.Debug("Error parting channel", "error", err)
 		return

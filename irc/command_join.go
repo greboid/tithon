@@ -10,9 +10,9 @@ func (c Join) GetHelp() string {
 	return "Joins a channel"
 }
 
-func (c Join) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil {
+func (c Join) Execute(_ *ConnectionManager, window *Window, input string) error {
+	if window == nil {
 		return NoServerError
 	}
-	return server.JoinChannel(input, "")
+	return window.connection.JoinChannel(input, "")
 }

@@ -14,13 +14,13 @@ func (c ChangeTopic) GetHelp() string {
 	return "Changes the topic"
 }
 
-func (c ChangeTopic) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil {
+func (c ChangeTopic) Execute(_ *ConnectionManager, window *Window, input string) error {
+	if window == nil {
 		return NoServerError
 	}
 	split := strings.SplitN(input, " ", 2)
 	if len(split) != 2 {
 		return NoChannelError
 	}
-	return server.connection.Send("TOPIC", split[0], split[1])
+	return window.connection.connection.Send("TOPIC", split[0], split[1])
 }

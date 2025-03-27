@@ -2,12 +2,10 @@ package irc
 
 import (
 	uniqueid "github.com/albinj12/unique-id"
-	"slices"
-	"strings"
 )
 
 type Channel struct {
-	Window
+	*Window
 	topic *Topic
 	users []*User
 }
@@ -15,15 +13,17 @@ type Channel struct {
 func NewChannel(connection *Connection, name string) *Channel {
 	s, _ := uniqueid.Generateid("a", 5, "c")
 	channel := &Channel{
-		Window: Window{
+		Window: &Window{
 			id:         s,
 			name:       name,
+			title:      "No topic Set",
 			messages:   make([]*Message, 0),
 			connection: connection,
 		},
-		topic: nil,
+		topic: NewTopic("No topic Set"),
 		users: nil,
 	}
+	channel.Window.hasUsers.Store(true)
 	return channel
 }
 
@@ -36,36 +36,4 @@ func (c *Channel) GetTopic() *Topic {
 		return NewTopic("")
 	}
 	return c.topic
-}
-
-func (c *Channel) SetUsers(users []*User) {
-	c.state.Lock()
-	defer c.state.Unlock()
-	c.users = users
-	c.SortUsers()
-}
-
-func (c *Channel) AddUser(user *User) {
-	c.state.Lock()
-	defer c.state.Unlock()
-	c.users = append(c.users, user)
-	c.SortUsers()
-}
-
-func (c *Channel) GetUsers() []*User {
-	var users []*User
-	for i := range c.users {
-		users = append(users, c.users[i])
-	}
-	return users
-}
-
-func (c *Channel) SortUsers() {
-	slices.SortFunc(c.users, func(a, b *User) int {
-		modeCmp := strings.Compare(b.modes, a.modes)
-		if modeCmp != 0 {
-			return modeCmp
-		}
-		return strings.Compare(a.nickname, b.nickname)
-	})
 }

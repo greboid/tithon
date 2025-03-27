@@ -10,12 +10,9 @@ func (c SendNotice) GetHelp() string {
 	return "Sends a notice"
 }
 
-func (c SendNotice) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil {
+func (c SendNotice) Execute(_ *ConnectionManager, window *Window, input string) error {
+	if window == nil {
 		return NoServerError
 	}
-	if channel == nil {
-		return NoChannelError
-	}
-	return server.SendNotice(channel.GetID(), input)
+	return window.connection.SendNotice(window.GetID(), input)
 }

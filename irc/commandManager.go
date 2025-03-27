@@ -15,7 +15,7 @@ var (
 type Command interface {
 	GetName() string
 	GetHelp() string
-	Execute(*ConnectionManager, *Connection, *Channel, string) error
+	Execute(*ConnectionManager, *Window, string) error
 }
 
 type CommandManager struct {
@@ -35,7 +35,7 @@ func NewCommandManager() *CommandManager {
 	}}
 }
 
-func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connection, channel *Channel, input string) {
+func (cm *CommandManager) Execute(connections *ConnectionManager, window *Window, input string) {
 	if !strings.HasPrefix(input, "/") {
 		input = "/msg " + input
 	}
@@ -45,25 +45,23 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, server *Connec
 		if first == cm.commands[i].GetName() {
 			input = strings.TrimPrefix(input, first+" ")
 			input = emoji.Parse(input)
-			err := cm.commands[i].Execute(connections, server, channel, input)
+			err := cm.commands[i].Execute(connections, window, input)
 			if err != nil {
-				cm.showCommandError(server, channel, cm.commands[i], err.Error())
+				cm.showCommandError(window, cm.commands[i], err.Error())
 			}
 			return
 		}
 	}
-	cm.showError(server, channel, "Unknown command: "+input)
+	cm.showError(window, "Unknown command: "+input)
 }
 
-func (cm *CommandManager) showCommandError(server *Connection, channel *Channel, command Command, message string) {
-	cm.showError(server, channel, "Command Error: "+command.GetName()+": "+message)
+func (cm *CommandManager) showCommandError(window *Window, command Command, message string) {
+	cm.showError(window, "Command Error: "+command.GetName()+": "+message)
 }
 
-func (cm *CommandManager) showError(server *Connection, channel *Channel, message string) {
-	if channel != nil {
-		channel.AddMessage(NewMessage("", message, Error))
-	} else if server != nil {
-		server.AddMessage(NewMessage("", message, Error))
+func (cm *CommandManager) showError(window *Window, message string) {
+	if window != nil {
+		window.AddMessage(NewMessage("", message, Error))
 	} else {
 		slog.Error("Command error", "message", message)
 	}

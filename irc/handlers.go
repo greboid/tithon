@@ -58,6 +58,7 @@ func (h *Handler) handleTopic(message ircmsg.Message) {
 	topic := NewTopic(strings.Join(message.Params[1:], " "))
 	slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
 	channel.SetTopic(topic)
+	channel.SetTitle(topic.GetTopic())
 	channel.AddMessage(NewMessage("", message.Nick()+" changed the topic: "+topic.GetTopic(), Event))
 }
 
@@ -66,6 +67,7 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 		if channel.name == message.Params[1] {
 			topic := NewTopic(strings.Join(message.Params[2:], " "))
 			channel.SetTopic(topic)
+			channel.SetTitle(topic.GetTopic())
 			slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
 			return
 		}

@@ -14,7 +14,7 @@
 </head>
 <body>
 <main id="main" data-on-load="@get('/update', {openWhenHidden: true})">
-    {{ template "Serverlist.gohtml" (map "Connections" .Connections "ActiveServer" .ActiveServer  "ActiveChannel" .ActiveChannel)}}
+    {{ template "Serverlist.gohtml" (map "Connections" .Connections "ActiveWindow" .ActiveWindow)}}
     {{ template "WindowInfo.gohtml" .WindowInfo}}
     {{ template "Messages.gohtml" .Messages }}
     {{ template "Nicklist.gohtml" (map "Users" .Users)}}

@@ -14,7 +14,7 @@ import (
 )
 
 type Connection struct {
-	Window
+	*Window
 	connection        *ircevent.Connection
 	hostname          string
 	port              int
@@ -36,7 +36,7 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 	s, _ := uniqueid.Generateid("a", 5, "s")
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
-	return &Connection{
+	connection := &Connection{
 		hostname:          hostname,
 		port:              port,
 		tls:               tls,
@@ -67,12 +67,16 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 			},
 			Debug: true,
 		},
-		Window: Window{
-			id:       s,
-			name:     hostname,
-			messages: make([]*Message, 0),
-		},
 	}
+	connection.Window = &Window{
+		id:         s,
+		name:       hostname,
+		title:      hostname,
+		messages:   make([]*Message, 0),
+		connection: connection,
+	}
+
+	return connection
 }
 
 func (c *Connection) GetID() string {
@@ -80,6 +84,9 @@ func (c *Connection) GetID() string {
 }
 
 func (c *Connection) GetFileHost() string {
+	if c.connection == nil {
+		return ""
+	}
 	return c.connection.ISupport()["soju.im/FILEHOST"]
 }
 

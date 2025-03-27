@@ -10,10 +10,10 @@ func (c Quit) GetHelp() string {
 	return "Quits a server, removing it from the list"
 }
 
-func (c Quit) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil {
+func (c Quit) Execute(cm *ConnectionManager, window *Window, _ string) error {
+	if window == nil {
 		return NoServerError
 	}
-	cm.RemoveConnection(server.GetID())
+	cm.RemoveConnection(window.connection.GetID())
 	return nil
 }

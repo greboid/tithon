@@ -10,13 +10,10 @@ func (c Part) GetHelp() string {
 	return "Parts a channel"
 }
 
-func (c Part) Execute(cm *ConnectionManager, server *Connection, channel *Channel, input string) error {
-	if server == nil {
+func (c Part) Execute(_ *ConnectionManager, window *Window, _ string) error {
+	if window == nil {
 		return NoServerError
 	}
-	if channel == nil {
-		return NoChannelError
-	}
-	server.RemoveChannel(channel.id)
+	window.connection.RemoveChannel(window.GetID())
 	return nil
 }

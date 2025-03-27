@@ -27,8 +27,7 @@ type Server struct {
 	httpServer           *http.Server
 	connectionManager    *irc.ConnectionManager
 	commands             *irc.CommandManager
-	activeServer         *irc.Connection
-	activeChannel        *irc.Channel
+	activeWindow         *irc.Window
 	activePrivateMessage *irc.PrivateMessage
 	fixedPort            int
 	templates            *template.Template
@@ -95,48 +94,21 @@ func (s *Server) getPort() (net.IP, int, error) {
 	return lp.IP, lp.Port, nil
 }
 
-func (s *Server) setActiveChannel(channel *irc.Channel) {
+func (s *Server) setActiveWindow(window *irc.Window) {
 	s.activeLock.Lock()
 	defer s.activeLock.Unlock()
-	if s.activeChannel != nil {
-		s.activeChannel.SetActive(false)
+	if s.activeWindow != nil {
+		s.activeWindow.SetActive(false)
 	}
-	if s.activeServer != nil {
-		s.activeServer.SetActive(false)
+	if window != nil {
+		window.SetActive(true)
+		window.SetUnread(false)
 	}
-	if channel != nil {
-		channel.SetActive(true)
-		channel.SetUnread(false)
-		s.activeServer = channel.GetServer()
-	}
-	s.activeChannel = channel
+	s.activeWindow = window
 }
 
-func (s *Server) setActiveServer(server *irc.Connection) {
+func (s *Server) getActiveWindow() *irc.Window {
 	s.activeLock.Lock()
 	defer s.activeLock.Unlock()
-	if s.activeChannel != nil {
-		s.activeChannel.SetActive(false)
-	}
-	if s.activeServer != nil {
-		s.activeServer.SetActive(false)
-	}
-	if server != nil {
-		server.SetActive(true)
-		server.SetUnread(false)
-	}
-	s.activeChannel = nil
-	s.activeServer = server
-}
-
-func (s *Server) getActiveServer() *irc.Connection {
-	s.activeLock.Lock()
-	defer s.activeLock.Unlock()
-	return s.activeServer
-}
-
-func (s *Server) getActiveChannel() *irc.Channel {
-	s.activeLock.Lock()
-	defer s.activeLock.Unlock()
-	return s.activeChannel
+	return s.activeWindow
 }

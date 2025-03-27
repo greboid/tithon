@@ -10,12 +10,12 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
 type Connection struct {
-	id                string
+	Window
+	connection        *ircevent.Connection
 	hostname          string
 	port              int
 	tls               bool
@@ -25,15 +25,10 @@ type Connection struct {
 	preferredNickname string
 	channels          map[string]*Channel
 	pms               map[string]*PrivateMessage
-	connection        *ircevent.Connection
 	mutex             sync.Mutex
 	callbackHandler   *Handler
 	supportsFileHost  bool
 	currentModes      string
-	messageLock       sync.Mutex
-	messages          []*Message
-	unread            atomic.Bool
-	active            atomic.Bool
 	possibleUserModes []*UserMode
 }
 
@@ -42,7 +37,6 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
 	return &Connection{
-		id:                s,
 		hostname:          hostname,
 		port:              port,
 		tls:               tls,
@@ -50,6 +44,8 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 		saslLogin:         sasllogin,
 		saslPassword:      saslpassword,
 		preferredNickname: profile.nickname,
+		channels:          map[string]*Channel{},
+		pms:               map[string]*PrivateMessage{},
 		connection: &ircevent.Connection{
 			Timeout:      10 * time.Second,
 			Server:       fmt.Sprintf("%s:%d", hostname, port),
@@ -71,9 +67,11 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 			},
 			Debug: true,
 		},
-		channels: map[string]*Channel{},
-		pms:      map[string]*PrivateMessage{},
-		messages: make([]*Message, 0),
+		Window: Window{
+			id:       s,
+			name:     hostname,
+			messages: make([]*Message, 0),
+		},
 	}
 }
 
@@ -216,39 +214,4 @@ func (c *Connection) GetModeNameForMode(mode string) string {
 		return ""
 	}
 	return modes[1][index : index+1]
-}
-
-func (c *Connection) AddMessage(message *Message) {
-	if !c.active.Load() {
-		c.unread.Store(true)
-	}
-	c.messageLock.Lock()
-	c.messages = append(c.messages, message)
-	c.messageLock.Unlock()
-}
-
-func (c *Connection) GetMessages() []*Message {
-	var messages []*Message
-	c.messageLock.Lock()
-	for _, message := range c.messages {
-		messages = append(messages, message)
-	}
-	c.messageLock.Unlock()
-	return messages
-}
-
-func (c *Connection) SetActive(b bool) {
-	c.active.Store(b)
-}
-
-func (c *Connection) IsActive() bool {
-	return c.active.Load()
-}
-
-func (c *Connection) SetUnread(b bool) {
-	c.unread.Store(b)
-}
-
-func (c *Connection) IsUnread() bool {
-	return c.unread.Load()
 }

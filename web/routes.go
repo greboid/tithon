@@ -137,7 +137,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	})
 	s.outputTemplate(&data, "WindowInfo.gohtml", info.WindowInfo)
 	s.outputTemplate(&data, "Messages.gohtml", info.Messages)
-	s.outputTemplate(&data, "Nicklist.gohtml", templates.Nicklist{Users: info.Users})
+	s.outputTemplate(&data, "Nicklist.gohtml", info.Users)
 	err := sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)

@@ -99,12 +99,12 @@ func (c *Connection) Connect() {
 		}
 		c.callbackHandler.addCallbacks()
 	}
-	c.AddMessage(NewEvent(fmt.Sprintf("Connecting to %s", c.connection.Server)))
+	c.AddMessage(NewEvent(time.Now(), fmt.Sprintf("Connecting to %s", c.connection.Server)))
 	//TODO Need to store a connection state
 	if !c.connection.Connected() {
 		err := c.connection.Connect()
 		if err != nil {
-			c.AddMessage(NewError("Connection error: " + err.Error()))
+			c.AddMessage(NewError(time.Now(), "Connection error: "+err.Error()))
 		}
 	}
 
@@ -157,24 +157,24 @@ func (c *Connection) HasCapability(name string) bool {
 	return exists
 }
 
-func (c *Connection) SendMessage(window string, message string) error {
+func (c *Connection) SendMessage(time time.Time, window string, message string) error {
 	channel := c.GetChannel(window)
 	if channel == nil {
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message))
+		channel.AddMessage(NewMessage(time, c.connection.CurrentNick(), message))
 	}
 	return c.connection.Send("PRIVMSG", channel.name, message)
 }
 
-func (c *Connection) SendNotice(window string, message string) error {
+func (c *Connection) SendNotice(time time.Time, window string, message string) error {
 	channel := c.GetChannel(window)
 	if channel == nil {
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message))
+		channel.AddMessage(NewMessage(time, c.connection.CurrentNick(), message))
 	}
 	return c.connection.Send("NOTICE", channel.name, message)
 }

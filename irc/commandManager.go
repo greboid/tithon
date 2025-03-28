@@ -5,6 +5,7 @@ import (
 	"github.com/enescakir/emoji"
 	"log/slog"
 	"strings"
+	"time"
 )
 
 var (
@@ -61,7 +62,7 @@ func (cm *CommandManager) showCommandError(window *Window, command Command, mess
 
 func (cm *CommandManager) showError(window *Window, message string) {
 	if window != nil {
-		window.AddMessage(NewError(message))
+		window.AddMessage(NewError(time.Now(), message))
 	} else {
 		slog.Error("Command error", "message", message)
 	}

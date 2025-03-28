@@ -3,6 +3,7 @@ package irc
 import (
 	"fmt"
 	"github.com/ergochat/irc-go/ircfmt"
+	"github.com/ergochat/irc-go/ircmsg"
 	"html"
 	"log/slog"
 	"regexp"
@@ -28,47 +29,42 @@ const (
 )
 
 type Message struct {
-	timestampString string
-	timestamp       time.Time
-	nickname        string
-	message         string
-	messageType     MessageType
-	highlights      []string
+	timestamp   time.Time
+	nickname    string
+	message     string
+	messageType MessageType
+	highlights  []string
 }
 
-func NewNotice(nickname string, message string, highlights ...string) *Message {
-	return newMessage(time.Now().Format(v3TimestampFormat), nickname, message, Notice, highlights)
-}
-func NewNoticeWithTime(messageTime string, nickname string, message string, highlights ...string) *Message {
+func NewNotice(messageTime time.Time, nickname string, message string, highlights ...string) *Message {
 	return newMessage(messageTime, nickname, message, Notice, highlights)
 }
-func NewEvent(message string) *Message {
-	return newMessage(time.Now().Format(v3TimestampFormat), "", message, Event, nil)
-}
-func NewEventWithTime(messageTime string, message string) *Message {
+
+func NewEvent(messageTime time.Time, message string) *Message {
 	return newMessage(messageTime, "", message, Event, nil)
 }
-func NewError(message string) *Message {
-	return newMessage(time.Now().Format(v3TimestampFormat), "", message, Error, nil)
-}
-func NewErrorWithTime(messageTime string, message string) *Message {
+
+func NewError(messageTime time.Time, message string) *Message {
 	return newMessage(messageTime, "", message, Error, nil)
 }
 
-func NewMessage(nickname string, message string, highlights ...string) *Message {
-	return newMessage(time.Now().Format(v3TimestampFormat), nickname, message, Normal, highlights)
-}
-
-func NewMessageWithTime(messageTime string, nickname string, message string, highlights ...string) *Message {
+func NewMessage(messageTime time.Time, nickname string, message string, highlights ...string) *Message {
 	return newMessage(messageTime, nickname, message, Normal, highlights)
 }
 
-func newMessage(timestamp string, nickname string, message string, messageType MessageType, highlights []string) *Message {
-	parsedTime, err := time.Parse(v3TimestampFormat, timestamp)
-	if err != nil {
-		slog.Error("Error parsing time from server", "time", timestamp, "error", err)
-		parsedTime = time.Now()
+func GetTimeForMessage(message ircmsg.Message) time.Time {
+	var err error
+	parsedTime := time.Now()
+	if found, messageTime := message.GetTag("time"); found {
+		parsedTime, err = time.Parse(v3TimestampFormat, messageTime)
+		if err != nil {
+			slog.Error("Error parsing time from server", "time", messageTime, "error", err)
+		}
 	}
+	return parsedTime
+}
+
+func newMessage(parsedTime time.Time, nickname string, message string, messageType MessageType, highlights []string) *Message {
 	m := &Message{
 		timestamp:   parsedTime,
 		nickname:    nickname,

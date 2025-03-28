@@ -55,11 +55,16 @@ func (h *Handler) handleTopic(message ircmsg.Message) {
 		slog.Warn("Topic for unknown channel", "message", message)
 		return
 	}
-	topic := NewTopic(strings.Join(message.Params[1:], " "))
+	newTopic := strings.Join(message.Params[1:], " ")
+	topic := NewTopic(newTopic)
 	slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
 	channel.SetTopic(topic)
 	channel.SetTitle(topic.GetTopic())
-	channel.AddMessage(NewEvent(message.Nick() + " changed the topic: " + topic.GetTopic()))
+	if newTopic == "" {
+		channel.AddMessage(NewEvent(message.Nick() + " unset the topic"))
+	} else {
+		channel.AddMessage(NewEvent(message.Nick() + " changed the topic: " + topic.GetTopic()))
+	}
 }
 
 func (h *Handler) handleRPLTopic(message ircmsg.Message) {

@@ -78,7 +78,6 @@ func newMessage(timestamp string, nickname string, message string, messageType M
 }
 
 func (m *Message) parse() *Message {
-
 	m.parseAction()
 	m.parseHighlight()
 	m.parseFormatting()

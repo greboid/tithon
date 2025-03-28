@@ -268,18 +268,23 @@ h1 {
   .fg-10 {
     color: var(--irccolour10);
   }
+
   .fg-11 {
     color: var(--irccolour11);
   }
+
   .fg-12 {
     color: var(--irccolour12);
   }
+
   .fg-13 {
     color: var(--irccolour13);
   }
+
   .fg-14 {
     color: var(--irccolour14);
   }
+
   .fg-15 {
     color: var(--irccolour15);
   }
@@ -311,6 +316,7 @@ h1 {
   .bg-6 {
     background-color: var(--irccolour6);
   }
+
   .bg-7 {
     background-color: var(--irccolour7);
   }
@@ -326,18 +332,23 @@ h1 {
   .bg-10 {
     background-color: var(--irccolour10);
   }
+
   .bg-11 {
     background-color: var(--irccolour11);
   }
+
   .bg-12 {
     background-color: var(--irccolour12);
   }
+
   .bg-13 {
     background-color: var(--irccolour13);
   }
+
   .bg-14 {
     background-color: var(--irccolour14);
   }
+
   .bg-15 {
     background-color: var(--irccolour15);
   }
@@ -385,27 +396,35 @@ h1 {
   .nickcolour11 {
     color: var(--nickColour11)
   }
+
   .nickcolour12 {
     color: var(--nickColour12)
   }
+
   .nickcolour13 {
     color: var(--nickColour13)
   }
+
   .nickcolour14 {
     color: var(--nickColour14)
   }
+
   .nickcolour15 {
     color: var(--nickColour15)
   }
+
   .nickcolour16 {
     color: var(--nickColour16)
   }
+
   .nickcolour17 {
     color: var(--nickColour17)
   }
+
   .nickcolour18 {
     color: var(--nickColour18)
   }
+
   .nickcolour19 {
     color: var(--nickColour19)
   }
@@ -417,36 +436,47 @@ h1 {
   .nickcolour21 {
     color: var(--nickColour21)
   }
+
   .nickcolour22 {
     color: var(--nickColour22)
   }
+
   .nickcolour23 {
     color: var(--nickColour23)
   }
+
   .nickcolour24 {
     color: var(--nickColour24)
   }
+
   .nickcolour25 {
     color: var(--nickColour25)
   }
+
   .nickcolour26 {
     color: var(--nickColour26)
   }
+
   .nickcolour27 {
     color: var(--nickColour27)
   }
+
   .nickcolour28 {
     color: var(--nickColour28)
   }
+
   .nickcolour29 {
     color: var(--nickColour29)
   }
+
   .nickcolour30 {
     color: var(--nickColour30)
   }
+
   .nickcolour31 {
     color: var(--nickColour31)
   }
+
   .nickcolour32 {
     color: var(--nickColour32)
   }
@@ -469,6 +499,7 @@ h1 {
         }
       }
     }
+
     &.action {
       & span.nickname {
         &::before {
@@ -476,35 +507,37 @@ h1 {
         }
       }
     }
+
     &.notice {
       & span.nickname {
         &::before {
           content: "-"
         }
+
         &::after {
           content: "-"
         }
       }
     }
 
-  &.highlight > .message {
-    color: var(--highlight);
-  }
+    &.highlight > .message {
+      color: var(--highlight);
+    }
 
-  & .message {
-    word-wrap: anywhere;
-  }
+    & .message {
+      word-wrap: anywhere;
+    }
 
-  & span.timestamp {
-    padding-right: 1rem;
-  }
+    & span.timestamp {
+      padding-right: 1rem;
+    }
 
-  & span.nickname {
-    text-align: right;
-    padding-right: 1rem;
-    white-space: pre;
+    & span.nickname {
+      text-align: right;
+      padding-right: 1rem;
+      white-space: pre;
+    }
   }
-}
 
 }
 

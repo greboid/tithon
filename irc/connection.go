@@ -99,12 +99,12 @@ func (c *Connection) Connect() {
 		}
 		c.callbackHandler.addCallbacks()
 	}
-	c.AddMessage(NewMessage("", fmt.Sprintf("Connecting to %s", c.connection.Server), Event))
+	c.AddMessage(NewEvent(fmt.Sprintf("Connecting to %s", c.connection.Server)))
 	//TODO Need to store a connection state
 	if !c.connection.Connected() {
 		err := c.connection.Connect()
 		if err != nil {
-			c.AddMessage(NewMessage("", "Connection error: "+err.Error(), Event))
+			c.AddMessage(NewError("Connection error: " + err.Error()))
 		}
 	}
 
@@ -163,7 +163,7 @@ func (c *Connection) SendMessage(window string, message string) error {
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message, Normal))
+		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message))
 	}
 	return c.connection.Send("PRIVMSG", channel.name, message)
 }
@@ -174,7 +174,7 @@ func (c *Connection) SendNotice(window string, message string) error {
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message, Notice))
+		channel.AddMessage(NewMessage(c.connection.CurrentNick(), message))
 	}
 	return c.connection.Send("NOTICE", channel.name, message)
 }

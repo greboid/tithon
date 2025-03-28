@@ -17,50 +17,96 @@ type MessageType int
 
 const (
 	Normal = iota
-	Notice
 	Action
+	Notice
 	Event
 	Error
+
 	Highlight
 	HighlightAction
+	HighlightNotice
 )
 
 type Message struct {
-	timestamp   time.Time
-	nickname    string
-	message     string
-	messageType MessageType
+	timestampString string
+	timestamp       time.Time
+	nickname        string
+	message         string
+	messageType     MessageType
 }
 
-func NewMessage(nickname string, message string, messageType MessageType) *Message {
-	return NewMessageWithTime(time.Now().Format(v3TimestampFormat), nickname, message, messageType)
+func NewNotice(nickname string, message string) *Message {
+	return newMessage(time.Now().Format(v3TimestampFormat), nickname, message, Notice)
+}
+func NewNoticeWithTime(messageTime string, nickname string, message string) *Message {
+	return newMessage(messageTime, nickname, message, Notice)
+}
+func NewEvent(message string) *Message {
+	return newMessage(time.Now().Format(v3TimestampFormat), "", message, Event)
+}
+func NewEventWithTime(messageTime string, message string) *Message {
+	return newMessage(messageTime, "", message, Event)
+}
+func NewError(message string) *Message {
+	return newMessage(time.Now().Format(v3TimestampFormat), "", message, Error)
+}
+func NewErrorWithTime(messageTime string, message string) *Message {
+	return newMessage(messageTime, "", message, Error)
 }
 
-func NewMessageWithTime(messageTime string, nickname string, message string, messageType MessageType) *Message {
-	parsedTime, err := time.Parse(v3TimestampFormat, messageTime)
+func NewMessage(nickname string, message string) *Message {
+	return newMessage(time.Now().Format(v3TimestampFormat), nickname, message, Normal)
+}
+
+func NewMessageWithTime(messageTime string, nickname string, message string) *Message {
+	return newMessage(messageTime, nickname, message, Normal)
+}
+
+func newMessage(timestamp string, nickname string, message string, messageType MessageType) *Message {
+	parsedTime, err := time.Parse(v3TimestampFormat, timestamp)
 	if err != nil {
-		slog.Error("Error parsing time from server", "time", messageTime, "error", err)
+		slog.Error("Error parsing time from server", "time", timestamp, "error", err)
 		parsedTime = time.Now()
 	}
-	ircmsg := &Message{
+	m := &Message{
 		timestamp:   parsedTime,
 		nickname:    nickname,
+		message:     message,
 		messageType: messageType,
 	}
-	if messageType == Normal && strings.HasPrefix(message, "\001ACTION") && strings.HasSuffix(message, "\001") {
-		message = strings.TrimPrefix(message, "\001ACTION")
-		message = strings.TrimSuffix(message, "\001")
-		ircmsg.messageType = Action
+	return m.parse()
+}
+
+func (m *Message) parse() *Message {
+
+	m.parseAction()
+	m.parseHighlight()
+	m.parseFormatting()
+	return m
+}
+
+func (m *Message) parseAction() {
+	if strings.HasPrefix(m.message, "\001ACTION") && strings.HasSuffix(m.message, "\001") {
+		m.message = strings.TrimPrefix(m.message, "\001ACTION")
+		m.message = strings.TrimSuffix(m.message, "\001")
+		m.messageType = Action
 	}
-	if ircmsg.isHighlight(message) {
-		if ircmsg.messageType == Action {
-			ircmsg.messageType = HighlightAction
-		} else if ircmsg.messageType == Normal {
-			ircmsg.messageType = Highlight
-		}
+}
+
+func (m *Message) parseHighlight() {
+	if !m.isHighlight() {
+		return
 	}
-	ircmsg.message = ircmsg.parseFormatting(message)
-	return ircmsg
+	switch m.messageType {
+	case Action:
+		m.messageType = HighlightAction
+	case Notice:
+		m.messageType = HighlightNotice
+	case Normal:
+		m.messageType = Highlight
+	default:
+		slog.Debug("No highlight type defined", "message", m)
+	}
 }
 
 func (m *Message) GetType() MessageType {
@@ -109,20 +155,20 @@ func (m *Message) GetTimestamp() string {
 	return m.timestamp.Format(time.TimeOnly)
 }
 
-func (m *Message) isHighlight(message string) bool {
-	return strings.Contains(strings.ToLower(message), "greboid")
+func (m *Message) isHighlight() bool {
+	return strings.Contains(strings.ToLower(m.message), "greboid")
 }
 
-func (m *Message) parseFormatting(message string) string {
-	output := html.EscapeString(message)
+func (m *Message) parseFormatting() {
+	output := html.EscapeString(m.message)
 	urlRegex := regexp.MustCompile(`(?P<url>https?://[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+)`)
 	output = urlRegex.ReplaceAllString(output, "<a target='_blank' href='${url}'>${url}</a>")
-	output = m.parseIRCFormatting(output)
-	return output
+	m.message = output
+	m.parseIRCFormatting()
 }
 
-func (m *Message) parseIRCFormatting(message string) string {
-	split := ircfmt.Split(message)
+func (m *Message) parseIRCFormatting() {
+	split := ircfmt.Split(m.message)
 	var out strings.Builder
 	for i := range split {
 		var classes []string
@@ -160,5 +206,5 @@ func (m *Message) parseIRCFormatting(message string) string {
 			out.WriteString("</span>")
 		}
 	}
-	return out.String()
+	m.message = out.String()
 }

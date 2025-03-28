@@ -59,7 +59,7 @@ func (h *Handler) handleTopic(message ircmsg.Message) {
 	slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
 	channel.SetTopic(topic)
 	channel.SetTitle(topic.GetTopic())
-	channel.AddMessage(NewMessage("", message.Nick()+" changed the topic: "+topic.GetTopic(), Event))
+	channel.AddMessage(NewEvent(message.Nick() + " changed the topic: " + topic.GetTopic()))
 }
 
 func (h *Handler) handleRPLTopic(message ircmsg.Message) {
@@ -77,9 +77,9 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 	var mess *Message
 	if found, messageTime := message.GetTag("time"); found {
-		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "), Normal)
+		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "))
 	} else {
-		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "), Normal)
+		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "))
 	}
 	if h.isChannel(message.Params[0]) {
 		channel, err := h.connection.GetChannelByName(message.Params[0])
@@ -122,7 +122,7 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.AddMessage(NewMessage("", message.Source+" has parted "+channel.GetName(), Event))
+	channel.AddMessage(NewEvent(message.Source + " has parted " + channel.GetName()))
 }
 
 func (h *Handler) handleKick(message ircmsg.Message) {
@@ -133,13 +133,13 @@ func (h *Handler) handleKick(message ircmsg.Message) {
 	}
 	if message.Params[1] == h.connection.CurrentNick() {
 		h.connection.RemoveChannel(channel.id)
-		h.connection.AddMessage(NewMessage("", message.Nick()+" has kicked you from "+message.Params[0]+" ("+strings.Join(message.Params[2:], " ")+")", Event))
+		h.connection.AddMessage(NewEvent(message.Nick() + " has kicked you from " + message.Params[0] + " (" + strings.Join(message.Params[2:], " ") + ")"))
 		return
 	}
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.AddMessage(NewMessage("", message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")", Event))
+	channel.AddMessage(NewEvent(message.Source + " has kicked " + message.Params[1] + " from " + channel.GetName() + "(" + strings.Join(message.Params[2:], " ") + ")"))
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {
@@ -149,11 +149,11 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 		return
 	}
 	channel.users = append(channel.users, NewUser(message.Nick(), ""))
-	channel.AddMessage(NewMessage("", message.Source+" has joined "+channel.GetName(), Event))
+	channel.AddMessage(NewEvent(message.Source + " has joined " + channel.GetName()))
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
-	h.connection.AddMessage(NewMessage("", fmt.Sprintf("Connected to %s", h.connection.connection.Server), Event))
+	h.connection.AddMessage(NewEvent(fmt.Sprintf("Connected to %s", h.connection.connection.Server)))
 	network := h.connection.connection.ISupport()["NETWORK"]
 	if len(network) > 0 {
 		h.connection.Window.SetName(network)
@@ -182,19 +182,19 @@ func (h *Handler) stripChannelPrefixes(name string) (string, string) {
 
 func (h *Handler) handleUserMode(message ircmsg.Message) {
 	h.connection.currentModes = message.Params[1]
-	h.connection.AddMessage(NewMessage("", "Your modes changed: "+message.Params[1], Event))
+	h.connection.AddMessage(NewEvent("Your modes changed: " + message.Params[1]))
 }
 
 func (h *Handler) handleError(message ircmsg.Message) {
-	h.connection.AddMessage(NewMessage("", strings.Join(message.Params, " "), Event))
+	h.connection.AddMessage(NewEvent(strings.Join(message.Params, " ")))
 }
 
 func (h *Handler) handleNotice(message ircmsg.Message) {
 	var mess *Message
 	if found, messageTime := message.GetTag("time"); found {
-		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "), Notice)
+		mess = NewNoticeWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "))
 	} else {
-		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "), Notice)
+		mess = NewNotice(message.Nick(), strings.Join(message.Params[1:], " "))
 	}
 	if strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@") {
 		h.connection.AddMessage(mess)
@@ -211,20 +211,20 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 }
 
 func (h *Handler) addEvent(message string) {
-	h.connection.AddMessage(NewMessage("", message, Event))
+	h.connection.AddMessage(NewEvent(message))
 }
 
 func (h *Handler) handleNick(message ircmsg.Message) {
 	if message.Nick() == h.connection.CurrentNick() {
 		newNick := message.Params[0]
-		h.connection.AddMessage(NewMessage("", "Nickname changed: "+newNick, Event))
+		h.connection.AddMessage(NewEvent("Nickname changed: " + newNick))
 	}
 	channels := h.connection.GetChannels()
 	for i := range channels {
 		users := channels[i].GetUsers()
 		for j := range users {
 			if users[j].nickname == message.Nick() {
-				channels[i].AddMessage(NewMessage("", message.Nick()+" is now known as "+message.Params[0], Event))
+				channels[i].AddMessage(NewEvent(message.Nick() + " is now known as " + message.Params[0]))
 				users[j].nickname = message.Params[0]
 			}
 		}
@@ -246,7 +246,7 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 		if changed {
 			channels[i].SetUsers(users)
 			nuh, _ := message.NUH()
-			channels[i].AddMessage(NewMessage("", nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " "), Event))
+			channels[i].AddMessage(NewEvent(nuh.Canonical() + " has quit " + strings.Join(message.Params[1:], " ")))
 		}
 	}
 }

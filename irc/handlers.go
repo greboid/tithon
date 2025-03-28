@@ -82,9 +82,9 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 	var mess *Message
 	if found, messageTime := message.GetTag("time"); found {
-		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "))
+		mess = NewMessageWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "), h.connection.CurrentNick())
 	} else {
-		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "))
+		mess = NewMessage(message.Nick(), strings.Join(message.Params[1:], " "), h.connection.CurrentNick())
 	}
 	if h.isChannel(message.Params[0]) {
 		channel, err := h.connection.GetChannelByName(message.Params[0])
@@ -197,9 +197,9 @@ func (h *Handler) handleError(message ircmsg.Message) {
 func (h *Handler) handleNotice(message ircmsg.Message) {
 	var mess *Message
 	if found, messageTime := message.GetTag("time"); found {
-		mess = NewNoticeWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "))
+		mess = NewNoticeWithTime(messageTime, message.Nick(), strings.Join(message.Params[1:], " "), h.connection.CurrentNick())
 	} else {
-		mess = NewNotice(message.Nick(), strings.Join(message.Params[1:], " "))
+		mess = NewNotice(message.Nick(), strings.Join(message.Params[1:], " "), h.connection.CurrentNick())
 	}
 	if strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@") {
 		h.connection.AddMessage(mess)

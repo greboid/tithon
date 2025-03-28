@@ -33,36 +33,37 @@ type Message struct {
 	nickname        string
 	message         string
 	messageType     MessageType
+	highlights      []string
 }
 
-func NewNotice(nickname string, message string) *Message {
-	return newMessage(time.Now().Format(v3TimestampFormat), nickname, message, Notice)
+func NewNotice(nickname string, message string, highlights ...string) *Message {
+	return newMessage(time.Now().Format(v3TimestampFormat), nickname, message, Notice, highlights)
 }
-func NewNoticeWithTime(messageTime string, nickname string, message string) *Message {
-	return newMessage(messageTime, nickname, message, Notice)
+func NewNoticeWithTime(messageTime string, nickname string, message string, highlights ...string) *Message {
+	return newMessage(messageTime, nickname, message, Notice, highlights)
 }
 func NewEvent(message string) *Message {
-	return newMessage(time.Now().Format(v3TimestampFormat), "", message, Event)
+	return newMessage(time.Now().Format(v3TimestampFormat), "", message, Event, nil)
 }
 func NewEventWithTime(messageTime string, message string) *Message {
-	return newMessage(messageTime, "", message, Event)
+	return newMessage(messageTime, "", message, Event, nil)
 }
 func NewError(message string) *Message {
-	return newMessage(time.Now().Format(v3TimestampFormat), "", message, Error)
+	return newMessage(time.Now().Format(v3TimestampFormat), "", message, Error, nil)
 }
 func NewErrorWithTime(messageTime string, message string) *Message {
-	return newMessage(messageTime, "", message, Error)
+	return newMessage(messageTime, "", message, Error, nil)
 }
 
-func NewMessage(nickname string, message string) *Message {
-	return newMessage(time.Now().Format(v3TimestampFormat), nickname, message, Normal)
+func NewMessage(nickname string, message string, highlights ...string) *Message {
+	return newMessage(time.Now().Format(v3TimestampFormat), nickname, message, Normal, highlights)
 }
 
-func NewMessageWithTime(messageTime string, nickname string, message string) *Message {
-	return newMessage(messageTime, nickname, message, Normal)
+func NewMessageWithTime(messageTime string, nickname string, message string, highlights ...string) *Message {
+	return newMessage(messageTime, nickname, message, Normal, highlights)
 }
 
-func newMessage(timestamp string, nickname string, message string, messageType MessageType) *Message {
+func newMessage(timestamp string, nickname string, message string, messageType MessageType, highlights []string) *Message {
 	parsedTime, err := time.Parse(v3TimestampFormat, timestamp)
 	if err != nil {
 		slog.Error("Error parsing time from server", "time", timestamp, "error", err)
@@ -73,6 +74,7 @@ func newMessage(timestamp string, nickname string, message string, messageType M
 		nickname:    nickname,
 		message:     message,
 		messageType: messageType,
+		highlights:  highlights,
 	}
 	return m.parse()
 }
@@ -155,7 +157,12 @@ func (m *Message) GetTimestamp() string {
 }
 
 func (m *Message) isHighlight() bool {
-	return strings.Contains(strings.ToLower(m.message), "greboid")
+	for i := range m.highlights {
+		if strings.Contains(strings.ToLower(m.message), strings.ToLower(m.highlights[i])) {
+			return true
+		}
+	}
+	return false
 }
 
 func (m *Message) parseFormatting() {

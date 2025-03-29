@@ -414,7 +414,7 @@ func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
-	err = s.templates.ExecuteTemplate(&data, "EmptyDialog.gotpl", nil)
+	err = s.templates.ExecuteTemplate(&data, "EmptyDialog.gohtml", nil)
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
 	}

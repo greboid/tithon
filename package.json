@@ -1,0 +1,26 @@
+{
+  "name": "ircclient",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/greboid/ircclient#readme",
+  "bugs": {
+    "url": "https://github.com/greboid/ircclient/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/greboid/ircclient.git"
+  },
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "go build .; electron ."
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.7.0",
+    "@electron-forge/maker-deb": "^7.7.0",
+    "@electron-forge/maker-zip": "^7.7.0",
+    "electron": "^35.0.3"
+  }
+}

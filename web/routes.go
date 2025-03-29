@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/greboid/ircclient/irc"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
@@ -59,16 +60,12 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	if stat, err := os.Stat("./web/templates"); err == nil && stat.IsDir() {
 		slog.Debug("Using on disk templates")
 		allTemplates = os.DirFS("./web/templates")
+		s.createWatcher(allTemplates)
 	} else {
 		slog.Debug("Using on embedded templates")
 		allTemplates, _ = fs.Sub(templateFS, "templates")
 	}
-	allParsedTemplates, err := template.New("").Funcs(getTemplateFuncs()).ParseFS(allTemplates, "*.gohtml")
-	if err != nil {
-		slog.Error("Error parsing templates", "error", err)
-		panic("Unable to load templates")
-	}
-	s.templates = allParsedTemplates
+	s.updateTemplates(allTemplates)
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(static))))
 	mux.HandleFunc("GET /{$}", s.handleIndex)
 	mux.HandleFunc("GET /update", s.handleUpdate)
@@ -84,6 +81,50 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /join", s.handleJoin)
 	mux.HandleFunc("GET /part", s.handlePart)
 	mux.HandleFunc("GET /nextWindow", s.handleNextWindow)
+}
+
+func (s *Server) createWatcher(templates fs.FS) {
+	templateWatcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		slog.Error("Unable to create watcher", "error", err)
+	}
+	go s.watcherLoop(templateWatcher, templates)
+	err = templateWatcher.Add("./web/templates")
+	if err != nil {
+		slog.Error("Error add template watcher", "error", err)
+	}
+}
+
+func (s *Server) watcherLoop(watcher *fsnotify.Watcher, templates fs.FS) {
+	defer func() {
+		_ = watcher.Close()
+	}()
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			if event.Has(fsnotify.Write) {
+				s.updateTemplates(templates)
+				slog.Debug("Updating templates", "file", event.Name)
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			slog.Error("error listening for template changes:", "error", err)
+		}
+	}
+}
+
+func (s *Server) updateTemplates(allTemplates fs.FS) {
+	allParsedTemplates, err := template.New("").Funcs(getTemplateFuncs()).ParseFS(allTemplates, "*.gohtml")
+	if err != nil {
+		slog.Error("Error parsing templates", "error", err)
+		panic("Unable to load templates")
+	}
+	s.templates = allParsedTemplates
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {

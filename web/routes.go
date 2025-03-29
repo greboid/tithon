@@ -491,12 +491,10 @@ func (s *Server) changeWindow(change int) {
 		return item.Window == s.activeWindow
 	})
 	if len(s.serverList.OrderedList) > 0 {
-		if index+change > len(s.serverList.OrderedList) {
-			if change < 0 {
-				s.setActiveWindow(s.serverList.OrderedList[len(s.serverList.OrderedList)].Window)
-			} else {
-				s.setActiveWindow(s.serverList.OrderedList[0].Window)
-			}
+		if index+change < 0 {
+			s.setActiveWindow(s.serverList.OrderedList[len(s.serverList.OrderedList)-1].Window)
+		} else if index+change >= len(s.serverList.OrderedList) {
+			s.setActiveWindow(s.serverList.OrderedList[0].Window)
 		} else {
 			s.setActiveWindow(s.serverList.OrderedList[index+change].Window)
 		}

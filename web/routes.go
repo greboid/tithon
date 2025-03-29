@@ -475,6 +475,6 @@ func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
 	s.UpdateUI(w, r)
 }
 
-func (s *Server) handleNextWindow(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleNextWindow(http.ResponseWriter, *http.Request) {
 	// TODO: Select next window
 }

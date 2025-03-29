@@ -11,11 +11,11 @@ const createWindow = async () => {
                                 })
   const child = spawn(join(__dirname, 'ircclient'))
   child.on('exit', () => {
-    console.log("Exited")
+    app.quit()
   })
   child.stdout.once('data', () => {
     win.loadURL('http://localhost:8081')
-       .catch(err => console.log(err))
+       .catch(() => app.quit())
   })
   win.setMenu(null)
 }

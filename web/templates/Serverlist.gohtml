@@ -1,29 +1,22 @@
-{{- /*gotype: github.com/greboid/ircclient/web/templates.ServerList */ -}}
 <div id="servers" data-on-wheel="@get('/nextWindow')">
     <ul>
-        {{ range $connection := .Connections }}
+        {{ range .Parents }}
             <li>
                 <div>
-                    <a class="
-                            {{ if $connection.IsActive }}active{{ end }}
-                            {{ if $connection.IsUnread }}unread{{ end }}
-                            "
-                       data-on-click="@get('/changeWindow/{{ $connection.GetID }}'); evt.preventDefault()"
-                       href="/s/{{$connection.GetID}}"
-                    >{{ $connection.GetName }}</a>
+                    <a class="{{ if .Active }}active{{ end }}{{ if .Unread }}unread{{ end }}"
+                       data-on-click="@get('/changeWindow/{{ .Link }}'); evt.preventDefault()"
+                       href="/s/{{.Link}}"
+                    >{{ .Name }}</a>
                 </div>
-                {{ if gt (len $connection.GetChannels) 0 }}
+                {{ if gt (len .Children) 0 }}
                     <ul>
-                        {{ range $channel := $connection.GetChannels }}
+                        {{ range .Children }}
                             <li>
                                 <div>
-                                    <a class="
-                                            {{ if $channel.IsActive }}active{{ end }}
-                                            {{ if $channel.IsUnread }}unread{{ end }}
-                                            "
-                                       data-on-click="@get('/changeWindow/{{$connection.GetID}}/{{$channel.GetID}}'); evt.preventDefault()"
-                                       href="/s/{{$connection.GetID}}/{{$channel.GetID}}"
-                                    >{{ $channel.GetName }}</a>
+                                    <a class="{{ if .Active }}active{{ end }}{{ if .Unread }}unread{{ end }}"
+                                       data-on-click="@get('/changeWindow/{{.Link}}'); evt.preventDefault()"
+                                       href="/s/{{.Link}}"
+                                    >{{ .Name }}</a>
                                 </div>
                             </li>
                         {{ end }}

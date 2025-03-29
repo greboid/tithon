@@ -142,10 +142,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
-	s.outputTemplate(&data, "Serverlist.gohtml", map[string]any{
-		"Connections":  s.connectionManager.GetConnections(),
-		"ActiveWindow": s.activeWindow,
-	})
+	s.outputTemplate(&data, "Serverlist.gohtml", s.getServerList())
 	if s.getActiveWindow() == nil {
 		s.outputTemplate(&data, "WindowInfo.gohtml", "")
 		s.outputTemplate(&data, "Messages.gohtml", nil)
@@ -186,7 +183,7 @@ func (s *Server) outputTemplate(wr io.Writer, name string, data any) {
 }
 
 func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		select {

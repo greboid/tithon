@@ -34,6 +34,18 @@ type Server struct {
 	activeLock           sync.Mutex
 }
 
+type ServerList struct {
+	Parents []*ServerListItem
+}
+
+type ServerListItem struct {
+	Link     string
+	Name     string
+	Active   bool
+	Unread   bool
+	Children []*ServerListItem
+}
+
 func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int) *Server {
 	mux := http.NewServeMux()
 	server := &Server{
@@ -93,6 +105,35 @@ func (s *Server) getPort() (net.IP, int, error) {
 	defer func() { _ = listen.Close() }()
 	lp := listen.Addr().(*net.TCPAddr)
 	return lp.IP, lp.Port, nil
+}
+
+func (s *Server) getServerList() *ServerList {
+	serverList := &ServerList{
+		Parents: make([]*ServerListItem, 0),
+	}
+	connections := s.connectionManager.GetConnections()
+	for i := range connections {
+		server := &ServerListItem{
+			Link:     connections[i].GetID(),
+			Name:     connections[i].GetName(),
+			Active:   connections[i].IsActive(),
+			Unread:   connections[i].IsUnread(),
+			Children: nil,
+		}
+		serverList.Parents = append(serverList.Parents, server)
+		channels := connections[i].GetChannels()
+		for j := range channels {
+			child := &ServerListItem{
+				Link:     connections[i].GetID() + "/" + channels[j].GetID(),
+				Name:     channels[j].GetName(),
+				Active:   channels[j].IsActive(),
+				Unread:   channels[j].IsUnread(),
+				Children: nil,
+			}
+			server.Children = append(server.Children, child)
+		}
+	}
+	return serverList
 }
 
 func (s *Server) setActiveWindow(window *irc.Window) {

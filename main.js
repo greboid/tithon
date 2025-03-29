@@ -1,4 +1,4 @@
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, shell} = require('electron')
 const { spawn } = require('child_process');
 const {join} = require('node:path')
 
@@ -16,6 +16,10 @@ const createWindow = async () => {
        .catch(() => app.quit())
   })
   win.setMenu(null)
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
 }
 app.commandLine.appendSwitch('disable-http-cache')
 app.on('window-all-closed', () => {

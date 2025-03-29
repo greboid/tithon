@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -32,6 +33,7 @@ type Server struct {
 	fixedPort            int
 	templates            *template.Template
 	activeLock           sync.Mutex
+	serverList           *ServerList
 }
 
 type ServerList struct {
@@ -39,6 +41,7 @@ type ServerList struct {
 }
 
 type ServerListItem struct {
+	Window   *irc.Window
 	Link     string
 	Name     string
 	Active   bool
@@ -57,6 +60,7 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 		connectionManager: cm,
 		commands:          commands,
 		activeWindow:      nil,
+		serverList:        &ServerList{},
 	}
 	server.addRoutes(mux)
 	return server
@@ -108,32 +112,45 @@ func (s *Server) getPort() (net.IP, int, error) {
 }
 
 func (s *Server) getServerList() *ServerList {
-	serverList := &ServerList{
-		Parents: make([]*ServerListItem, 0),
-	}
 	connections := s.connectionManager.GetConnections()
+	s.serverList.Parents = nil
 	for i := range connections {
-		server := &ServerListItem{
-			Link:     connections[i].GetID(),
-			Name:     connections[i].GetName(),
-			Active:   connections[i].IsActive(),
-			Unread:   connections[i].IsUnread(),
-			Children: nil,
-		}
-		serverList.Parents = append(serverList.Parents, server)
-		channels := connections[i].GetChannels()
-		for j := range channels {
-			child := &ServerListItem{
-				Link:     connections[i].GetID() + "/" + channels[j].GetID(),
-				Name:     channels[j].GetName(),
-				Active:   channels[j].IsActive(),
-				Unread:   channels[j].IsUnread(),
+		serverIndex := slices.IndexFunc(s.serverList.Parents, func(item *ServerListItem) bool {
+			return item.Window == connections[i].Window
+		})
+		var server *ServerListItem
+		if serverIndex == -1 {
+			server = &ServerListItem{
+				Window:   connections[i].Window,
+				Link:     connections[i].GetID(),
+				Name:     connections[i].GetName(),
+				Active:   connections[i].IsActive(),
+				Unread:   connections[i].IsUnread(),
 				Children: nil,
 			}
-			server.Children = append(server.Children, child)
+			s.serverList.Parents = append(s.serverList.Parents, server)
+		} else {
+			server = s.serverList.Parents[serverIndex]
+		}
+		channels := connections[i].GetChannels()
+		for j := range channels {
+			windowIndex := slices.IndexFunc(s.serverList.Parents, func(item *ServerListItem) bool {
+				return item.Window == channels[j].Window
+			})
+			if windowIndex == -1 {
+				child := &ServerListItem{
+					Window:   channels[j].Window,
+					Link:     connections[i].GetID() + "/" + channels[j].GetID(),
+					Name:     channels[j].GetName(),
+					Active:   channels[j].IsActive(),
+					Unread:   channels[j].IsUnread(),
+					Children: nil,
+				}
+				server.Children = append(server.Children, child)
+			}
 		}
 	}
-	return serverList
+	return s.serverList
 }
 
 func (s *Server) setActiveWindow(window *irc.Window) {

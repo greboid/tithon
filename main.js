@@ -2,8 +2,6 @@ const {app, BrowserWindow} = require('electron')
 const { spawn } = require('child_process');
 const {join} = require('node:path')
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-
 const createWindow = async () => {
   const win = new BrowserWindow({
                                   width:  800,

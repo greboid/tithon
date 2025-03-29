@@ -7,15 +7,24 @@ import (
 	"sync/atomic"
 )
 
+type WindowState string
+
+const (
+	UnreadMessage   = "unread"
+	UnreadEvent     = "unread event"
+	UnreadHighlight = "unread highlight"
+	Read            = "read"
+	Active          = "active"
+)
+
 type Window struct {
 	id         string
 	name       string
 	title      string
 	messages   []*Message
 	connection *Connection
-	state      sync.Mutex
-	active     atomic.Bool
-	unread     atomic.Bool
+	stateSync  sync.Mutex
+	state      WindowState
 	hasUsers   atomic.Bool
 	users      []*User
 }
@@ -33,21 +42,29 @@ func (c *Window) SetName(name string) {
 }
 
 func (c *Window) AddMessage(message *Message) {
-	if !c.active.Load() {
-		c.unread.Store(true)
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
+	if c.state == Active {
+		return
 	}
-	c.state.Lock()
+	switch message.messageType {
+	case Error, Event:
+		c.state = UnreadEvent
+	case Normal, Notice, Action:
+		c.state = UnreadMessage
+	case Highlight, HighlightNotice, HighlightAction:
+		c.state = UnreadHighlight
+	}
 	c.messages = append(c.messages, message)
-	c.state.Unlock()
 }
 
 func (c *Window) GetMessages() []*Message {
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
 	var messages []*Message
-	c.state.Lock()
 	for _, message := range c.messages {
 		messages = append(messages, message)
 	}
-	c.state.Unlock()
 	return messages
 }
 
@@ -56,31 +73,37 @@ func (c *Window) GetServer() *Connection {
 }
 
 func (c *Window) SetActive(b bool) {
-	c.active.Store(b)
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
+	if b {
+		c.state = Active
+	} else {
+		c.state = Read
+	}
 }
 
 func (c *Window) IsActive() bool {
-	return c.active.Load()
-}
-
-func (c *Window) SetUnread(b bool) {
-	c.unread.Store(b)
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
+	return c.state == Active
 }
 
 func (c *Window) IsUnread() bool {
-	return c.unread.Load()
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
+	return c.state == UnreadMessage || c.state == UnreadEvent || c.state == UnreadHighlight
 }
 
 func (c *Window) SetUsers(users []*User) {
-	c.state.Lock()
-	defer c.state.Unlock()
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
 	c.users = users
 	c.SortUsers()
 }
 
 func (c *Window) AddUser(user *User) {
-	c.state.Lock()
-	defer c.state.Unlock()
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
 	c.users = append(c.users, user)
 	c.SortUsers()
 }

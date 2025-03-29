@@ -163,7 +163,6 @@ func (s *Server) setActiveWindow(window *irc.Window) {
 	}
 	if window != nil {
 		window.SetActive(true)
-		window.SetUnread(false)
 	}
 	s.activeWindow = window
 }

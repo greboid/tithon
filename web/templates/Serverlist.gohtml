@@ -3,7 +3,7 @@
         {{ range .Parents }}
             <li>
                 <div>
-                    <a class="{{ if .Window.IsActive }}active{{ end }}{{ if .Window.IsUnread }}unread{{ end }}"
+                    <a class="{{ .Window.GetState }}"
                        data-on-click="@get('/changeWindow/{{ .Link }}'); evt.preventDefault()"
                        href="/s/{{.Link}}"
                     >{{ .Window.GetName }}</a>
@@ -13,7 +13,7 @@
                         {{ range .Children }}
                             <li>
                                 <div>
-                                    <a class="{{ if .Window.IsActive }}active{{ end }}{{ if .Window.IsUnread }}unread{{ end }}"
+                                    <a class="{{ .Window.GetState }}"
                                        data-on-click="@get('/changeWindow/{{.Link}}'); evt.preventDefault()"
                                        href="/s/{{.Link}}"
                                     >{{ .Window.GetName }}</a>

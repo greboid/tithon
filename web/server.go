@@ -45,8 +45,6 @@ type ServerListItem struct {
 	Window   *irc.Window
 	Link     string
 	Name     string
-	Active   bool
-	Unread   bool
 	Children []*ServerListItem
 }
 
@@ -124,8 +122,6 @@ func (s *Server) getServerList() *ServerList {
 				Window:   connections[i].Window,
 				Link:     connections[i].GetID(),
 				Name:     connections[i].GetName(),
-				Active:   connections[i].IsActive(),
-				Unread:   connections[i].IsUnread(),
 				Children: nil,
 			}
 			s.serverList.Parents = append(s.serverList.Parents, server)
@@ -143,8 +139,6 @@ func (s *Server) getServerList() *ServerList {
 					Window:   channels[j].Window,
 					Link:     connections[i].GetID() + "/" + channels[j].GetID(),
 					Name:     channels[j].GetName(),
-					Active:   channels[j].IsActive(),
-					Unread:   channels[j].IsUnread(),
 					Children: nil,
 				}
 				server.Children = append(server.Children, child)

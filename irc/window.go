@@ -10,9 +10,9 @@ import (
 type WindowState string
 
 const (
-	UnreadMessage   = "unread"
-	UnreadEvent     = "unread event"
-	UnreadHighlight = "unread highlight"
+	UnreadMessage   = "message"
+	UnreadEvent     = "event"
+	UnreadHighlight = "highlight"
 	Read            = "read"
 	Active          = "active"
 )
@@ -82,16 +82,10 @@ func (c *Window) SetActive(b bool) {
 	}
 }
 
-func (c *Window) IsActive() bool {
+func (c *Window) GetState() string {
 	c.stateSync.Lock()
 	defer c.stateSync.Unlock()
-	return c.state == Active
-}
-
-func (c *Window) IsUnread() bool {
-	c.stateSync.Lock()
-	defer c.stateSync.Unlock()
-	return c.state == UnreadMessage || c.state == UnreadEvent || c.state == UnreadHighlight
+	return string(c.state)
 }
 
 func (c *Window) SetUsers(users []*User) {

@@ -20,7 +20,9 @@
   --foreground: light-dark(var(--light-color), var(--dark-color));
   --background2: light-dark(var(--light-highlight), var(--dark-highlight));
   --headings: light-dark(var(--light-accent), var(--dark-accent));
-  --unread: light-dark(var(--light-accent), var(--dark-accent));
+  --unreadNormal: light-dark(var(--light-accent), var(--dark-accent));
+  --unreadEvents: light-dark(var(--light-highlight), var(--dark-highlight));
+  --unreadHighlight: light-dark(var(--light-accent2), var(--dark-accent2));
   --highlight: light-dark(var(--light-accent2), var(--dark-accent2));
 
   --nickColour1: #556b2f;
@@ -133,8 +135,15 @@ h1 {
             font-style: italic;
           }
 
-          &.unread {
-            color: var(--unread);
+          &.message {
+            color: var(--unreadNormal);
+          }
+
+          &.highlight {
+            color: var(--unreadHighlight);
+          }
+          &.event {
+            color: var(--unreadEvents);
           }
         }
       }

@@ -15,6 +15,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -80,7 +81,8 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /upload", s.handleUpload)
 	mux.HandleFunc("GET /join", s.handleJoin)
 	mux.HandleFunc("GET /part", s.handlePart)
-	mux.HandleFunc("GET /nextWindow", s.handleNextWindow)
+	mux.HandleFunc("GET /nextWindowUp", s.handleNextWindowUp)
+	mux.HandleFunc("GET /nextWindowDown", s.handleNextWindowDown)
 }
 
 func (s *Server) createWatcher(templates fs.FS) {
@@ -475,6 +477,28 @@ func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
 	s.UpdateUI(w, r)
 }
 
-func (s *Server) handleNextWindow(http.ResponseWriter, *http.Request) {
-	// TODO: Select next window
+func (s *Server) handleNextWindowUp(w http.ResponseWriter, r *http.Request) {
+	s.changeWindow(-1)
+	s.UpdateUI(w, r)
+}
+func (s *Server) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
+	s.changeWindow(+1)
+	s.UpdateUI(w, r)
+}
+
+func (s *Server) changeWindow(change int) {
+	index := slices.IndexFunc(s.serverList.OrderedList, func(item *ServerListItem) bool {
+		return item.Window == s.activeWindow
+	})
+	if len(s.serverList.OrderedList) > 0 {
+		if index+change > len(s.serverList.OrderedList) {
+			if change < 0 {
+				s.setActiveWindow(s.serverList.OrderedList[len(s.serverList.OrderedList)].Window)
+			} else {
+				s.setActiveWindow(s.serverList.OrderedList[0].Window)
+			}
+		} else {
+			s.setActiveWindow(s.serverList.OrderedList[index+change].Window)
+		}
+	}
 }

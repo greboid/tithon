@@ -1,22 +1,22 @@
-<div id="servers" data-on-wheel="@get('/nextWindow')">
+<div id="servers" data-on-wheel="evt.wheelDelta > 0 ? @get('/nextWindowUp') : @get('/nextWindowDown')">
     <ul>
         {{ range .Parents }}
             <li>
                 <div>
-                    <a class="{{ if .Active }}active{{ end }}{{ if .Unread }}unread{{ end }}"
+                    <a class="{{ if .Window.IsActive }}active{{ end }}{{ if .Window.IsUnread }}unread{{ end }}"
                        data-on-click="@get('/changeWindow/{{ .Link }}'); evt.preventDefault()"
                        href="/s/{{.Link}}"
-                    >{{ .Name }}</a>
+                    >{{ .Window.GetName }}</a>
                 </div>
                 {{ if gt (len .Children) 0 }}
                     <ul>
                         {{ range .Children }}
                             <li>
                                 <div>
-                                    <a class="{{ if .Active }}active{{ end }}{{ if .Unread }}unread{{ end }}"
+                                    <a class="{{ if .Window.IsActive }}active{{ end }}{{ if .Window.IsUnread }}unread{{ end }}"
                                        data-on-click="@get('/changeWindow/{{.Link}}'); evt.preventDefault()"
                                        href="/s/{{.Link}}"
-                                    >{{ .Name }}</a>
+                                    >{{ .Window.GetName }}</a>
                                 </div>
                             </li>
                         {{ end }}

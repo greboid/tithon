@@ -37,7 +37,8 @@ type Server struct {
 }
 
 type ServerList struct {
-	Parents []*ServerListItem
+	Parents     []*ServerListItem
+	OrderedList []*ServerListItem
 }
 
 type ServerListItem struct {
@@ -113,7 +114,6 @@ func (s *Server) getPort() (net.IP, int, error) {
 
 func (s *Server) getServerList() *ServerList {
 	connections := s.connectionManager.GetConnections()
-	s.serverList.Parents = nil
 	for i := range connections {
 		serverIndex := slices.IndexFunc(s.serverList.Parents, func(item *ServerListItem) bool {
 			return item.Window == connections[i].Window
@@ -129,12 +129,13 @@ func (s *Server) getServerList() *ServerList {
 				Children: nil,
 			}
 			s.serverList.Parents = append(s.serverList.Parents, server)
+			s.serverList.OrderedList = append(s.serverList.OrderedList, server)
 		} else {
 			server = s.serverList.Parents[serverIndex]
 		}
 		channels := connections[i].GetChannels()
 		for j := range channels {
-			windowIndex := slices.IndexFunc(s.serverList.Parents, func(item *ServerListItem) bool {
+			windowIndex := slices.IndexFunc(server.Children, func(item *ServerListItem) bool {
 				return item.Window == channels[j].Window
 			})
 			if windowIndex == -1 {
@@ -147,6 +148,7 @@ func (s *Server) getServerList() *ServerList {
 					Children: nil,
 				}
 				server.Children = append(server.Children, child)
+				s.serverList.OrderedList = append(s.serverList.OrderedList, child)
 			}
 		}
 	}

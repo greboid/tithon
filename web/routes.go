@@ -83,6 +83,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /upload", s.handleUpload)
 	mux.HandleFunc("GET /join", s.handleJoin)
 	mux.HandleFunc("GET /part", s.handlePart)
+	mux.HandleFunc("GET /nextWindow", s.handleNextWindow)
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
@@ -434,4 +435,8 @@ func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.UpdateUI(w, r)
+}
+
+func (s *Server) handleNextWindow(w http.ResponseWriter, r *http.Request) {
+	// TODO: Select next window
 }

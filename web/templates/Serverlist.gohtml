@@ -1,5 +1,5 @@
 {{- /*gotype: github.com/greboid/ircclient/web/templates.ServerList */ -}}
-<div id="servers">
+<div id="servers" data-on-wheel="@get('/nextWindow')">
     <ul>
         {{ range $connection := .Connections }}
             <li>

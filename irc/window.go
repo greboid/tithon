@@ -34,10 +34,14 @@ func (c *Window) GetID() string {
 }
 
 func (c *Window) GetName() string {
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
 	return c.name
 }
 
 func (c *Window) SetName(name string) {
+	c.stateSync.Lock()
+	defer c.stateSync.Unlock()
 	c.name = name
 }
 

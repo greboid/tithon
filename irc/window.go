@@ -48,6 +48,7 @@ func (c *Window) SetName(name string) {
 func (c *Window) AddMessage(message *Message) {
 	c.stateSync.Lock()
 	defer c.stateSync.Unlock()
+	c.messages = append(c.messages, message)
 	if c.state == Active {
 		return
 	}
@@ -59,7 +60,6 @@ func (c *Window) AddMessage(message *Message) {
 	case Highlight, HighlightNotice, HighlightAction:
 		c.state = UnreadHighlight
 	}
-	c.messages = append(c.messages, message)
 }
 
 func (c *Window) GetMessages() []*Message {

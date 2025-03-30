@@ -129,7 +129,7 @@ func (c *Connection) Disconnect() {
 	c.connection.Quit()
 }
 
-func (c *Connection) isChannel(target string) bool {
+func (c *Connection) IsChannel(target string) bool {
 	chanTypes := c.connection.ISupport()["CHANTYPES"]
 	if chanTypes == "" {
 		chanTypes = "#"

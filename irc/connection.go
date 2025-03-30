@@ -121,6 +121,8 @@ func (c *Connection) Disconnect() {
 }
 
 func (c *Connection) GetChannels() []*Channel {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	channels := slices.Collect(maps.Values(c.channels))
 	slices.SortStableFunc(channels, func(a, b *Channel) int {
 		return strings.Compare(strings.ToLower(a.name), strings.ToLower(b.name))
@@ -142,12 +144,16 @@ func (c *Connection) GetChannelByName(name string) (*Channel, error) {
 }
 
 func (c *Connection) AddChannel(name string) *Channel {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	channel := NewChannel(c, name)
 	c.channels[channel.id] = channel
 	return channel
 }
 
 func (c *Connection) RemoveChannel(s string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	c.PartChannel(s)
 	delete(c.channels, s)
 }

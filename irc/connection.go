@@ -5,6 +5,7 @@ import (
 	"fmt"
 	uniqueid "github.com/albinj12/unique-id"
 	"github.com/ergochat/irc-go/ircevent"
+	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
 	"maps"
 	"slices"
@@ -110,6 +111,14 @@ func (c *Connection) Connect() {
 
 }
 
+func (c *Connection) AddConnectCallback(callback func(message ircmsg.Message)) {
+	c.connection.AddConnectCallback(callback)
+}
+
+func (c *Connection) AddCallback(command string, callback func(ircmsg.Message)) {
+	c.connection.AddCallback(command, callback)
+}
+
 func (c *Connection) GetCredentials() (string, string) {
 	return c.saslLogin, c.saslPassword
 }
@@ -118,6 +127,19 @@ func (c *Connection) Disconnect() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.connection.Quit()
+}
+
+func (c *Connection) isChannel(target string) bool {
+	chanTypes := c.connection.ISupport()["CHANTYPES"]
+	if chanTypes == "" {
+		chanTypes = "#"
+	}
+	for _, char := range chanTypes {
+		if strings.HasPrefix(target, string(char)) {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Connection) GetChannels() []*Channel {
@@ -219,4 +241,16 @@ func (c *Connection) GetModeNameForMode(mode string) string {
 		return ""
 	}
 	return modes[1][index : index+1]
+}
+
+func (c *Connection) SendRaw(message string) {
+	c.connection.SendRaw(message)
+}
+
+func (c *Connection) ISupport(value string) string {
+	return c.connection.ISupport()[value]
+}
+
+func (c *Connection) GetHostname() string {
+	return c.connection.Server
 }

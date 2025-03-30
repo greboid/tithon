@@ -15,39 +15,26 @@ type Handler struct {
 }
 
 func (h *Handler) addCallbacks() {
-	h.connection.connection.AddCallback("JOIN", h.handleJoin)
-	h.connection.connection.AddCallback("PRIVMSG", h.handlePrivMsg)
-	h.connection.connection.AddCallback("NOTICE", h.handleNotice)
-	h.connection.connection.AddCallback(ircevent.RPL_TOPIC, h.handleRPLTopic)
-	h.connection.connection.AddCallback("TOPIC", h.handleTopic)
-	h.connection.connection.AddConnectCallback(h.handleConnected)
-	h.connection.connection.AddCallback("PART", h.handlePart)
-	h.connection.connection.AddCallback("KICK", h.handleKick)
-	h.connection.connection.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
-	h.connection.connection.AddCallback(ircevent.RPL_UMODEIS, h.handleUserMode)
-	h.connection.connection.AddCallback("ERROR", h.handleError)
-	h.connection.connection.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
+	h.connection.AddCallback("JOIN", h.handleJoin)
+	h.connection.AddCallback("PRIVMSG", h.handlePrivMsg)
+	h.connection.AddCallback("NOTICE", h.handleNotice)
+	h.connection.AddCallback(ircevent.RPL_TOPIC, h.handleRPLTopic)
+	h.connection.AddCallback("TOPIC", h.handleTopic)
+	h.connection.AddConnectCallback(h.handleConnected)
+	h.connection.AddCallback("PART", h.handlePart)
+	h.connection.AddCallback("KICK", h.handleKick)
+	h.connection.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
+	h.connection.AddCallback(ircevent.RPL_UMODEIS, h.handleUserMode)
+	h.connection.AddCallback("ERROR", h.handleError)
+	h.connection.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
 		h.addEvent(GetTimeForMessage(message), "Nickname ("+message.Params[1]+") already in use")
 	})
-	h.connection.connection.AddCallback("NICK", h.handleNick)
-	h.connection.connection.AddCallback("QUIT", h.handleQuit)
-	h.connection.connection.AddCallback(ircevent.ERR_PASSWDMISMATCH, func(message ircmsg.Message) {
+	h.connection.AddCallback("NICK", h.handleNick)
+	h.connection.AddCallback("QUIT", h.handleQuit)
+	h.connection.AddCallback(ircevent.ERR_PASSWDMISMATCH, func(message ircmsg.Message) {
 		h.addEvent(GetTimeForMessage(message), "Password Mismatch: "+strings.Join(message.Params, " "))
 	})
-	h.connection.connection.AddCallback("MODE", h.handleMode)
-}
-
-func (h *Handler) isChannel(target string) bool {
-	chanTypes := h.connection.connection.ISupport()["CHANTYPES"]
-	if chanTypes == "" {
-		chanTypes = "#"
-	}
-	for _, char := range chanTypes {
-		if strings.HasPrefix(target, string(char)) {
-			return true
-		}
-	}
-	return false
+	h.connection.AddCallback("MODE", h.handleMode)
 }
 
 func (h *Handler) handleTopic(message ircmsg.Message) {
@@ -81,7 +68,7 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 }
 
 func (h *Handler) handlePrivMsg(message ircmsg.Message) {
-	if h.isChannel(message.Params[0]) {
+	if h.connection.isChannel(message.Params[0]) {
 		channel, err := h.connection.GetChannelByName(message.Params[0])
 		if err != nil {
 			slog.Warn("Message for unknown channel", "message", message)
@@ -105,7 +92,7 @@ func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 	slog.Debug("Joining channel", "channel", message.Params[0])
 	h.connection.AddChannel(message.Params[0])
 	if h.connection.HasCapability("draft/chathistory") {
-		h.connection.connection.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
+		h.connection.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
 	}
 }
 
@@ -153,8 +140,8 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
-	h.connection.AddMessage(NewEvent(GetTimeForMessage(message), fmt.Sprintf("Connected to %s", h.connection.connection.Server)))
-	network := h.connection.connection.ISupport()["NETWORK"]
+	h.connection.AddMessage(NewEvent(GetTimeForMessage(message), fmt.Sprintf("Connected to %s", h.connection.GetHostname())))
+	network := h.connection.ISupport("NETWORK")
 	if len(network) > 0 {
 		h.connection.Window.SetName(network)
 	}
@@ -193,7 +180,7 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 	mess := NewNotice(GetTimeForMessage(message), message.Nick(), strings.Join(message.Params[1:], " "), h.connection.CurrentNick())
 	if strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@") {
 		h.connection.AddMessage(mess)
-	} else if h.isChannel(message.Params[0]) {
+	} else if h.connection.isChannel(message.Params[0]) {
 		channel, err := h.connection.GetChannelByName(message.Params[0])
 		if err != nil {
 			slog.Warn("Notice for unknown channel", "notice", message)

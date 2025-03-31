@@ -10,42 +10,90 @@ import (
 	"time"
 )
 
+type channelHandler interface {
+	IsChannel(target string) bool
+	GetChannelByName(string) (*Channel, error)
+	GetChannels() []*Channel
+	AddChannel(name string) *Channel
+	RemoveChannel(s string)
+}
+
+type callbackHandler interface {
+	AddConnectCallback(callback func(message ircmsg.Message))
+	AddCallback(command string, callback func(ircmsg.Message))
+}
+
+type infoHandler interface {
+	ISupport(value string) string
+	CurrentNick() string
+	GetName() string
+	SetName(string)
+	GetHostname() string
+	HasCapability(name string) bool
+}
+
+type modeHandler interface {
+	GetModeNameForMode(mode string) string
+	GetModePrefixes() []string
+	GetCurrentModes() string
+	SetCurrentModes(modes string)
+}
+
+type messageHandler interface {
+	AddMessage(message *Message)
+	SendRaw(message string)
+}
+
 type Handler struct {
-	connection *Connection
+	channelHandler  channelHandler
+	callbackHandler callbackHandler
+	infoHandler     infoHandler
+	modeHandler     modeHandler
+	messageHandler  messageHandler
+}
+
+func NewHandler(connection *Connection) *Handler {
+	return &Handler{
+		channelHandler:  connection,
+		callbackHandler: connection,
+		infoHandler:     connection,
+		modeHandler:     connection,
+		messageHandler:  connection,
+	}
 }
 
 func (h *Handler) addCallbacks() {
-	h.connection.AddCallback("JOIN", h.handleJoin)
-	h.connection.AddCallback("PRIVMSG", h.handlePrivMsg)
-	h.connection.AddCallback("NOTICE", h.handleNotice)
-	h.connection.AddCallback(ircevent.RPL_TOPIC, h.handleRPLTopic)
-	h.connection.AddCallback("TOPIC", h.handleTopic)
-	h.connection.AddConnectCallback(h.handleConnected)
-	h.connection.AddCallback("PART", h.handlePart)
-	h.connection.AddCallback("KICK", h.handleKick)
-	h.connection.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
-	h.connection.AddCallback(ircevent.RPL_UMODEIS, h.handleUserMode)
-	h.connection.AddCallback("ERROR", h.handleError)
-	h.connection.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
+	h.callbackHandler.AddCallback("JOIN", h.handleJoin)
+	h.callbackHandler.AddCallback("PRIVMSG", h.handlePrivMsg)
+	h.callbackHandler.AddCallback("NOTICE", h.handleNotice)
+	h.callbackHandler.AddCallback(ircevent.RPL_TOPIC, h.handleRPLTopic)
+	h.callbackHandler.AddCallback("TOPIC", h.handleTopic)
+	h.callbackHandler.AddConnectCallback(h.handleConnected)
+	h.callbackHandler.AddCallback("PART", h.handlePart)
+	h.callbackHandler.AddCallback("KICK", h.handleKick)
+	h.callbackHandler.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
+	h.callbackHandler.AddCallback(ircevent.RPL_UMODEIS, h.handleUserMode)
+	h.callbackHandler.AddCallback("ERROR", h.handleError)
+	h.callbackHandler.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
 		h.addEvent(GetTimeForMessage(message), "Nickname ("+message.Params[1]+") already in use")
 	})
-	h.connection.AddCallback("NICK", h.handleNick)
-	h.connection.AddCallback("QUIT", h.handleQuit)
-	h.connection.AddCallback(ircevent.ERR_PASSWDMISMATCH, func(message ircmsg.Message) {
+	h.callbackHandler.AddCallback("NICK", h.handleNick)
+	h.callbackHandler.AddCallback("QUIT", h.handleQuit)
+	h.callbackHandler.AddCallback(ircevent.ERR_PASSWDMISMATCH, func(message ircmsg.Message) {
 		h.addEvent(GetTimeForMessage(message), "Password Mismatch: "+strings.Join(message.Params, " "))
 	})
-	h.connection.AddCallback("MODE", h.handleMode)
+	h.callbackHandler.AddCallback("MODE", h.handleMode)
 }
 
 func (h *Handler) handleTopic(message ircmsg.Message) {
-	channel, err := h.connection.GetChannelByName(message.Params[0])
+	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Warn("Topic for unknown channel", "message", message)
 		return
 	}
 	newTopic := strings.Join(message.Params[1:], " ")
 	topic := NewTopic(newTopic)
-	slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
+	slog.Debug("Setting topic", "server", h.infoHandler.GetName(), "channel", channel.GetName(), "topic", topic)
 	channel.SetTopic(topic)
 	channel.SetTitle(topic.GetTopic())
 	if newTopic == "" {
@@ -56,32 +104,32 @@ func (h *Handler) handleTopic(message ircmsg.Message) {
 }
 
 func (h *Handler) handleRPLTopic(message ircmsg.Message) {
-	for _, channel := range h.connection.GetChannels() {
+	for _, channel := range h.channelHandler.GetChannels() {
 		if channel.name == message.Params[1] {
 			topic := NewTopic(strings.Join(message.Params[2:], " "))
 			channel.SetTopic(topic)
 			channel.SetTitle(topic.GetTopic())
-			slog.Debug("Setting topic", "server", h.connection.GetName(), "channel", channel.GetName(), "topic", topic)
+			slog.Debug("Setting topic", "server", h.infoHandler.GetName(), "channel", channel.GetName(), "topic", topic)
 			return
 		}
 	}
 }
 
 func (h *Handler) handlePrivMsg(message ircmsg.Message) {
-	if h.connection.isChannel(message.Params[0]) {
-		channel, err := h.connection.GetChannelByName(message.Params[0])
+	if h.channelHandler.IsChannel(message.Params[0]) {
+		channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 		if err != nil {
 			slog.Warn("Message for unknown channel", "message", message)
 			return
 		}
-		channel.AddMessage(NewMessage(GetTimeForMessage(message), message.Nick(), strings.Join(message.Params[1:], " "), h.connection.CurrentNick()))
+		channel.AddMessage(NewMessage(GetTimeForMessage(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick()))
 	} else {
 		slog.Warn("Unsupported DM", "message", message)
 	}
 }
 
 func (h *Handler) handleJoin(message ircmsg.Message) {
-	if message.Nick() == h.connection.CurrentNick() {
+	if message.Nick() == h.infoHandler.CurrentNick() {
 		h.handleSelfJoin(message)
 	} else {
 		h.handleOtherJoin(message)
@@ -90,20 +138,20 @@ func (h *Handler) handleJoin(message ircmsg.Message) {
 
 func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 	slog.Debug("Joining channel", "channel", message.Params[0])
-	h.connection.AddChannel(message.Params[0])
-	if h.connection.HasCapability("draft/chathistory") {
-		h.connection.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
+	h.channelHandler.AddChannel(message.Params[0])
+	if h.infoHandler.HasCapability("draft/chathistory") {
+		h.messageHandler.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
 	}
 }
 
 func (h *Handler) handlePart(message ircmsg.Message) {
-	channel, err := h.connection.GetChannelByName(message.Params[0])
+	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Warn("Received part for unknown channel", "channel", message.Params[0])
 		return
 	}
-	if message.Nick() == h.connection.CurrentNick() {
-		h.connection.RemoveChannel(channel.id)
+	if message.Nick() == h.infoHandler.CurrentNick() {
+		h.channelHandler.RemoveChannel(channel.id)
 		return
 	}
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
@@ -113,14 +161,14 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 }
 
 func (h *Handler) handleKick(message ircmsg.Message) {
-	channel, err := h.connection.GetChannelByName(message.Params[0])
+	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Warn("Received kick for unknown channel", "channel", message.Params[0])
 		return
 	}
-	if message.Params[1] == h.connection.CurrentNick() {
-		h.connection.RemoveChannel(channel.id)
-		h.connection.AddMessage(NewEvent(GetTimeForMessage(message), message.Nick()+" has kicked you from "+message.Params[0]+" ("+strings.Join(message.Params[2:], " ")+")"))
+	if message.Params[1] == h.infoHandler.CurrentNick() {
+		h.channelHandler.RemoveChannel(channel.id)
+		h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), message.Nick()+" has kicked you from "+message.Params[0]+" ("+strings.Join(message.Params[2:], " ")+")"))
 		return
 	}
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
@@ -130,7 +178,7 @@ func (h *Handler) handleKick(message ircmsg.Message) {
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {
-	channel, err := h.connection.GetChannelByName(message.Params[0])
+	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Error("Error getting channel for join", "message", message)
 		return
@@ -140,15 +188,15 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
-	h.connection.AddMessage(NewEvent(GetTimeForMessage(message), fmt.Sprintf("Connected to %s", h.connection.GetHostname())))
-	network := h.connection.ISupport("NETWORK")
+	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), fmt.Sprintf("Connected to %s", h.infoHandler.GetHostname())))
+	network := h.infoHandler.ISupport("NETWORK")
 	if len(network) > 0 {
-		h.connection.Window.SetName(network)
+		h.infoHandler.SetName(network)
 	}
 }
 
 func (h *Handler) handleNameReply(message ircmsg.Message) {
-	channel, err := h.connection.GetChannelByName(message.Params[2])
+	channel, err := h.channelHandler.GetChannelByName(message.Params[2])
 	if err != nil {
 		slog.Debug("Names reply for unknown channel", "channel", message.Params[2])
 		return
@@ -161,27 +209,27 @@ func (h *Handler) handleNameReply(message ircmsg.Message) {
 }
 
 func (h *Handler) stripChannelPrefixes(name string) (string, string) {
-	prefixes := h.connection.GetModePrefixes()
+	prefixes := h.modeHandler.GetModePrefixes()
 	nickname := strings.TrimLeft(name, prefixes[1])
 	modes := name[:len(name)-len(nickname)]
 	return modes, nickname
 }
 
 func (h *Handler) handleUserMode(message ircmsg.Message) {
-	h.connection.currentModes = message.Params[1]
-	h.connection.AddMessage(NewEvent(GetTimeForMessage(message), "Your modes changed: "+message.Params[1]))
+	h.modeHandler.SetCurrentModes(message.Params[1])
+	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), "Your modes changed: "+message.Params[1]))
 }
 
 func (h *Handler) handleError(message ircmsg.Message) {
-	h.connection.AddMessage(NewEvent(GetTimeForMessage(message), strings.Join(message.Params, " ")))
+	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), strings.Join(message.Params, " ")))
 }
 
 func (h *Handler) handleNotice(message ircmsg.Message) {
-	mess := NewNotice(GetTimeForMessage(message), message.Nick(), strings.Join(message.Params[1:], " "), h.connection.CurrentNick())
+	mess := NewNotice(GetTimeForMessage(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick())
 	if strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@") {
-		h.connection.AddMessage(mess)
-	} else if h.connection.isChannel(message.Params[0]) {
-		channel, err := h.connection.GetChannelByName(message.Params[0])
+		h.messageHandler.AddMessage(mess)
+	} else if h.channelHandler.IsChannel(message.Params[0]) {
+		channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 		if err != nil {
 			slog.Warn("Notice for unknown channel", "notice", message)
 			return
@@ -193,15 +241,15 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 }
 
 func (h *Handler) addEvent(timestamp time.Time, message string) {
-	h.connection.AddMessage(NewEvent(timestamp, message))
+	h.messageHandler.AddMessage(NewEvent(timestamp, message))
 }
 
 func (h *Handler) handleNick(message ircmsg.Message) {
-	if message.Nick() == h.connection.CurrentNick() {
+	if message.Nick() == h.infoHandler.CurrentNick() {
 		newNick := message.Params[0]
-		h.connection.AddMessage(NewEvent(GetTimeForMessage(message), "Nickname changed: "+newNick))
+		h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), "Nickname changed: "+newNick))
 	}
-	channels := h.connection.GetChannels()
+	channels := h.channelHandler.GetChannels()
 	for i := range channels {
 		users := channels[i].GetUsers()
 		for j := range users {
@@ -214,7 +262,7 @@ func (h *Handler) handleNick(message ircmsg.Message) {
 }
 
 func (h *Handler) handleQuit(message ircmsg.Message) {
-	channels := h.connection.GetChannels()
+	channels := h.channelHandler.GetChannels()
 	for i := range channels {
 		changed := false
 		users := channels[i].GetUsers()
@@ -234,7 +282,7 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 }
 
 func (h *Handler) handleMode(message ircmsg.Message) {
-	channel, err := h.connection.GetChannelByName(message.Params[0])
+	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Warn("Received mode for unknown channel", "channel", message.Params[0])
 		return
@@ -269,7 +317,7 @@ func (h *Handler) handleMode(message ircmsg.Message) {
 		users := channel.GetUsers()
 		for j := range users {
 			if users[j].nickname == ops[i].nickname {
-				mode := h.connection.GetModeNameForMode(ops[i].mode)
+				mode := h.modeHandler.GetModeNameForMode(ops[i].mode)
 				if ops[i].change {
 					users[j].modes += mode
 				} else {

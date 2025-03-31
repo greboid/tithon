@@ -95,9 +95,7 @@ func (c *Connection) Connect() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if c.callbackHandler == nil {
-		c.callbackHandler = &Handler{
-			connection: c,
-		}
+		c.callbackHandler = NewHandler(c)
 		c.callbackHandler.addCallbacks()
 	}
 	c.AddMessage(NewEvent(time.Now(), fmt.Sprintf("Connecting to %s", c.connection.Server)))
@@ -253,4 +251,12 @@ func (c *Connection) ISupport(value string) string {
 
 func (c *Connection) GetHostname() string {
 	return c.connection.Server
+}
+
+func (c *Connection) GetCurrentModes() string {
+	return c.currentModes
+}
+
+func (c *Connection) SetCurrentModes(modes string) {
+	c.currentModes = modes
 }

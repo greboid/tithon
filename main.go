@@ -28,14 +28,15 @@ func main() {
 	log := slog.New(slog.NewTextHandler(os.Stdout, options))
 	slog.SetDefault(log)
 	connectionManager := irc.NewConnectionManager()
+	server := web.NewServer(connectionManager, irc.NewCommandManager(), *FixedPort)
+	connectionManager.SetUpdateTrigger(server)
+	defer server.Stop()
 	defer connectionManager.Stop()
 	err := connectionManager.Load()
 	if err != nil {
 		slog.Error("Unable to load config", "error", err)
 		return
 	}
-	server := web.NewServer(connectionManager, irc.NewCommandManager(), *FixedPort)
-	defer server.Stop()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)
 	listenAddr := server.GetListenAddress()

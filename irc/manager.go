@@ -13,9 +13,14 @@ import (
 	"strings"
 )
 
+type UpdateTrigger interface {
+	SetPendingUpdate()
+}
+
 type ConnectionManager struct {
 	connections    map[string]*Connection
 	commandManager *CommandManager
+	updateTrigger  UpdateTrigger
 }
 
 func NewConnectionManager() *ConnectionManager {
@@ -35,19 +40,21 @@ func (cm *ConnectionManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewConnection(hostname, port, tls, password, sasllogin, saslpassword, profile)
+	connection := NewConnection(hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger)
 	cm.connections[connection.id] = connection
 	if connect {
 		go func() {
 			connection.Connect()
 		}()
 	}
+	cm.updateTrigger.SetPendingUpdate()
 	return connection.id
 }
 
 func (cm *ConnectionManager) RemoveConnection(id string) {
 	cm.connections[id].Disconnect()
 	delete(cm.connections, id)
+	cm.updateTrigger.SetPendingUpdate()
 }
 
 func (cm *ConnectionManager) GetConnections() []*Connection {
@@ -134,4 +141,8 @@ func (cm *ConnectionManager) Save() {
 	if err != nil {
 		slog.Error("Unable to save config", "error", err)
 	}
+}
+
+func (cm *ConnectionManager) SetUpdateTrigger(ut UpdateTrigger) {
+	cm.updateTrigger = ut
 }

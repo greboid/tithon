@@ -127,6 +127,7 @@ func (s *Server) updateTemplates(allTemplates fs.FS) {
 		panic("Unable to load templates")
 	}
 	s.templates = allParsedTemplates
+	s.SetPendingUpdate()
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
@@ -185,7 +186,7 @@ func (s *Server) outputTemplate(wr io.Writer, name string, data any) {
 }
 
 func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		select {
@@ -193,7 +194,9 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 			slog.Debug("Client connection closed")
 			return
 		case <-ticker.C:
-			s.UpdateUI(w, r)
+			if yes := s.pendingUpdate.Swap(false); yes {
+				s.UpdateUI(w, r)
+			}
 		}
 	}
 }

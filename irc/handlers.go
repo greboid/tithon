@@ -50,6 +50,7 @@ type Handler struct {
 	infoHandler     infoHandler
 	modeHandler     modeHandler
 	messageHandler  messageHandler
+	updateTrigger   UpdateTrigger
 }
 
 func NewHandler(connection *Connection) *Handler {
@@ -59,6 +60,7 @@ func NewHandler(connection *Connection) *Handler {
 		infoHandler:     connection,
 		modeHandler:     connection,
 		messageHandler:  connection,
+		updateTrigger:   connection.ut,
 	}
 }
 
@@ -86,6 +88,7 @@ func (h *Handler) addCallbacks() {
 }
 
 func (h *Handler) handleTopic(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Warn("Topic for unknown channel", "message", message)
@@ -104,6 +107,7 @@ func (h *Handler) handleTopic(message ircmsg.Message) {
 }
 
 func (h *Handler) handleRPLTopic(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	for _, channel := range h.channelHandler.GetChannels() {
 		if channel.name == message.Params[1] {
 			topic := NewTopic(strings.Join(message.Params[2:], " "))
@@ -116,6 +120,7 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 }
 
 func (h *Handler) handlePrivMsg(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	if h.channelHandler.IsChannel(message.Params[0]) {
 		channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 		if err != nil {
@@ -129,6 +134,7 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 }
 
 func (h *Handler) handleJoin(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	if message.Nick() == h.infoHandler.CurrentNick() {
 		h.handleSelfJoin(message)
 	} else {
@@ -145,6 +151,7 @@ func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 }
 
 func (h *Handler) handlePart(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Warn("Received part for unknown channel", "channel", message.Params[0])
@@ -161,6 +168,7 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 }
 
 func (h *Handler) handleKick(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Warn("Received kick for unknown channel", "channel", message.Params[0])
@@ -188,6 +196,7 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), fmt.Sprintf("Connected to %s", h.infoHandler.GetHostname())))
 	network := h.infoHandler.ISupport("NETWORK")
 	if len(network) > 0 {
@@ -196,6 +205,7 @@ func (h *Handler) handleConnected(message ircmsg.Message) {
 }
 
 func (h *Handler) handleNameReply(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	channel, err := h.channelHandler.GetChannelByName(message.Params[2])
 	if err != nil {
 		slog.Debug("Names reply for unknown channel", "channel", message.Params[2])
@@ -216,15 +226,18 @@ func (h *Handler) stripChannelPrefixes(name string) (string, string) {
 }
 
 func (h *Handler) handleUserMode(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	h.modeHandler.SetCurrentModes(message.Params[1])
 	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), "Your modes changed: "+message.Params[1]))
 }
 
 func (h *Handler) handleError(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), strings.Join(message.Params, " ")))
 }
 
 func (h *Handler) handleNotice(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	mess := NewNotice(GetTimeForMessage(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick())
 	if strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@") {
 		h.messageHandler.AddMessage(mess)
@@ -245,6 +258,7 @@ func (h *Handler) addEvent(timestamp time.Time, message string) {
 }
 
 func (h *Handler) handleNick(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	if message.Nick() == h.infoHandler.CurrentNick() {
 		newNick := message.Params[0]
 		h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), "Nickname changed: "+newNick))
@@ -262,6 +276,7 @@ func (h *Handler) handleNick(message ircmsg.Message) {
 }
 
 func (h *Handler) handleQuit(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	channels := h.channelHandler.GetChannels()
 	for i := range channels {
 		changed := false
@@ -282,6 +297,7 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 }
 
 func (h *Handler) handleMode(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
 	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		slog.Warn("Received mode for unknown channel", "channel", message.Params[0])

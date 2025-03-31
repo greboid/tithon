@@ -31,9 +31,10 @@ type Connection struct {
 	supportsFileHost  bool
 	currentModes      string
 	possibleUserModes []*UserMode
+	ut                UpdateTrigger
 }
 
-func NewConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile) *Connection {
+func NewConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger) *Connection {
 	s, _ := uniqueid.Generateid("a", 5, "s")
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
@@ -68,6 +69,7 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 			},
 			Debug: true,
 		},
+		ut: ut,
 	}
 	connection.Window = &Window{
 		id:         s,
@@ -92,6 +94,7 @@ func (c *Connection) GetFileHost() string {
 }
 
 func (c *Connection) Connect() {
+	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if c.callbackHandler == nil {
@@ -106,7 +109,6 @@ func (c *Connection) Connect() {
 			c.AddMessage(NewError(time.Now(), "Connection error: "+err.Error()))
 		}
 	}
-
 }
 
 func (c *Connection) AddConnectCallback(callback func(message ircmsg.Message)) {
@@ -122,6 +124,7 @@ func (c *Connection) GetCredentials() (string, string) {
 }
 
 func (c *Connection) Disconnect() {
+	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.connection.Quit()
@@ -164,6 +167,7 @@ func (c *Connection) GetChannelByName(name string) (*Channel, error) {
 }
 
 func (c *Connection) AddChannel(name string) *Channel {
+	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	channel := NewChannel(c, name)
@@ -172,6 +176,7 @@ func (c *Connection) AddChannel(name string) *Channel {
 }
 
 func (c *Connection) RemoveChannel(s string) {
+	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.PartChannel(s)
@@ -184,6 +189,7 @@ func (c *Connection) HasCapability(name string) bool {
 }
 
 func (c *Connection) SendMessage(time time.Time, window string, message string) error {
+	defer c.ut.SetPendingUpdate()
 	channel := c.GetChannel(window)
 	if channel == nil {
 		return errors.New("not on a channel")

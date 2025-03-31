@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -34,6 +35,7 @@ type Server struct {
 	templates            *template.Template
 	activeLock           sync.Mutex
 	serverList           *ServerList
+	pendingUpdate        atomic.Bool
 }
 
 type ServerList struct {
@@ -159,10 +161,15 @@ func (s *Server) setActiveWindow(window *irc.Window) {
 		window.SetActive(true)
 	}
 	s.activeWindow = window
+	s.SetPendingUpdate()
 }
 
 func (s *Server) getActiveWindow() *irc.Window {
 	s.activeLock.Lock()
 	defer s.activeLock.Unlock()
 	return s.activeWindow
+}
+
+func (s *Server) SetPendingUpdate() {
+	s.pendingUpdate.Store(true)
 }

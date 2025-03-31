@@ -1,4 +1,4 @@
-<div id="nicklist">
+<div id="nicklist" data-show="$nicklistshow" >
     {{ range . }}
         <p>{{.GetNickListModes }}{{ .GetNickListDisplay }}</p>
     {{end}}

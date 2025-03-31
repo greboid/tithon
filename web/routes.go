@@ -147,6 +147,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
 	s.outputTemplate(&data, "Serverlist.gohtml", s.getServerList())
+	s.outputTemplate(&data, "Nicksettings.gohtml", nil)
 	if s.getActiveWindow() == nil {
 		s.outputTemplate(&data, "WindowInfo.gohtml", "")
 		s.outputTemplate(&data, "Messages.gohtml", nil)

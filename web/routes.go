@@ -133,6 +133,7 @@ func (s *Server) updateTemplates(allTemplates fs.FS) {
 func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	s.pendingUpdate.Store(true)
 	err := s.templates.ExecuteTemplate(w, "Index.gohtml", nil)
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)

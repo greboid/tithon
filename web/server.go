@@ -5,7 +5,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"github.com/greboid/ircclient/irc"
+	"github.com/greboid/tithon/irc"
 	"html/template"
 	"log/slog"
 	"net"

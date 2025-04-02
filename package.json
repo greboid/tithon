@@ -1,14 +1,14 @@
 {
-  "name": "goircha",
+  "name": "tithon",
   "version": "1.0.0",
   "description": "Modern IRC client",
-  "homepage": "https://github.com/greboid/ircclient#readme",
+  "homepage": "https://github.com/greboid/tithon#readme",
   "bugs": {
-    "url": "https://github.com/greboid/ircclient/issues"
+    "url": "https://github.com/greboid/tithon/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/greboid/ircclient.git"
+    "url": "git+https://github.com/greboid/tithon.git"
   },
   "license": "MIT",
   "author": "",

@@ -25,7 +25,7 @@ module.exports = {
     }
   },
   packagerConfig: {
-    name: 'goircha',
+    name: 'tithon',
     icon: 'web/static/icon.png'
   },
   makers: [

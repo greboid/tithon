@@ -2,7 +2,7 @@ package irc
 
 import (
 	"errors"
-	"github.com/greboid/ircclient/config"
+	"github.com/greboid/tithon/config"
 	"github.com/kirsle/configdir"
 	"gopkg.in/yaml.v3"
 	"log/slog"
@@ -86,7 +86,7 @@ func (cm *ConnectionManager) Stop() {
 }
 
 func (cm *ConnectionManager) Load() error {
-	configPath := configdir.LocalConfig("ircclient")
+	configPath := configdir.LocalConfig("tithon")
 	err := configdir.MakePath(configPath)
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (cm *ConnectionManager) Load() error {
 }
 
 func (cm *ConnectionManager) Save() {
-	configPath := configdir.LocalConfig("ircclient")
+	configPath := configdir.LocalConfig("tithon")
 	err := configdir.MakePath(configPath)
 	if err != nil {
 		return

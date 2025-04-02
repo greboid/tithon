@@ -1,4 +1,4 @@
-module github.com/greboid/ircclient
+module github.com/greboid/tithon
 
 go 1.23.3
 

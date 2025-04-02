@@ -8,7 +8,7 @@ const createWindow = async () => {
                                   width:  800,
                                   height: 600,
                                 })
-  const child = spawn(join(__dirname, 'ircclient'))
+  const child = spawn(join(__dirname, 'backend'))
   child.on('exit', () => {
     app.quit()
   })

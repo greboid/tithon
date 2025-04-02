@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"github.com/csmith/envflag"
-	"github.com/greboid/ircclient/irc"
-	"github.com/greboid/ircclient/web"
+	"github.com/greboid/tithon/irc"
+	"github.com/greboid/tithon/web"
 	"log/slog"
 	"os"
 	"os/signal"

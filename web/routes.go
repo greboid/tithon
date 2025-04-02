@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
-	"github.com/greboid/ircclient/irc"
+	"github.com/greboid/tithon/irc"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
 	"io"

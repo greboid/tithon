@@ -4,6 +4,7 @@ const {join} = require('node:path')
 
 const createWindow = async () => {
   const win = new BrowserWindow({
+                                  icon: 'web/static/icon.png',
                                   width:  800,
                                   height: 600,
                                 })

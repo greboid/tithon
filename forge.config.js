@@ -36,5 +36,17 @@ module.exports = {
       name: '@electron-forge/maker-deb',
       platforms: ['linux'],
     }
+  ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'greboid',
+          name: 'tithon'
+        },
+        prerelease: true
+      }
+    }
   ]
 };

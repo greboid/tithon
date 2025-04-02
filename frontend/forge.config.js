@@ -6,27 +6,18 @@ module.exports = {
     force: true
   },
   hooks: {
-    generateAssets: async (forgeConfig, platform, arch) => {
-      const child = exec('go build -o backend '+__dirname, (err) => {
+    generateAssets: async (config, platform, arch) => {
+      const child = exec('go build -C '+path.join(__dirname, "..", "backend")+' -o '+path.join(__dirname, "backend")+' .', (err) => {
         if (err) {
-          console.log("Error building backend")
-          throw err
+          console.log(`Error building backend: ${err}`)
         }
       })
       await new Promise((resolve) => { child.on('close', resolve)})
-    },
-    packageAfterExtract: async (forgeConfig, buildPath, electronVersion, platform, arch) => {
-      fs.copyFile(path.join(__dirname, 'backend'), path.join(buildPath, 'backend'), (err) => {
-        if (err) {
-          console.log("Error moving backend")
-          throw err
-        }
-      })
     }
   },
   packagerConfig: {
     name: 'tithon',
-    icon: 'web/static/icon.png'
+    icon: 'icon.png'
   },
   makers: [
     {

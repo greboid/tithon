@@ -18,9 +18,9 @@ const createWindow = async () => {
     win.loadURL('http://localhost:8081')
        .catch(() => app.quit())
   })
-  child.stdout.on('data', (data) => {
-    console.log(new TextDecoder().decode(data))
-  })
+  // child.stdout.on('data', (data) => {
+  //   console.log(new TextDecoder().decode(data))
+  // })
   win.setMenu(null)
   win.webContents.setWindowOpenHandler(({url}) => {
     shell.openExternal(url)

@@ -2,12 +2,14 @@ module github.com/greboid/tithon
 
 go 1.23.3
 
+toolchain go1.24.1
+
 require (
 	github.com/albinj12/unique-id v1.1.0
 	github.com/csmith/envflag v1.0.0
 	github.com/enescakir/emoji v1.0.0
 	github.com/ergochat/irc-go v0.4.0
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/starfederation/datastar v0.21.4
 	gopkg.in/yaml.v3 v3.0.1

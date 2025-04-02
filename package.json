@@ -1,7 +1,7 @@
 {
-  "name": "ircclient",
+  "name": "goircha",
   "version": "1.0.0",
-  "description": "",
+  "description": "Modern IRC client",
   "homepage": "https://github.com/greboid/ircclient#readme",
   "bugs": {
     "url": "https://github.com/greboid/ircclient/issues"
@@ -15,7 +15,7 @@
   "type": "commonjs",
   "main": "main.js",
   "scripts": {
-    "start": "go build .; electron .",
+    "start": "electron-forge start",
     "make": "electron-forge make",
     "package": "electron-forge package"
   },

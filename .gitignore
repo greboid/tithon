@@ -1,6 +1,7 @@
 test
 config.yaml
 ircclient
+backend
 
 # Logs
 logs

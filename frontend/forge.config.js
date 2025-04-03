@@ -17,7 +17,8 @@ module.exports = {
   },
   packagerConfig: {
     name: 'tithon',
-    icon: 'icon.png'
+    icon: 'icon.png',
+    executable: "tithon",
   },
   makers: [
     {
@@ -26,6 +27,19 @@ module.exports = {
     {
       name: '@electron-forge/maker-deb',
       platforms: ['linux'],
+      config: {
+        options: {
+          name: "tithon",
+          productName: "Tithon IRC",
+          maintainer: 'Greboid',
+          homepage: 'https://github.com/greboid/tithon',
+          icon: 'icon.png',
+          section: "Network",
+          categories: ['Network', 'Chat', 'IRCClient'],
+          description: "Simple IRC Client",
+          license: "MIT"
+        }
+      }
     }
   ],
   publishers: [

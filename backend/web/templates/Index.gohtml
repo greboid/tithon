@@ -14,9 +14,11 @@
 <body>
 <main id="main" data-on-load="@get('/update', {openWhenHidden: true})">
     <div id="servers"></div>
-    <div id="windowinfo"></div>
     <div id="messages"></div>
-    <div id="nicksettings"></div>
+    <div id="windowandnicksettings">
+        <div id="windowinfo"></div>
+        <div id="nicksettings"></div>
+    </div>
     <div id="nicklist"></div>
     {{ template "EmptyInput.gohtml"}}
     {{ template "Settings.gohtml"}}

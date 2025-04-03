@@ -99,12 +99,13 @@ main {
   display: grid;
   gap: 0.5rem;
   grid-template-areas:
-    "servers  windowinfo  nicksettings"
+    "servers  windowandnicksettings windowandnicksettings"
     "servers  messages    nicklist"
-    "settings input       input";
+    "settings input        input";
   grid-template-rows: fit-content(1.5rem) 1fr min-content;
   grid-template-columns: fit-content(20rem) 1fr max-content;
   height: 100%;
+  empty-cells: hide;
 }
 
 h1 {
@@ -199,6 +200,10 @@ h1 {
       }
     }
   }
+}
+
+#windowandnicksettings {
+  grid-area: windowandnicksettings;
 }
 
 #nicksettings {

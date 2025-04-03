@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/greboid/tithon/irc"
+	"github.com/kirsle/configdir"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -67,7 +69,17 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 		allTemplates, _ = fs.Sub(templateFS, "templates")
 	}
 	s.updateTemplates(allTemplates)
+	usercss := filepath.Join(configdir.LocalConfig("tithon"), "user.css")
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(static))))
+	mux.HandleFunc("GET /static/user.css", func(w http.ResponseWriter, r *http.Request) {
+		if stat, err := os.Stat(usercss); err == nil && !stat.IsDir() {
+			http.ServeFile(w, r, usercss)
+			slog.Debug("Using on disk user.css")
+		} else {
+			http.ServeFileFS(w, r, static, "user.css")
+			slog.Debug("Using embedded user.css")
+		}
+	})
 	mux.HandleFunc("GET /{$}", s.handleIndex)
 	mux.HandleFunc("GET /update", s.handleUpdate)
 	mux.HandleFunc("GET /showSettings", s.handleShowSettings)

@@ -1,7 +1,8 @@
 let atBottom = true
 window.addEventListener('scroll', function(event) {
   if (event.target.id === 'messages') {
-    atBottom = event.target.scrollTop === (event.target.scrollHeight-event.target.clientHeight)
+    const target = event.target
+    atBottom = (target.scrollHeight - target.scrollTop - target.clientHeight) < 5
   }
 }, true)
 

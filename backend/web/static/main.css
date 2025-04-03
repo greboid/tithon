@@ -114,6 +114,7 @@ h1 {
 
 #servers {
   grid-area: servers;
+  user-select: none;
 
   & ul {
     padding: 0;
@@ -224,6 +225,7 @@ h1 {
   grid-area: nicklist;
   overflow-y: auto;
   padding-right: 1rem;
+  user-select: none;
 }
 
 #messages {

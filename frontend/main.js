@@ -1,4 +1,4 @@
-const {app, BrowserWindow, shell} = require('electron')
+const {app, globalShortcut, BrowserWindow, shell} = require('electron')
 const {spawn} = require('child_process')
 const {join} = require('node:path')
 
@@ -15,6 +15,10 @@ const createWindow = async () => {
     app.quit()
   })
   child.stdout.once('data', () => {
+    win.loadURL('http://localhost:8081')
+       .catch(() => app.quit())
+  })
+  const refresh = globalShortcut.register('F5', () => {
     win.loadURL('http://localhost:8081')
        .catch(() => app.quit())
   })

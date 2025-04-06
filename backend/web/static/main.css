@@ -385,131 +385,131 @@ h1 {
   }
 
   .nickcolour1 {
-    color: var(--nickColour1)
+    color: var(--nickColour1);
   }
 
   .nickcolour2 {
-    color: var(--nickColour2)
+    color: var(--nickColour2);
   }
 
   .nickcolour3 {
-    color: var(--nickColour3)
+    color: var(--nickColour3);
   }
 
   .nickcolour4 {
-    color: var(--nickColour4)
+    color: var(--nickColour4);
   }
 
   .nickcolour5 {
-    color: var(--nickColour5)
+    color: var(--nickColour5);
   }
 
   .nickcolour6 {
-    color: var(--nickColour6)
+    color: var(--nickColour6);
   }
 
   .nickcolour7 {
-    color: var(--nickColour7)
+    color: var(--nickColour7);
   }
 
   .nickcolour8 {
-    color: var(--nickColour8)
+    color: var(--nickColour8);
   }
 
   .nickcolour9 {
-    color: var(--nickColour9)
+    color: var(--nickColour9);
   }
 
   .nickcolour10 {
-    color: var(--nickColour10)
+    color: var(--nickColour10);
   }
 
   .nickcolour11 {
-    color: var(--nickColour11)
+    color: var(--nickColour11);
   }
 
   .nickcolour12 {
-    color: var(--nickColour12)
+    color: var(--nickColour12);
   }
 
   .nickcolour13 {
-    color: var(--nickColour13)
+    color: var(--nickColour13);
   }
 
   .nickcolour14 {
-    color: var(--nickColour14)
+    color: var(--nickColour14);
   }
 
   .nickcolour15 {
-    color: var(--nickColour15)
+    color: var(--nickColour15);
   }
 
   .nickcolour16 {
-    color: var(--nickColour16)
+    color: var(--nickColour16);
   }
 
   .nickcolour17 {
-    color: var(--nickColour17)
+    color: var(--nickColour17);
   }
 
   .nickcolour18 {
-    color: var(--nickColour18)
+    color: var(--nickColour18);
   }
 
   .nickcolour19 {
-    color: var(--nickColour19)
+    color: var(--nickColour19);
   }
 
   .nickcolour20 {
-    color: var(--nickColour20)
+    color: var(--nickColour20);
   }
 
   .nickcolour21 {
-    color: var(--nickColour21)
+    color: var(--nickColour21);
   }
 
   .nickcolour22 {
-    color: var(--nickColour22)
+    color: var(--nickColour22);
   }
 
   .nickcolour23 {
-    color: var(--nickColour23)
+    color: var(--nickColour23);
   }
 
   .nickcolour24 {
-    color: var(--nickColour24)
+    color: var(--nickColour24);
   }
 
   .nickcolour25 {
-    color: var(--nickColour25)
+    color: var(--nickColour25);
   }
 
   .nickcolour26 {
-    color: var(--nickColour26)
+    color: var(--nickColour26);
   }
 
   .nickcolour27 {
-    color: var(--nickColour27)
+    color: var(--nickColour27);
   }
 
   .nickcolour28 {
-    color: var(--nickColour28)
+    color: var(--nickColour28);
   }
 
   .nickcolour29 {
-    color: var(--nickColour29)
+    color: var(--nickColour29);
   }
 
   .nickcolour30 {
-    color: var(--nickColour30)
+    color: var(--nickColour30);
   }
 
   .nickcolour31 {
-    color: var(--nickColour31)
+    color: var(--nickColour31);
   }
 
   .nickcolour32 {
-    color: var(--nickColour32)
+    color: var(--nickColour32);
   }
 
   & a {
@@ -522,11 +522,11 @@ h1 {
     &.normal, &.highlight {
       & span.nickname {
         &::before {
-          content: "<"
+          content: "<";
         }
 
         &::after {
-          content: ">"
+          content: ">";
         }
       }
     }
@@ -534,7 +534,7 @@ h1 {
     &.action {
       & span.nickname {
         &::before {
-          content: "* "
+          content: "* ";
         }
       }
     }
@@ -542,11 +542,11 @@ h1 {
     &.notice {
       & span.nickname {
         &::before {
-          content: "-"
+          content: "-";
         }
 
         &::after {
-          content: "-"
+          content: "-";
         }
       }
     }

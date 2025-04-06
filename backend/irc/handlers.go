@@ -100,9 +100,9 @@ func (h *Handler) handleTopic(message ircmsg.Message) {
 	channel.SetTopic(topic)
 	channel.SetTitle(topic.GetTopic())
 	if newTopic == "" {
-		channel.AddMessage(NewEvent(GetTimeForMessage(message), message.Nick()+" unset the topic"))
+		channel.AddMessage(NewEvent(GetTimeForMessage(message), h.isMsgMe(message), message.Nick()+" unset the topic"))
 	} else {
-		channel.AddMessage(NewEvent(GetTimeForMessage(message), message.Nick()+" changed the topic: "+topic.GetTopic()))
+		channel.AddMessage(NewEvent(GetTimeForMessage(message), h.isMsgMe(message), message.Nick()+" changed the topic: "+topic.GetTopic()))
 	}
 }
 
@@ -127,7 +127,7 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 			slog.Warn("Message for unknown channel", "message", message)
 			return
 		}
-		channel.AddMessage(NewMessage(GetTimeForMessage(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick()))
+		channel.AddMessage(NewMessage(GetTimeForMessage(message), h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick()))
 	} else {
 		slog.Warn("Unsupported DM", "message", message)
 	}
@@ -164,7 +164,7 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.AddMessage(NewEvent(GetTimeForMessage(message), message.Source+" has parted "+channel.GetName()))
+	channel.AddMessage(NewEvent(GetTimeForMessage(message), false, message.Source+" has parted "+channel.GetName()))
 }
 
 func (h *Handler) handleKick(message ircmsg.Message) {
@@ -176,13 +176,13 @@ func (h *Handler) handleKick(message ircmsg.Message) {
 	}
 	if message.Params[1] == h.infoHandler.CurrentNick() {
 		h.channelHandler.RemoveChannel(channel.id)
-		h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), message.Nick()+" has kicked you from "+message.Params[0]+" ("+strings.Join(message.Params[2:], " ")+")"))
+		h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), false, message.Nick()+" has kicked you from "+message.Params[0]+" ("+strings.Join(message.Params[2:], " ")+")"))
 		return
 	}
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.AddMessage(NewEvent(GetTimeForMessage(message), message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")"))
+	channel.AddMessage(NewEvent(GetTimeForMessage(message), h.isMsgMe(message), message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")"))
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {
@@ -192,12 +192,12 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 		return
 	}
 	channel.users = append(channel.users, NewUser(message.Nick(), ""))
-	channel.AddMessage(NewEvent(GetTimeForMessage(message), message.Source+" has joined "+channel.GetName()))
+	channel.AddMessage(NewEvent(GetTimeForMessage(message), false, message.Source+" has joined "+channel.GetName()))
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), fmt.Sprintf("Connected to %s", h.infoHandler.GetHostname())))
+	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), false, fmt.Sprintf("Connected to %s", h.infoHandler.GetHostname())))
 	network := h.infoHandler.ISupport("NETWORK")
 	if len(network) > 0 {
 		h.infoHandler.SetName(network)
@@ -228,17 +228,17 @@ func (h *Handler) stripChannelPrefixes(name string) (string, string) {
 func (h *Handler) handleUserMode(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
 	h.modeHandler.SetCurrentModes(message.Params[1])
-	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), "Your modes changed: "+message.Params[1]))
+	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), false, "Your modes changed: "+message.Params[1]))
 }
 
 func (h *Handler) handleError(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), strings.Join(message.Params, " ")))
+	h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), false, strings.Join(message.Params, " ")))
 }
 
 func (h *Handler) handleNotice(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	mess := NewNotice(GetTimeForMessage(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick())
+	mess := NewNotice(GetTimeForMessage(message), h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick())
 	if strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@") {
 		h.messageHandler.AddMessage(mess)
 	} else if h.channelHandler.IsChannel(message.Params[0]) {
@@ -254,21 +254,21 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 }
 
 func (h *Handler) addEvent(timestamp time.Time, message string) {
-	h.messageHandler.AddMessage(NewEvent(timestamp, message))
+	h.messageHandler.AddMessage(NewEvent(timestamp, false, message))
 }
 
 func (h *Handler) handleNick(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	if message.Nick() == h.infoHandler.CurrentNick() {
+	if h.isMsgMe(message) {
 		newNick := message.Params[0]
-		h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), "Nickname changed: "+newNick))
+		h.messageHandler.AddMessage(NewEvent(GetTimeForMessage(message), true, "Nickname changed: "+newNick))
 	}
 	channels := h.channelHandler.GetChannels()
 	for i := range channels {
 		users := channels[i].GetUsers()
 		for j := range users {
 			if users[j].nickname == message.Nick() {
-				channels[i].AddMessage(NewEvent(GetTimeForMessage(message), message.Nick()+" is now known as "+message.Params[0]))
+				channels[i].AddMessage(NewEvent(GetTimeForMessage(message), false, message.Nick()+" is now known as "+message.Params[0]))
 				users[j].nickname = message.Params[0]
 			}
 		}
@@ -291,7 +291,7 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 		if changed {
 			channels[i].SetUsers(users)
 			nuh, _ := message.NUH()
-			channels[i].AddMessage(NewEvent(GetTimeForMessage(message), nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " ")))
+			channels[i].AddMessage(NewEvent(GetTimeForMessage(message), false, nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " ")))
 		}
 	}
 }
@@ -343,4 +343,8 @@ func (h *Handler) handleMode(message ircmsg.Message) {
 		}
 	}
 	channel.SortUsers()
+}
+
+func (h *Handler) isMsgMe(message ircmsg.Message) bool {
+	return message.Nick() == h.infoHandler.CurrentNick()
 }

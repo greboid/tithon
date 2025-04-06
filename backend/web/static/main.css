@@ -25,6 +25,7 @@
   --unreadHighlight: light-dark(var(--light-accent2), var(--dark-accent2));
   --highlight: light-dark(var(--light-accent2), var(--dark-accent2));
 
+  --meColour: var(--foreground);
   --nickColour1: #556b2f;
   --nickColour2: #228b22;
   --nickColour3: #8b0000;
@@ -377,6 +378,10 @@ h1 {
 
   .bg-15 {
     background-color: var(--irccolour15);
+  }
+
+  .mecolour {
+    color: var(--meColour);
   }
 
   .nickcolour1 {

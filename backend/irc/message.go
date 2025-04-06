@@ -34,22 +34,23 @@ type Message struct {
 	message     string
 	messageType MessageType
 	highlights  []string
+	me          bool
 }
 
-func NewNotice(messageTime time.Time, nickname string, message string, highlights ...string) *Message {
-	return newMessage(messageTime, nickname, message, Notice, highlights)
+func NewNotice(messageTime time.Time, me bool, nickname string, message string, highlights ...string) *Message {
+	return newMessage(messageTime, me, nickname, message, Notice, highlights)
 }
 
-func NewEvent(messageTime time.Time, message string) *Message {
-	return newMessage(messageTime, "", message, Event, nil)
+func NewEvent(messageTime time.Time, me bool, message string) *Message {
+	return newMessage(messageTime, me, "", message, Event, nil)
 }
 
-func NewError(messageTime time.Time, message string) *Message {
-	return newMessage(messageTime, "", message, Error, nil)
+func NewError(messageTime time.Time, me bool, message string) *Message {
+	return newMessage(messageTime, me, "", message, Error, nil)
 }
 
-func NewMessage(messageTime time.Time, nickname string, message string, highlights ...string) *Message {
-	return newMessage(messageTime, nickname, message, Normal, highlights)
+func NewMessage(messageTime time.Time, me bool, nickname string, message string, highlights ...string) *Message {
+	return newMessage(messageTime, me, nickname, message, Normal, highlights)
 }
 
 func GetTimeForMessage(message ircmsg.Message) time.Time {
@@ -64,13 +65,14 @@ func GetTimeForMessage(message ircmsg.Message) time.Time {
 	return parsedTime
 }
 
-func newMessage(parsedTime time.Time, nickname string, message string, messageType MessageType, highlights []string) *Message {
+func newMessage(parsedTime time.Time, me bool, nickname string, message string, messageType MessageType, highlights []string) *Message {
 	m := &Message{
 		timestamp:   parsedTime,
 		nickname:    nickname,
 		message:     message,
 		messageType: messageType,
 		highlights:  highlights,
+		me:          me,
 	}
 	return m.parse()
 }
@@ -140,6 +142,9 @@ func (m *Message) GetNickname() string {
 }
 
 func (m *Message) GetNameColour() string {
+	if m.me {
+		return "mecolour"
+	}
 	count := 0
 	for i := range m.nickname {
 		count += int(m.nickname[i])

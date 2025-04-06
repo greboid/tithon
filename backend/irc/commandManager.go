@@ -62,7 +62,7 @@ func (cm *CommandManager) showCommandError(window *Window, command Command, mess
 
 func (cm *CommandManager) showError(window *Window, message string) {
 	if window != nil {
-		window.AddMessage(NewError(time.Now(), message))
+		window.AddMessage(NewError(time.Now(), false, message))
 	} else {
 		slog.Error("Command error", "message", message)
 	}

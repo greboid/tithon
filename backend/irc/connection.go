@@ -101,12 +101,12 @@ func (c *Connection) Connect() {
 		c.callbackHandler = NewHandler(c)
 		c.callbackHandler.addCallbacks()
 	}
-	c.AddMessage(NewEvent(time.Now(), fmt.Sprintf("Connecting to %s", c.connection.Server)))
+	c.AddMessage(NewEvent(time.Now(), false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
 	//TODO Need to store a connection state
 	if !c.connection.Connected() {
 		err := c.connection.Connect()
 		if err != nil {
-			c.AddMessage(NewError(time.Now(), "Connection error: "+err.Error()))
+			c.AddMessage(NewError(time.Now(), false, "Connection error: "+err.Error()))
 		}
 	}
 }
@@ -195,7 +195,7 @@ func (c *Connection) SendMessage(time time.Time, window string, message string) 
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(time, c.connection.CurrentNick(), message))
+		channel.AddMessage(NewMessage(time, true, c.connection.CurrentNick(), message))
 	}
 	return c.connection.Send("PRIVMSG", channel.name, message)
 }
@@ -206,7 +206,7 @@ func (c *Connection) SendNotice(time time.Time, window string, message string) e
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(time, c.connection.CurrentNick(), message))
+		channel.AddMessage(NewMessage(time, true, c.connection.CurrentNick(), message))
 	}
 	return c.connection.Send("NOTICE", channel.name, message)
 }

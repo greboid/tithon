@@ -77,6 +77,7 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 		title:      hostname,
 		messages:   make([]*Message, 0),
 		connection: connection,
+		isServer:   true,
 	}
 
 	return connection

@@ -4,7 +4,6 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"sync/atomic"
 )
 
 type WindowState string
@@ -25,8 +24,9 @@ type Window struct {
 	connection *Connection
 	stateSync  sync.Mutex
 	state      WindowState
-	hasUsers   atomic.Bool
+	hasUsers   bool
 	users      []*User
+	isServer   bool
 }
 
 func (c *Window) GetID() string {
@@ -107,7 +107,7 @@ func (c *Window) AddUser(user *User) {
 }
 
 func (c *Window) GetUsers() []*User {
-	if !c.hasUsers.Load() {
+	if !c.hasUsers {
 		return nil
 	}
 	var users []*User
@@ -133,4 +133,8 @@ func (c *Window) SetTitle(title string) {
 
 func (c *Window) GetTitle() string {
 	return c.title
+}
+
+func (c *Window) IsServer() bool {
+	return c.isServer
 }

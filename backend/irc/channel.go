@@ -19,11 +19,11 @@ func NewChannel(connection *Connection, name string) *Channel {
 			title:      "No topic Set",
 			messages:   make([]*Message, 0),
 			connection: connection,
+			hasUsers:   true,
 		},
 		topic: NewTopic("No topic Set"),
 		users: nil,
 	}
-	channel.Window.hasUsers.Store(true)
 	return channel
 }
 

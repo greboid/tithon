@@ -10,7 +10,8 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        node-version: 'latest'
+        with:
+          node-version: 'latest'
       - name: Release
         run: |
           cd backend

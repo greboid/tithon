@@ -15,4 +15,5 @@ jobs:
       - name: Release
         run: |
           cd frontend
+          npm install
           npm run publish

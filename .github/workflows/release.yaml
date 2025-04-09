@@ -5,6 +5,7 @@ on:
       - v*
 jobs:
   release:
+    runs-on: ubuntu-latest
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4

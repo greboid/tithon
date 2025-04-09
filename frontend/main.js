@@ -18,9 +18,12 @@ const createWindow = async () => {
     win.loadURL('http://localhost:8081')
        .catch(() => app.quit())
   })
-  const refresh = globalShortcut.register('F5', () => {
+  globalShortcut.register('F5', () => {
     win.loadURL('http://localhost:8081')
        .catch(() => app.quit())
+  })
+  globalShortcut.register('F12', () => {
+    win.webContents.openDevTools()
   })
   // child.stdout.on('data', (data) => {
   //   console.log(new TextDecoder().decode(data))

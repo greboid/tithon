@@ -14,5 +14,5 @@ jobs:
           node-version: 'latest'
       - name: Release
         run: |
-          cd backend
+          cd frontend
           npm run publish

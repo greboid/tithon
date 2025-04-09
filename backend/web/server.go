@@ -36,6 +36,7 @@ type Server struct {
 	activeLock           sync.Mutex
 	serverList           *ServerList
 	pendingUpdate        atomic.Bool
+	listlock             sync.Mutex
 }
 
 type ServerList struct {
@@ -113,6 +114,9 @@ func (s *Server) getPort() (net.IP, int, error) {
 }
 
 func (s *Server) getServerList() *ServerList {
+	s.listlock.Lock()
+	defer s.listlock.Unlock()
+	s.serverList = &ServerList{}
 	connections := s.connectionManager.GetConnections()
 	for i := range connections {
 		serverIndex := slices.IndexFunc(s.serverList.Parents, func(item *ServerListItem) bool {

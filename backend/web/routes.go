@@ -504,6 +504,8 @@ func (s *Server) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) changeWindow(change int) {
+	s.listlock.Lock()
+	defer s.listlock.Unlock()
 	index := slices.IndexFunc(s.serverList.OrderedList, func(item *ServerListItem) bool {
 		return item.Window == s.getActiveWindow()
 	})

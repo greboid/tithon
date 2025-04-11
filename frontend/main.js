@@ -1,4 +1,5 @@
 const {app, globalShortcut, BrowserWindow, shell} = require('electron')
+const { register } = require("electron-shortcuts")
 const {spawn} = require('child_process')
 const {join} = require('node:path')
 
@@ -18,13 +19,13 @@ const createWindow = async () => {
     win.loadURL('http://localhost:8081')
        .catch(() => app.quit())
   })
-  globalShortcut.register('F5', () => {
+  register('F5', () => {
     win.loadURL('http://localhost:8081')
        .catch(() => app.quit())
-  })
-  globalShortcut.register('F12', () => {
+  }, win)
+  register('F12', () => {
     win.webContents.openDevTools()
-  })
+  }, win)
   // child.stdout.on('data', (data) => {
   //   console.log(new TextDecoder().decode(data))
   // })

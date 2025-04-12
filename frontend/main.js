@@ -1,5 +1,4 @@
-const {app, globalShortcut, BrowserWindow, shell} = require('electron')
-const { register } = require("electron-shortcuts")
+const {app, globalShortcut, BrowserWindow, Menu, MenuItem, shell} = require('electron')
 const {spawn} = require('child_process')
 const {join} = require('node:path')
 
@@ -11,6 +10,24 @@ const createWindow = async () => {
                                   width:  800,
                                   height: 600,
                                 })
+  const menu = new Menu()
+  menu.append(new MenuItem({
+                             label:       'Refresh',
+                             accelerator: 'F5',
+                             click:       () => {
+                               win.loadURL('http://localhost:8081')
+                                  .catch(() => app.quit())
+                             },
+                           }))
+  menu.append(new MenuItem({
+                             label:       'Show Dev Tools',
+                             accelerator: 'F12',
+                             click:       () => {
+                               win.webContents.toggleDevTools()
+                             },
+                           }))
+  Menu.setApplicationMenu(menu)
+  win.setMenuBarVisibility(false)
   child = spawn(join(__dirname, 'backend'))
   child.on('exit', () => {
     app.quit()
@@ -19,17 +36,9 @@ const createWindow = async () => {
     win.loadURL('http://localhost:8081')
        .catch(() => app.quit())
   })
-  register('F5', () => {
-    win.loadURL('http://localhost:8081')
-       .catch(() => app.quit())
-  }, win)
-  register('F12', () => {
-    win.webContents.openDevTools()
-  }, win)
   // child.stdout.on('data', (data) => {
   //   console.log(new TextDecoder().decode(data))
   // })
-  win.setMenu(null)
   win.webContents.setWindowOpenHandler(({url}) => {
     shell.openExternal(url)
     return {action: 'deny'}

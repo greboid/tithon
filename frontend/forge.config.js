@@ -50,7 +50,7 @@ module.exports = {
           owner: 'greboid',
           name: 'tithon'
         },
-        prerelease: false
+        prerelease: false,
         draft: false
       }
     }

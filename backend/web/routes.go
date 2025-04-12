@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/greboid/tithon/irc"
+	semver "github.com/hashicorp/go-version"
 	"github.com/kirsle/configdir"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
@@ -17,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"slices"
 	"strconv"
 	"strings"
@@ -146,7 +148,21 @@ func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.pendingUpdate.Store(true)
-	err := s.templates.ExecuteTemplate(w, "Index.gohtml", nil)
+	var versionString string
+	if info, ok := debug.ReadBuildInfo(); ok {
+		versionString = info.Main.Version
+		if version, err := semver.NewVersion(versionString); err == nil {
+			versionString = strings.Trim(strings.Join(strings.Fields(fmt.Sprint(version.Segments()[0:3])), "."), "[]")
+			if version.Prerelease() != "" {
+				versionString = versionString + "-dev"
+			}
+		} else {
+			versionString = "err"
+		}
+	} else {
+		versionString = "unknown"
+	}
+	err := s.templates.ExecuteTemplate(w, "Index.gohtml", versionString)
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)
 		return

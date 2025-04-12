@@ -100,7 +100,7 @@ main {
   display: grid;
   gap: 0.5rem;
   grid-template-areas:
-    "servers  windowandnicksettings windowandnicksettings"
+    "title  windowandnicksettings windowandnicksettings"
     "servers  messages    nicklist"
     "settings input        input";
   grid-template-rows: fit-content(1.5rem) 1fr min-content;
@@ -111,6 +111,13 @@ main {
 
 h1 {
   color: var(--headings);
+}
+
+#title {
+  grid-area: title;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #servers {
@@ -206,10 +213,12 @@ h1 {
 
 #windowandnicksettings {
   grid-area: windowandnicksettings;
+  display: flex;
+  align-items: center;
 }
 
 #nicksettings {
-  grid-area: nicksettings;
+  flex-grow: 2;
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
@@ -219,7 +228,6 @@ h1 {
 }
 
 #windowinfo {
-  grid-area: windowinfo;
 }
 
 #nicklist {

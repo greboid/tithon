@@ -61,26 +61,26 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 		slog.Debug("Using on embedded static resources")
 		static, _ = fs.Sub(staticFS, "static")
 	}
+	usercss := filepath.Join(configdir.LocalConfig("tithon"), "user.css")
+	if _, err := os.Stat(usercss); err != nil {
+		if _, err = os.OpenFile(usercss, os.O_CREATE, 0600); err != nil {
+			slog.Debug("Unable to create empty user.css")
+		}
+	}
+	s.createStaticWatcher(usercss)
 	var allTemplates fs.FS
 	if stat, err := os.Stat("./web/templates"); err == nil && stat.IsDir() {
 		slog.Debug("Using on disk templates")
 		allTemplates = os.DirFS("./web/templates")
-		s.createWatcher(allTemplates)
+		s.createTemplateWatcher(allTemplates)
 	} else {
 		slog.Debug("Using on embedded templates")
 		allTemplates, _ = fs.Sub(templateFS, "templates")
 	}
 	s.updateTemplates(allTemplates)
-	usercss := filepath.Join(configdir.LocalConfig("tithon"), "user.css")
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(static))))
 	mux.HandleFunc("GET /static/user.css", func(w http.ResponseWriter, r *http.Request) {
-		if stat, err := os.Stat(usercss); err == nil && !stat.IsDir() {
-			http.ServeFile(w, r, usercss)
-			slog.Debug("Using on disk user.css")
-		} else {
-			http.ServeFileFS(w, r, static, "user.css")
-			slog.Debug("Using embedded user.css")
-		}
+		http.ServeFile(w, r, usercss)
 	})
 	mux.HandleFunc("GET /{$}", s.handleIndex)
 	mux.HandleFunc("GET /update", s.handleUpdate)
@@ -99,7 +99,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /nextWindowDown", s.handleNextWindowDown)
 }
 
-func (s *Server) createWatcher(templates fs.FS) {
+func (s *Server) createTemplateWatcher(templates fs.FS) {
 	templateWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		slog.Error("Unable to create watcher", "error", err)
@@ -109,6 +109,9 @@ func (s *Server) createWatcher(templates fs.FS) {
 	if err != nil {
 		slog.Error("Error add template watcher", "error", err)
 	}
+}
+
+func (s *Server) createStaticWatcher(usercss string) {
 	staticWatches, err := fsnotify.NewWatcher()
 	if err != nil {
 		slog.Error("Unable to create watcher", "error", err)
@@ -117,6 +120,12 @@ func (s *Server) createWatcher(templates fs.FS) {
 	err = staticWatches.Add("./web/static")
 	if err != nil {
 		slog.Error("Error add static watcher", "error", err)
+	}
+	if _, err = os.UserConfigDir(); err == nil {
+		err = staticWatches.Add(usercss)
+		if err != nil {
+			slog.Error("Error add static watcher", "error", err)
+		}
 	}
 }
 
@@ -132,13 +141,13 @@ func (s *Server) staticLoop(watcher *fsnotify.Watcher) {
 			}
 			if event.Has(fsnotify.Write) {
 				s.SetUIUpdate()
-				slog.Debug("Updating templates", "file", event.Name)
+				slog.Debug("Updating static files", "file", event.Name)
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
 				return
 			}
-			slog.Error("error listening for template changes:", "error", err)
+			slog.Error("error listening for static changes:", "error", err)
 		}
 	}
 }

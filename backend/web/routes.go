@@ -104,14 +104,46 @@ func (s *Server) createWatcher(templates fs.FS) {
 	if err != nil {
 		slog.Error("Unable to create watcher", "error", err)
 	}
-	go s.watcherLoop(templateWatcher, templates)
+	go s.templateLoop(templateWatcher, templates)
 	err = templateWatcher.Add("./web/templates")
 	if err != nil {
 		slog.Error("Error add template watcher", "error", err)
 	}
+	staticWatches, err := fsnotify.NewWatcher()
+	if err != nil {
+		slog.Error("Unable to create watcher", "error", err)
+	}
+	go s.staticLoop(staticWatches)
+	err = staticWatches.Add("./web/static")
+	if err != nil {
+		slog.Error("Error add static watcher", "error", err)
+	}
 }
 
-func (s *Server) watcherLoop(watcher *fsnotify.Watcher, templates fs.FS) {
+func (s *Server) staticLoop(watcher *fsnotify.Watcher) {
+	defer func() {
+		_ = watcher.Close()
+	}()
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			if event.Has(fsnotify.Write) {
+				s.SetUIUpdate()
+				slog.Debug("Updating templates", "file", event.Name)
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			slog.Error("error listening for template changes:", "error", err)
+		}
+	}
+}
+
+func (s *Server) templateLoop(watcher *fsnotify.Watcher, templates fs.FS) {
 	defer func() {
 		_ = watcher.Close()
 	}()
@@ -165,6 +197,17 @@ func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	err := s.templates.ExecuteTemplate(w, "Index.gohtml", versionString)
 	if err != nil {
 		slog.Debug("Error serving index", "error", err)
+		return
+	}
+}
+
+func (s *Server) updateMainUI(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	sse := datastar.NewSSE(w, r)
+	err := sse.ExecuteScript("window.location.reload()", datastar.WithExecuteScriptAutoRemove(true))
+	if err != nil {
+		slog.Debug("Error refreshing page", "error", err)
 		return
 	}
 }
@@ -224,6 +267,10 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 			slog.Debug("Client connection closed")
 			return
 		case <-ticker.C:
+			if yes := s.uiUpdate.Swap(false); yes {
+				s.pendingUpdate.Store(false)
+				s.updateMainUI(w, r)
+			}
 			if yes := s.pendingUpdate.Swap(false); yes {
 				s.UpdateUI(w, r)
 			}

@@ -37,6 +37,7 @@ type Server struct {
 	serverList           *ServerList
 	pendingUpdate        atomic.Bool
 	listlock             sync.Mutex
+	uiUpdate             atomic.Bool
 }
 
 type ServerList struct {
@@ -176,4 +177,8 @@ func (s *Server) getActiveWindow() *irc.Window {
 
 func (s *Server) SetPendingUpdate() {
 	s.pendingUpdate.Store(true)
+}
+
+func (s *Server) SetUIUpdate() {
+	s.uiUpdate.Store(true)
 }

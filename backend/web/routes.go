@@ -594,14 +594,23 @@ func (s *Server) changeWindow(change int) {
 }
 
 func (s *Server) handleTab(w http.ResponseWriter, r *http.Request) {
-	type values struct {
+	type inputValues struct {
 		Input    string `json:"input"`
 		Position int    `json:"char"`
 	}
-	data := &values{}
+	type outputValues struct {
+		Input    string `json:"input"`
+		Position int    `json:"bs"`
+	}
+	data := &inputValues{}
 	_ = datastar.ReadSignals(r, data)
 	fmt.Printf("%#v\n", data)
 	sse := datastar.NewSSE(w, r)
-	sse.MergeSignals([]byte("{input: 'Henlo My Friend', bs: 4}"))
+	output := outputValues{
+		Input:    data.Input,
+		Position: data.Position,
+	}
+	dataBytes, _ := json.Marshal(output)
+	sse.MergeSignals(dataBytes)
 	//TODO : Make this not bs
 }

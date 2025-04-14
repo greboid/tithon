@@ -7,21 +7,21 @@ import (
 
 type Config struct {
 	instance *config.Config
-	Servers  []Server `json:"servers"`
+	Servers  []Server `yaml:"servers"`
 }
 
 type Server struct {
-	Hostname     string  `json:"hostname"`
-	Port         int     `json:"port"`
-	TLS          bool    `json:"tls"`
-	Password     string  `json:"password"`
-	SASLLogin    string  `json:"sasllogin"`
-	SASLPassword string  `json:"saslpassword"`
-	Profile      Profile `json:"profile"`
+	Hostname     string  `yaml:"hostname"`
+	Port         int     `yaml:"port"`
+	TLS          bool    `yaml:"tls"`
+	Password     string  `yaml:"password"`
+	SASLLogin    string  `yaml:"sasl_login"`
+	SASLPassword string  `yaml:"sasl_password"`
+	Profile      Profile `yaml:"profile"`
 }
 
 type Profile struct {
-	Nickname string `json:"nickname"`
+	Nickname string `yaml:"nickname"`
 }
 
 func (c *Config) Load() error {

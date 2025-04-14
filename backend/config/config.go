@@ -1,7 +1,13 @@
 package config
 
+import (
+	"github.com/csmith/config"
+	"log/slog"
+)
+
 type Config struct {
-	Servers []Server `json:"servers"`
+	instance *config.Config
+	Servers  []Server `json:"servers"`
 }
 
 type Server struct {
@@ -16,4 +22,22 @@ type Server struct {
 
 type Profile struct {
 	Nickname string `json:"nickname"`
+}
+
+func (c *Config) Load() error {
+	slog.Debug("Loading config")
+	conf, err := config.New(config.DirectoryName("tithon"), config.FileName("config.yaml"))
+	if err != nil {
+		return err
+	}
+	err = conf.Load(c)
+	if err != nil {
+		return err
+	}
+	c.instance = conf
+	return nil
+}
+
+func (c *Config) Save() error {
+	return c.instance.Save(c)
 }

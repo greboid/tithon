@@ -1,14 +1,9 @@
 package irc
 
 import (
-	"errors"
 	"github.com/greboid/tithon/config"
-	"github.com/kirsle/configdir"
-	"gopkg.in/yaml.v3"
 	"log/slog"
 	"maps"
-	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -21,12 +16,14 @@ type ConnectionManager struct {
 	connections    map[string]*Connection
 	commandManager *CommandManager
 	updateTrigger  UpdateTrigger
+	config         *config.Config
 }
 
-func NewConnectionManager() *ConnectionManager {
+func NewConnectionManager(conf *config.Config) *ConnectionManager {
 	return &ConnectionManager{
 		connections:    map[string]*Connection{},
 		commandManager: NewCommandManager(),
+		config:         conf,
 	}
 }
 
@@ -85,43 +82,17 @@ func (cm *ConnectionManager) Stop() {
 	}
 }
 
-func (cm *ConnectionManager) Load() error {
-	configPath := configdir.LocalConfig("tithon")
-	err := configdir.MakePath(configPath)
-	if err != nil {
-		return err
-	}
-
-	slog.Info("Loading config")
-	conf := &config.Config{}
-
-	yamlData, err := os.ReadFile(filepath.Join(configPath, "config.yaml"))
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		slog.Error("Unable to load config", "error", err)
-		return err
-	}
-
-	err = yaml.Unmarshal(yamlData, conf)
-	if err != nil {
-		return err
-	}
-	for _, server := range conf.Servers {
+func (cm *ConnectionManager) Load() {
+	for _, server := range cm.config.Servers {
 		cm.AddConnection(server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
 	}
-	return nil
 }
 
 func (cm *ConnectionManager) Save() {
-	configPath := configdir.LocalConfig("tithon")
-	err := configdir.MakePath(configPath)
-	if err != nil {
-		return
-	}
-
-	slog.Info("Saving config")
-	conf := &config.Config{}
+	slog.Debug("Saving connections to config")
+	servers := make([]config.Server, 0)
 	for _, server := range cm.connections {
-		conf.Servers = append(conf.Servers, config.Server{
+		servers = append(servers, config.Server{
 			Hostname:     server.hostname,
 			Port:         server.port,
 			TLS:          server.tls,
@@ -133,14 +104,8 @@ func (cm *ConnectionManager) Save() {
 			},
 		})
 	}
-	data, err := yaml.Marshal(conf)
-	if err != nil {
-		slog.Error("Unable to save config", "error", err)
-	}
-	err = os.WriteFile(filepath.Join(configPath, "config.yaml"), data, 0644)
-	if err != nil {
-		slog.Error("Unable to save config", "error", err)
-	}
+	cm.config.Servers = servers
+	slog.Debug("Saved connections to config")
 }
 
 func (cm *ConnectionManager) SetUpdateTrigger(ut UpdateTrigger) {

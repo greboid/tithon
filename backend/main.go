@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/csmith/envflag"
+	"github.com/greboid/tithon/config"
 	"github.com/greboid/tithon/irc"
 	"github.com/greboid/tithon/web"
 	"log/slog"
@@ -27,16 +28,25 @@ func main() {
 	}
 	log := slog.New(slog.NewTextHandler(os.Stdout, options))
 	slog.SetDefault(log)
-	connectionManager := irc.NewConnectionManager()
-	server := web.NewServer(connectionManager, irc.NewCommandManager(), *FixedPort)
-	connectionManager.SetUpdateTrigger(server)
-	defer server.Stop()
-	defer connectionManager.Stop()
-	err := connectionManager.Load()
+	conf := &config.Config{}
+	err := conf.Load()
 	if err != nil {
 		slog.Error("Unable to load config", "error", err)
 		return
 	}
+	defer func() {
+		err = conf.Save()
+		if err != nil {
+			slog.Error("Unable to save config", "error", err)
+			return
+		}
+	}()
+	connectionManager := irc.NewConnectionManager(conf)
+	defer connectionManager.Stop()
+	server := web.NewServer(connectionManager, irc.NewCommandManager(), *FixedPort)
+	defer server.Stop()
+	connectionManager.SetUpdateTrigger(server)
+	connectionManager.Load()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)
 	listenAddr := server.GetListenAddress()

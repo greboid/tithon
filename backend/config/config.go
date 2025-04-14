@@ -3,11 +3,13 @@ package config
 import (
 	"github.com/csmith/config"
 	"log/slog"
+	"time"
 )
 
 type Config struct {
-	instance *config.Config
-	Servers  []Server `yaml:"servers"`
+	instance   *config.Config
+	Servers    []Server   `yaml:"servers"`
+	UISettings UISettings `yaml:"ui_settings"`
 }
 
 type Server struct {
@@ -18,6 +20,10 @@ type Server struct {
 	SASLLogin    string  `yaml:"sasl_login"`
 	SASLPassword string  `yaml:"sasl_password"`
 	Profile      Profile `yaml:"profile"`
+}
+
+type UISettings struct {
+	TimestampFormat string `yaml:"timestamp_format"`
 }
 
 type Profile struct {
@@ -35,6 +41,9 @@ func (c *Config) Load() error {
 		return err
 	}
 	c.instance = conf
+	if c.UISettings.TimestampFormat == "" {
+		c.UISettings.TimestampFormat = time.TimeOnly
+	}
 	return nil
 }
 

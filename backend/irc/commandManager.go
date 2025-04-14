@@ -3,6 +3,7 @@ package irc
 import (
 	"errors"
 	"github.com/enescakir/emoji"
+	"github.com/greboid/tithon/config"
 	"log/slog"
 	"strings"
 	"time"
@@ -21,19 +22,23 @@ type Command interface {
 
 type CommandManager struct {
 	commands []Command
+	conf     *config.Config
 }
 
-func NewCommandManager() *CommandManager {
-	return &CommandManager{[]Command{
-		&SendAction{},
-		&Msg{},
-		&Quit{},
-		&Join{},
-		&Part{},
-		&Nick{},
-		&ChangeTopic{},
-		&SendNotice{},
-	}}
+func NewCommandManager(conf *config.Config) *CommandManager {
+	return &CommandManager{
+		commands: []Command{
+			&SendAction{},
+			&Msg{},
+			&Quit{},
+			&Join{},
+			&Part{},
+			&Nick{},
+			&ChangeTopic{},
+			&SendNotice{},
+		},
+		conf: conf,
+	}
 }
 
 func (cm *CommandManager) Execute(connections *ConnectionManager, window *Window, input string) {
@@ -62,7 +67,7 @@ func (cm *CommandManager) showCommandError(window *Window, command Command, mess
 
 func (cm *CommandManager) showError(window *Window, message string) {
 	if window != nil {
-		window.AddMessage(NewError(time.Now(), false, message))
+		window.AddMessage(NewError(time.Now(), cm.conf.UISettings.TimestampFormat, false, message))
 	} else {
 		slog.Error("Command error", "message", message)
 	}

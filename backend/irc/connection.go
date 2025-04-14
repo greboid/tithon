@@ -6,6 +6,7 @@ import (
 	uniqueid "github.com/albinj12/unique-id"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
+	"github.com/greboid/tithon/config"
 	"log/slog"
 	"maps"
 	"slices"
@@ -32,9 +33,10 @@ type Connection struct {
 	currentModes      string
 	possibleUserModes []*UserMode
 	ut                UpdateTrigger
+	conf              *config.Config
 }
 
-func NewConnection(hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger) *Connection {
+func NewConnection(conf *config.Config, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger) *Connection {
 	s, _ := uniqueid.Generateid("a", 5, "s")
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
@@ -69,7 +71,8 @@ func NewConnection(hostname string, port int, tls bool, password string, sasllog
 			},
 			Debug: true,
 		},
-		ut: ut,
+		ut:   ut,
+		conf: conf,
 	}
 	connection.Window = &Window{
 		id:         s,
@@ -102,12 +105,12 @@ func (c *Connection) Connect() {
 		c.callbackHandler = NewHandler(c)
 		c.callbackHandler.addCallbacks()
 	}
-	c.AddMessage(NewEvent(time.Now(), false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
+	c.AddMessage(NewEvent(time.Now(), c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
 	//TODO Need to store a connection state
 	if !c.connection.Connected() {
 		err := c.connection.Connect()
 		if err != nil {
-			c.AddMessage(NewError(time.Now(), false, "Connection error: "+err.Error()))
+			c.AddMessage(NewError(time.Now(), c.conf.UISettings.TimestampFormat, false, "Connection error: "+err.Error()))
 		}
 	}
 }
@@ -196,7 +199,7 @@ func (c *Connection) SendMessage(time time.Time, window string, message string) 
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(time, true, c.connection.CurrentNick(), message))
+		channel.AddMessage(NewMessage(time, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message))
 	}
 	return c.connection.Send("PRIVMSG", channel.name, message)
 }
@@ -207,7 +210,7 @@ func (c *Connection) SendNotice(time time.Time, window string, message string) e
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(time, true, c.connection.CurrentNick(), message))
+		channel.AddMessage(NewMessage(time, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message))
 	}
 	return c.connection.Send("NOTICE", channel.name, message)
 }

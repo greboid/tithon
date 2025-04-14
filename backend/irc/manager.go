@@ -22,7 +22,7 @@ type ConnectionManager struct {
 func NewConnectionManager(conf *config.Config) *ConnectionManager {
 	return &ConnectionManager{
 		connections:    map[string]*Connection{},
-		commandManager: NewCommandManager(),
+		commandManager: NewCommandManager(conf),
 		config:         conf,
 	}
 }
@@ -37,7 +37,7 @@ func (cm *ConnectionManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewConnection(hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger)
+	connection := NewConnection(cm.config, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger)
 	cm.connections[connection.id] = connection
 	if connect {
 		go func() {

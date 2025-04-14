@@ -97,6 +97,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /part", s.handlePart)
 	mux.HandleFunc("GET /nextWindowUp", s.handleNextWindowUp)
 	mux.HandleFunc("GET /nextWindowDown", s.handleNextWindowDown)
+	mux.HandleFunc("GET /tab", s.handleTab)
 }
 
 func (s *Server) createTemplateWatcher(templates fs.FS) {
@@ -590,4 +591,17 @@ func (s *Server) changeWindow(change int) {
 			s.setActiveWindow(s.serverList.OrderedList[index+change].Window)
 		}
 	}
+}
+
+func (s *Server) handleTab(w http.ResponseWriter, r *http.Request) {
+	type values struct {
+		Input    string `json:"input"`
+		Position int    `json:"char"`
+	}
+	data := &values{}
+	_ = datastar.ReadSignals(r, data)
+	fmt.Printf("%#v\n", data)
+	sse := datastar.NewSSE(w, r)
+	sse.MergeSignals([]byte("{input: 'Henlo My Friend', bs: 4}"))
+	//TODO : Make this not bs
 }

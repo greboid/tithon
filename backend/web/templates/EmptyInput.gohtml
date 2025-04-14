@@ -1,15 +1,26 @@
 <div id="input" data-signals="{files: [], filesMimes: [], filesNames: [], location: ''}">
-    <form data-on-submit="@get('/input', {contentType: 'form'})">
+    <form
+            data-signals-char__ifmissing="0"
+            data-signals-bs__ifmissing="0"
+            data-signals-tab__ifmissing="1"
+            data-signals-input__ifmissing=""
+            data-on-keydown="evt.key == 'Tab' ? $tab++ && evt.preventDefault() : null"
+            data-on-signal-change-tab="@get('/tab')"
+            data-on-submit="@get('/input')">
         <label for="textInput" hidden aria-hidden="true">Input</label>
         <input
+                type="text"
                 id="textInput"
                 name="input"
                 spellcheck="true"
-                data-signals-input__ifmissing=""
+                data-ref="inputField"
                 data-bind-input=""
-                data-on-signals-change-location="@clipboard($location)"
+                data-on-selectionChange="$char = evt.target.selectionStart"
+                data-on-signal-change-location="@clipboard($location)"
+                data-on-signal-change-bs="$inputField.selectionStart = $bs; $inputField.selectionEnd = $bs; $bs = -1"
                 autocomplete="off"
         />
+        <p data-text="$char"></p>
     </form>
     <label data-attr-hidden="$filehost.length == 0" data-signals-filehost__ifmissing="" data-on-signals-change-files__debounce.500ms="$files.length > 0 && @post('/upload')">
         <input hidden type="file" data-bind="files" multiple />

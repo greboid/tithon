@@ -75,12 +75,13 @@ func NewConnection(conf *config.Config, hostname string, port int, tls bool, pas
 		conf: conf,
 	}
 	connection.Window = &Window{
-		id:         s,
-		name:       hostname,
-		title:      hostname,
-		messages:   make([]*Message, 0),
-		connection: connection,
-		isServer:   true,
+		id:           s,
+		name:         hostname,
+		title:        hostname,
+		messages:     make([]*Message, 0),
+		connection:   connection,
+		isServer:     true,
+		tabCompleter: NewConnectionTabCompleter(connection),
 	}
 
 	return connection

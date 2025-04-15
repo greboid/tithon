@@ -594,6 +594,10 @@ func (s *Server) changeWindow(change int) {
 }
 
 func (s *Server) handleTab(w http.ResponseWriter, r *http.Request) {
+	aw := s.getActiveWindow()
+	if aw == nil {
+		return
+	}
 	type inputValues struct {
 		Input    string `json:"input"`
 		Position int    `json:"char"`
@@ -603,14 +607,26 @@ func (s *Server) handleTab(w http.ResponseWriter, r *http.Request) {
 		Position int    `json:"bs"`
 	}
 	data := &inputValues{}
-	_ = datastar.ReadSignals(r, data)
-	fmt.Printf("%#v\n", data)
+	err := datastar.ReadSignals(r, data)
+	if err != nil {
+		slog.Error("Unable to read signals", "error", err)
+		return
+	}
+	tc := aw.GetTabCompleter()
+	input, position := tc.Complete(data.Input, data.Position)
 	sse := datastar.NewSSE(w, r)
 	output := outputValues{
-		Input:    data.Input,
-		Position: data.Position,
+		Input:    input,
+		Position: position,
 	}
-	dataBytes, _ := json.Marshal(output)
-	sse.MergeSignals(dataBytes)
-	//TODO : Make this not bs
+	dataBytes, err := json.Marshal(output)
+	if err != nil {
+		slog.Error("Unable to marshal signals", "error", err)
+		return
+	}
+	err = sse.MergeSignals(dataBytes)
+	if err != nil {
+		slog.Error("Unable to merge signals", "error", err)
+		return
+	}
 }

@@ -10,7 +10,7 @@ type PrivateMessage struct {
 
 func NewPrivateMessage(connection *Connection, name string) *PrivateMessage {
 	s, _ := uniqueid.Generateid("a", 5, "p")
-	return &PrivateMessage{
+	privateMessage := &PrivateMessage{
 		Window: Window{
 			id:         s,
 			name:       name,
@@ -18,4 +18,6 @@ func NewPrivateMessage(connection *Connection, name string) *PrivateMessage {
 			connection: connection,
 		},
 	}
+	privateMessage.Window.tabCompleter = NewPrivateMessageTabCompleter(privateMessage)
+	return privateMessage
 }

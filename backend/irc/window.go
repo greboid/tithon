@@ -17,16 +17,17 @@ const (
 )
 
 type Window struct {
-	id         string
-	name       string
-	title      string
-	messages   []*Message
-	connection *Connection
-	stateSync  sync.Mutex
-	state      WindowState
-	hasUsers   bool
-	users      []*User
-	isServer   bool
+	id           string
+	name         string
+	title        string
+	messages     []*Message
+	connection   *Connection
+	stateSync    sync.Mutex
+	state        WindowState
+	hasUsers     bool
+	users        []*User
+	isServer     bool
+	tabCompleter TabCompleter
 }
 
 func (c *Window) GetID() string {
@@ -137,4 +138,8 @@ func (c *Window) GetTitle() string {
 
 func (c *Window) IsServer() bool {
 	return c.isServer
+}
+
+func (c *Window) GetTabCompleter() TabCompleter {
+	return c.tabCompleter
 }

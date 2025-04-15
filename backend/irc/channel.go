@@ -24,6 +24,7 @@ func NewChannel(connection *Connection, name string) *Channel {
 		topic: NewTopic("No topic Set"),
 		users: nil,
 	}
+	channel.Window.tabCompleter = NewChannelTabCompleter(channel)
 	return channel
 }
 

@@ -119,6 +119,7 @@ func (c *Window) GetUsers() []*User {
 }
 
 func (c *Window) SortUsers() {
+	// TODO: Pull out info function
 	slices.SortFunc(c.users, func(a, b *User) int {
 		modeCmp := strings.Compare(b.modes, a.modes)
 		if modeCmp != 0 {

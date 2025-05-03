@@ -428,7 +428,16 @@ func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
-	input := r.URL.Query().Get("input")
+	type inputValues struct {
+		Input string `json:"input"`
+	}
+	inputData := &inputValues{}
+	err := datastar.ReadSignals(r, inputData)
+	if err != nil {
+		slog.Debug("Error reading input", "error", err)
+		return
+	}
+	input := inputData.Input
 	if input == "" {
 		return
 	}
@@ -436,7 +445,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
-	err := s.templates.ExecuteTemplate(&data, "EmptyInput.gohtml", nil)
+	err = s.templates.ExecuteTemplate(&data, "EmptyInput.gohtml", nil)
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
 	}

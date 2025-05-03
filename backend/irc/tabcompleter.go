@@ -20,6 +20,10 @@ type ChannelTabCompleter struct {
 	channel        userList
 	lastCompletion string
 	previousIndex  int
+	lastPosition   int
+	lastInput      string
+	original       string
+	orpos          int
 }
 
 func NewPrivateMessageTabCompleter(pm *PrivateMessage) TabCompleter {
@@ -42,44 +46,54 @@ func (t *NoopTabCompleter) Complete(input string, position int) (string, int) {
 }
 
 func (t *ChannelTabCompleter) Complete(input string, position int) (string, int) {
-	if position > len(input) {
-		return input, position
+	users := t.nicknamesToString(t.channel.GetUsers())
+	lastSpace, nextSpace := t.surroundingSpacesIndexes(input, position)
+	var partial string
+	if t.lastInput == input && t.lastPosition == position {
+		partial = t.original
+		position = t.orpos
+		input = t.lastInput
+	} else {
+		partial = input[lastSpace:nextSpace]
 	}
+	match := t.completePrefixInList(partial, users, t.lastCompletion)
+	diff := len(match) - len(partial)
+	sentence := input[:lastSpace] + match + input[nextSpace:]
+	t.lastInput = sentence
+	t.lastPosition = position + diff
+	t.orpos = position
+	t.lastCompletion = match
+	t.original = partial
+	return sentence, position + diff
+}
+
+func (t *ChannelTabCompleter) surroundingSpacesIndexes(input string, position int) (int, int) {
 	lastSpace := strings.LastIndex(input[:position], " ")
 	if lastSpace == -1 {
 		lastSpace = 0
 	} else {
 		lastSpace++
 	}
-	users := t.channel.GetUsers()
-	matched := false
-	var output string
-	var outputPos int
-	for i := range users {
-		if strings.HasPrefix(users[i].nickname, t.lastCompletion) {
-			matched = true
-			if len(input) == position {
-				output = input[:lastSpace] + users[i].nickname + " "
-				outputPos = len(input[:lastSpace]) + len(users[i].nickname)
-				t.lastCompletion = users[i].nickname
-			} else {
-				oldLength := position - lastSpace
-				output = input[:lastSpace] + users[i].nickname + " " + input[:oldLength]
-				outputPos = len(input[:lastSpace]) + len(users[i].nickname) + 1
-				t.lastCompletion = users[i].nickname
-			}
-			if t.previousIndex != -1 {
-				if t.previousIndex <= i {
-					continue
-				}
-			}
-			t.previousIndex = i
-			return output, outputPos
+	nextSpace := strings.Index(input[lastSpace:], " ")
+	if nextSpace == -1 {
+		nextSpace = len(input)
+	}
+	return lastSpace, nextSpace
+}
+
+func (t *ChannelTabCompleter) nicknamesToString(nicknames []*User) []string {
+	output := make([]string, 0)
+	for i := range nicknames {
+		output = append(output, nicknames[i].nickname)
+	}
+	return output
+}
+
+func (t *ChannelTabCompleter) completePrefixInList(start string, choices []string, lastMatch string) string {
+	for i := range choices {
+		if strings.HasPrefix(strings.ToLower(choices[i]), strings.ToLower(start)) && strings.ToLower(lastMatch) != strings.ToLower(choices[i]) {
+			return choices[i]
 		}
 	}
-	if matched {
-		return output, outputPos
-	}
-	t.previousIndex = -1
-	return input, position
+	return start
 }

@@ -22,7 +22,7 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 			input:    "dat",
 			position: 3,
 			runs:     1,
-			want:     "dataforce ",
+			want:     "dataforce",
 			want1:    9,
 		},
 		{
@@ -31,7 +31,7 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 			input:    "HENLO dat",
 			position: 9,
 			runs:     1,
-			want:     "HENLO dataforce ",
+			want:     "HENLO dataforce",
 			want1:    15,
 		},
 		{
@@ -40,7 +40,7 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 			input:    "HENLO dat",
 			position: 9,
 			runs:     2,
-			want:     "HENLO dataforce ",
+			want:     "HENLO dataforce",
 			want1:    15,
 		},
 		{
@@ -49,8 +49,8 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 			input:    "HENLO d",
 			position: 7,
 			runs:     2,
-			want:     "HENLO demented ",
-			want1:    15,
+			want:     "HENLO demented",
+			want1:    14,
 		},
 	}
 	for _, tt := range tests {
@@ -59,10 +59,10 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 				channel:       tt.channel,
 				previousIndex: -1,
 			}
-			var got string
-			var got1 int
+			got := tt.input
+			got1 := tt.position
 			for _ = range tt.runs {
-				got, got1 = t.Complete(tt.input, tt.position)
+				got, got1 = t.Complete(got, got1)
 			}
 			if got != tt.want {
 				t1.Errorf("Complete() got = `%v`, want `%v`", got, tt.want)

@@ -4,8 +4,8 @@ github.com/albinj12/unique-id v1.1.0 h1:RprxwWAr3XL59DAQqHru20RP/ftFVZg4QXF33zeg
 github.com/albinj12/unique-id v1.1.0/go.mod h1:KSOI/66/u11lhKRejXptDk5tJl1id1NknpnPE4aJPrM=
 github.com/csmith/config v1.2.0 h1:gruaGLDC9ZWRqiB0Smj3w6ahjPs+bx4iqRlehTWkyFo=
 github.com/csmith/config v1.2.0/go.mod h1:zANRVj4vESRCBxFM2pGv2XefMnQjJOGrABDp9sNi718=
-github.com/csmith/envflag v1.0.0 h1:ARMp9RyT/+1eMevJrB0cQeHxBlGpnoLSjuPdGVINzIA=
-github.com/csmith/envflag v1.0.0/go.mod h1:cE/k+xEpKPaIvo7Tz3RubNpWXRRf/WcI+bvPopn4VE0=
+github.com/csmith/envflag/v2 v2.0.0 h1:jho28W/psEqJ02EdbUHmkmFpbc5HFhog6NzHRbgtIFg=
+github.com/csmith/envflag/v2 v2.0.0/go.mod h1:GNzzXvZ2bC3z6tdoO45mTrs7l4Uht2WfBKaF1KQu0Pk=
 github.com/csmith/slogflags v1.0.0 h1:6z3fJQk2jWHR33bNszRZ6XyxYNesFdnEssHS9BPbHeI=
 github.com/csmith/slogflags v1.0.0/go.mod h1:M8Q+BmnQItanz/rs2tO5J6bgt4lZZQJiu2EWTO2aEzA=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

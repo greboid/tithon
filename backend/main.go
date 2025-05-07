@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/csmith/envflag"
+	"github.com/csmith/envflag/v2"
 	"github.com/csmith/slogflags"
 	"github.com/greboid/tithon/config"
 	"github.com/greboid/tithon/irc"

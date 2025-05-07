@@ -36,7 +36,7 @@ type Connection struct {
 	conf              *config.Config
 }
 
-func NewConnection(conf *config.Config, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger) *Connection {
+func NewConnection(conf *config.Config, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, debug bool) *Connection {
 	s, _ := uniqueid.Generateid("a", 5, "s")
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
@@ -69,7 +69,7 @@ func NewConnection(conf *config.Config, hostname string, port int, tls bool, pas
 				"draft/chathistory",
 				"draft/event-playback",
 			},
-			Debug: true,
+			Debug: debug,
 		},
 		ut:   ut,
 		conf: conf,

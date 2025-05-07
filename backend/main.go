@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/csmith/envflag"
+	"github.com/csmith/slogflags"
 	"github.com/greboid/tithon/config"
 	"github.com/greboid/tithon/irc"
 	"github.com/greboid/tithon/web"
@@ -20,14 +21,7 @@ var (
 
 func main() {
 	envflag.Parse()
-	options := &slog.HandlerOptions{}
-	if *debug {
-		options.Level = slog.LevelDebug
-	} else {
-		options.Level = slog.LevelInfo
-	}
-	log := slog.New(slog.NewTextHandler(os.Stdout, options))
-	slog.SetDefault(log)
+	slogflags.Logger(slogflags.WithSetDefault(true))
 	conf := &config.Config{}
 	err := conf.Load()
 	if err != nil {
@@ -50,7 +44,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)
 	listenAddr := server.GetListenAddress()
-	log.Info("Listening on", "address", listenAddr)
+	slog.Info("Listening on", "address", listenAddr)
 	go func() {
 		connectionManager.Start()
 	}()

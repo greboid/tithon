@@ -1,4 +1,4 @@
-<div id="messages">
+<div id="messages" data-on-keydown__window="evt.target.id !== 'textInput' && !evt.ctrlKey ? $inputField.focus() : null">
     {{ range . }}
         <p class={{.GetTypeDisplay}}>
             <span class="timestamp">{{ .GetTimestamp }}</span>

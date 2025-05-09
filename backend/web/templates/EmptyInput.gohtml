@@ -20,7 +20,6 @@
                 data-on-signal-change-bs="$inputField.selectionStart = $bs; $inputField.selectionEnd = $bs; $bs = -1"
                 autocomplete="off"
         />
-        <p data-text="$char"></p>
     </form>
     <label data-attr-hidden="$filehost.length == 0" data-signals-filehost__ifmissing="" data-on-signals-change-files__debounce.500ms="$files.length > 0 && @post('/upload')">
         <input hidden type="file" data-bind="files" multiple />

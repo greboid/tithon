@@ -118,6 +118,7 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
+  user-select: none;
 }
 
 #servers {
@@ -587,6 +588,10 @@ dialog {
   background-color: var(--background);
   color: var(--foreground);
 
+  & h1 {
+    user-select: none;
+  }
+
   & div {
     display: flex;
     flex-direction: column;
@@ -626,6 +631,7 @@ form {
 label {
   grid-column: labels;
   grid-row: auto;
+  user-select: none;
 }
 
 input, textarea, button {

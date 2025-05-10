@@ -242,7 +242,7 @@ func (h *Handler) handleError(message ircmsg.Message) {
 func (h *Handler) handleNotice(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
 	mess := NewNotice(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick())
-	if strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@") {
+	if message.Source == "" || (strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@")) {
 		h.messageHandler.AddMessage(mess)
 	} else if h.channelHandler.IsChannel(message.Params[0]) {
 		channel, err := h.channelHandler.GetChannelByName(message.Params[0])

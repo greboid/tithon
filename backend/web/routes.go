@@ -329,17 +329,15 @@ func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	hostname := r.URL.Query().Get("hostname")
 	port := r.URL.Query().Get("port")
-	portInt, err := strconv.Atoi(port)
-	if err != nil {
-		//TODO: Handle error
-		portInt = 6667
-	}
+	var err error
+	portInt := 6697
+	portInt, _ = strconv.Atoi(port)
+	tlsBool := true
 	tls := r.URL.Query().Get("tls")
-	tlsBool, err := strconv.ParseBool(tls)
-	if err != nil {
-		//TODO: Handle error
-		tlsBool = true
+	if tls == "" {
+		tlsBool = false
 	}
+	tlsBool, _ = strconv.ParseBool(tls)
 	nickname := r.URL.Query().Get("nickname")
 	sasllogin := r.URL.Query().Get("sasllogin")
 	saslpassword := r.URL.Query().Get("saslpassword")

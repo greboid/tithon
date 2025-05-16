@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	rawIRC    = flag.Bool("rawirc", false, "Show raw IRC")
 	OpenUI    = flag.Bool("openui", true, "Should the UI launch")
 	FixedPort = flag.Int("port", 8081, "Fixed port to use, 0 will use a random port")
 )
@@ -35,7 +34,7 @@ func main() {
 			return
 		}
 	}()
-	connectionManager := irc.NewConnectionManager(conf, *rawIRC)
+	connectionManager := irc.NewConnectionManager(conf)
 	defer connectionManager.Stop()
 	server := web.NewServer(connectionManager, irc.NewCommandManager(conf), *FixedPort)
 	defer server.Stop()

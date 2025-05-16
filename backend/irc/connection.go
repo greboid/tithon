@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	uniqueid "github.com/albinj12/unique-id"
+	"github.com/csmith/slogflags"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/greboid/tithon/config"
@@ -36,7 +37,7 @@ type Connection struct {
 	conf              *config.Config
 }
 
-func NewConnection(conf *config.Config, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, debug bool) *Connection {
+func NewConnection(conf *config.Config, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger) *Connection {
 	s, _ := uniqueid.Generateid("a", 5, "s")
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
@@ -69,7 +70,8 @@ func NewConnection(conf *config.Config, hostname string, port int, tls bool, pas
 				"draft/chathistory",
 				"draft/event-playback",
 			},
-			Debug: debug,
+			Debug: true,
+			Log:   slog.NewLogLogger(slogflags.Logger().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", s)}), slog.LevelDebug),
 		},
 		ut:   ut,
 		conf: conf,

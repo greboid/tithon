@@ -17,15 +17,13 @@ type ConnectionManager struct {
 	commandManager *CommandManager
 	updateTrigger  UpdateTrigger
 	config         *config.Config
-	debug          bool
 }
 
-func NewConnectionManager(conf *config.Config, debug bool) *ConnectionManager {
+func NewConnectionManager(conf *config.Config) *ConnectionManager {
 	return &ConnectionManager{
 		connections:    map[string]*Connection{},
 		commandManager: NewCommandManager(conf),
 		config:         conf,
-		debug:          debug,
 	}
 }
 
@@ -39,7 +37,7 @@ func (cm *ConnectionManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewConnection(cm.config, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.debug)
+	connection := NewConnection(cm.config, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger)
 	cm.connections[connection.id] = connection
 	if connect {
 		go func() {

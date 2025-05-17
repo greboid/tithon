@@ -45,6 +45,7 @@ const createWindow = async () => {
   })
 }
 app.commandLine.appendSwitch('disable-http-cache')
+app.setName('tithon')
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()

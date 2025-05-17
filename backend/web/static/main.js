@@ -42,4 +42,34 @@ const handlePaste = async (e) => {
     }
   }
 }
+
 window.addEventListener('paste', handlePaste)
+
+const createUserContext = () => {
+  const menu = document.createElement("UL")
+  const copyItem = document.createElement("LI")
+  copyItem.innerText = "Copy"
+  menu.appendChild(copyItem)
+  return menu
+}
+
+const createServerContext = () => {
+
+}
+
+const createChannelContext = () => {
+
+}
+
+const showContextMenu = (e) => {
+  if (e.target.matches(".nickname *")) {
+    console.log(e)
+    e.preventDefault()
+    const menu = createUserContext()
+    menu.
+  }
+}
+
+const hideContextMenu = () => {}
+
+window.addEventListener('contextmenu', showContextMenu)

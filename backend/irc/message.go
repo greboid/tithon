@@ -62,6 +62,7 @@ func GetTimeForMessage(message ircmsg.Message) time.Time {
 		if err != nil {
 			slog.Error("Error parsing time from server", "time", messageTime, "error", err)
 		}
+		parsedTime = parsedTime.In(time.Local)
 	}
 	return parsedTime
 }

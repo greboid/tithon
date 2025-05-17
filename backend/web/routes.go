@@ -52,6 +52,15 @@ func getTemplateFuncs() template.FuncMap {
 	}
 }
 
+func (s *Server) noCacheMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		h.ServeHTTP(w, r)
+	})
+}
+
 func (s *Server) addRoutes(mux *http.ServeMux) {
 	var static fs.FS
 	if stat, err := os.Stat("./web/static"); err == nil && stat.IsDir() {
@@ -78,7 +87,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 		allTemplates, _ = fs.Sub(templateFS, "templates")
 	}
 	s.updateTemplates(allTemplates)
-	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(static))))
+	mux.Handle("GET /static/", s.noCacheMiddleware(http.StripPrefix("/static/", http.FileServer(http.FS(static)))))
 	mux.HandleFunc("GET /static/user.css", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, usercss)
 	})

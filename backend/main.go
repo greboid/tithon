@@ -36,8 +36,7 @@ func main() {
 			return a
 		}),
 	)
-	fmt.Printf("%#+v\n", log.Handler().Enabled(context.Background(), irc.LevelTrace))
-	slog.Log(context.Background(), irc.LevelTrace, "Blargh")
+
 	conf := &config.Config{}
 	err := conf.Load()
 	if err != nil {

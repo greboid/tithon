@@ -52,6 +52,15 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 			want:     "HENLO demented",
 			want1:    14,
 		},
+		{
+			name:     "Three matches, three runs",
+			channel:  newFakeUserList("dataforce", "demented", "dumbo"),
+			input:    "HENLO d",
+			position: 7,
+			runs:     3,
+			want:     "HENLO dumbo",
+			want1:    11,
+		},
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -71,6 +80,25 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 				t1.Errorf("Complete() got1 = `%v`, want `%v`", got1, tt.want1)
 			}
 		})
+	}
+}
+
+func TestChannelTabCompleter_MultipleInputs(t1 *testing.T) {
+	channel := newFakeUserList("dataforce", "demented", "md87")
+
+	t := &ChannelTabCompleter{
+		channel:       channel,
+		previousIndex: -1,
+	}
+
+	input1, pos1 := t.Complete("d", 1)
+	if input1 != "dataforce" || pos1 != 9 {
+		t1.Errorf("First Complete() got `%v` at position %v, want `dataforce` at position 9", input1, pos1)
+	}
+
+	input2, pos2 := t.Complete("dataforce d", 11)
+	if input2 != "dataforce dataforce" || pos2 != 19 {
+		t1.Errorf("Second Complete() got `%v` at position %v, want `dataforce dataforce` at position 19", input2, pos2)
 	}
 }
 

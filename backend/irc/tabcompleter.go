@@ -18,7 +18,7 @@ type PMTabCompleter struct{}
 
 type ChannelTabCompleter struct {
 	channel        userList
-	lastCompletion string
+	lastCompletion int
 	previousIndex  int
 	lastPosition   int
 	lastInput      string
@@ -49,20 +49,23 @@ func (t *ChannelTabCompleter) Complete(input string, position int) (string, int)
 	users := t.nicknamesToString(t.channel.GetUsers())
 	lastSpace, nextSpace := t.surroundingSpacesIndexes(input, position)
 	var partial string
+	var lastCompletion int
 	if t.lastInput == input && t.lastPosition == position {
 		partial = t.original
 		position = t.orpos
 		input = t.lastInput
+		lastCompletion = t.lastCompletion
 	} else {
 		partial = input[lastSpace:nextSpace]
+		lastCompletion = -1
 	}
-	match := t.completePrefixInList(partial, users, t.lastCompletion)
+	match, completion := t.completePrefixInList(partial, users, lastCompletion)
 	diff := len(match) - len(partial)
 	sentence := input[:lastSpace] + match + input[nextSpace:]
+	t.lastCompletion = completion
 	t.lastInput = sentence
 	t.lastPosition = position + diff
 	t.orpos = position
-	t.lastCompletion = match
 	t.original = partial
 	return sentence, position + diff
 }
@@ -89,11 +92,12 @@ func (t *ChannelTabCompleter) nicknamesToString(nicknames []*User) []string {
 	return output
 }
 
-func (t *ChannelTabCompleter) completePrefixInList(start string, choices []string, lastMatch string) string {
+func (t *ChannelTabCompleter) completePrefixInList(start string, choices []string, lastMatch int) (string, int) {
 	for i := range choices {
-		if strings.HasPrefix(strings.ToLower(choices[i]), strings.ToLower(start)) && strings.ToLower(lastMatch) != strings.ToLower(choices[i]) {
-			return choices[i]
+		index := (i + lastMatch + 1) % len(choices)
+		if strings.HasPrefix(strings.ToLower(choices[index]), strings.ToLower(start)) {
+			return choices[index], index
 		}
 	}
-	return start
+	return start, 0
 }

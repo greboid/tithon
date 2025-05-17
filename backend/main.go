@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"github.com/csmith/envflag/v2"
 	"github.com/csmith/slogflags"
 	"github.com/greboid/tithon/config"
@@ -20,7 +22,22 @@ var (
 
 func main() {
 	envflag.Parse()
-	slogflags.Logger(slogflags.WithSetDefault(true))
+	log := slogflags.Logger(
+		slogflags.WithCustomLevels(map[string]slog.Level{"trace": irc.LevelTrace}),
+		slogflags.WithSetDefault(true),
+		slogflags.WithReplaceAttr(func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.LevelKey {
+				level := a.Value.Any().(slog.Level)
+				switch {
+				case level == irc.LevelTrace:
+					a.Value = slog.StringValue("TRACE")
+				}
+			}
+			return a
+		}),
+	)
+	fmt.Printf("%#+v\n", log.Handler().Enabled(context.Background(), irc.LevelTrace))
+	slog.Log(context.Background(), irc.LevelTrace, "Blargh")
 	conf := &config.Config{}
 	err := conf.Load()
 	if err != nil {

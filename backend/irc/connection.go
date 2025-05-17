@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	uniqueid "github.com/albinj12/unique-id"
-	"github.com/csmith/slogflags"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/greboid/tithon/config"
@@ -14,6 +13,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+)
+
+const (
+	LevelTrace = slog.Level(-8)
 )
 
 type Connection struct {
@@ -71,7 +74,7 @@ func NewConnection(conf *config.Config, hostname string, port int, tls bool, pas
 				"draft/event-playback",
 			},
 			Debug: true,
-			Log:   slog.NewLogLogger(slogflags.Logger().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", s)}), slog.LevelDebug),
+			Log:   slog.NewLogLogger(slog.Default().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", s)}), LevelTrace),
 		},
 		ut:   ut,
 		conf: conf,

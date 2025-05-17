@@ -4,11 +4,11 @@
   --font: 'JetBrainsMono';
   --fontLigatures: normal;
 
-  --light-bg: #F6F4F4;
+  --light-bg: #f4f4f6;
   --light-color: #000000;
-  --light-highlight: #EADEDA;
-  --light-accent: #5D251D;
-  --light-accent2: #C5595D;
+  --light-highlight: #d6d6de;
+  --light-accent: #6f2c1e;
+  --light-accent2: #59a779;
 
   --dark-bg: #2b2a33;
   --dark-color: #ffffff;

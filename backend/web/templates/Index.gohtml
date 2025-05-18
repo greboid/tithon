@@ -12,7 +12,13 @@
     <script src="/static/main.js"></script>
 </head>
 <body>
-<main id="main" data-on-load="@get('/update', {openWhenHidden: true})">
+<main id="main"
+      data-signals-failed__ifmissing="false"
+      data-on-load="@get('/update', {openWhenHidden: true, retryMaxCount: 2})"
+      data-on-datastar-sse="evt.detail.type == 'retries-failed' ? $failed = true : null"
+      data-on-datastar-sse="evt.detail.type == 'started' ? $failed = false : null"
+      data-class-error="$failed"
+>
     <div id="title"><img width="40" src="/static/icon.png" alt="Tithon" title="Tithon"/><p>{{.}}</p></div>
     <div id="servers"></div>
     <div id="messages"></div>

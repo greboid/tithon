@@ -23,16 +23,6 @@ func main() {
 	slogflags.Logger(
 		slogflags.WithCustomLevels(map[string]slog.Level{"trace": irc.LevelTrace}),
 		slogflags.WithSetDefault(true),
-		slogflags.WithReplaceAttr(func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == slog.LevelKey {
-				level := a.Value.Any().(slog.Level)
-				switch {
-				case level == irc.LevelTrace:
-					a.Value = slog.StringValue("TRACE")
-				}
-			}
-			return a
-		}),
 	)
 
 	conf := &config.Config{}

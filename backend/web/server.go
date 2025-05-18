@@ -24,6 +24,10 @@ var (
 	templateFS embed.FS
 )
 
+type Notification struct {
+	Text string
+}
+
 type Server struct {
 	lock                 sync.Mutex
 	httpServer           *http.Server
@@ -38,6 +42,7 @@ type Server struct {
 	pendingUpdate        atomic.Bool
 	listlock             sync.Mutex
 	uiUpdate             atomic.Bool
+	pendingNotifications chan Notification
 }
 
 type ServerList struct {
@@ -60,10 +65,11 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 		httpServer: &http.Server{
 			Handler: mux,
 		},
-		connectionManager: cm,
-		commands:          commands,
-		activeWindow:      nil,
-		serverList:        &ServerList{},
+		connectionManager:    cm,
+		commands:             commands,
+		activeWindow:         nil,
+		serverList:           &ServerList{},
+		pendingNotifications: make(chan Notification),
 	}
 	server.addRoutes(mux)
 	return server
@@ -181,4 +187,8 @@ func (s *Server) SetPendingUpdate() {
 
 func (s *Server) SetUIUpdate() {
 	s.uiUpdate.Store(true)
+}
+
+func (s *Server) SendNotification(text string) {
+	s.pendingNotifications <- Notification{Text: text}
 }

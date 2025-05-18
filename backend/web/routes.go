@@ -293,6 +293,11 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 			if yes := s.pendingUpdate.Swap(false); yes {
 				s.UpdateUI(w, r)
 			}
+		case notification := <-s.pendingNotifications:
+			err := datastar.NewSSE(w, r).ExecuteScript(`notify("`+notification.Text+`")`, datastar.WithExecuteScriptAutoRemove(true))
+			if err != nil {
+				slog.Error("Unable to send notification", "error", err)
+			}
 		}
 	}
 }

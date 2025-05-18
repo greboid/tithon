@@ -9,7 +9,8 @@ const createWindow = async () => {
                                   icon:   'icon.png',
                                   width:  800,
                                   height: 600,
-                                })
+                                  webPreferences: {     autoplayPolicy: 'no-user-gesture-required' }
+                                  })
   const menu = new Menu()
   menu.append(new MenuItem({
                              label:       'Refresh',
@@ -44,7 +45,6 @@ const createWindow = async () => {
     return {action: 'deny'}
   })
 }
-app.commandLine.appendSwitch('disable-http-cache')
 app.setName('tithon')
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

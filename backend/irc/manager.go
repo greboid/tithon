@@ -12,11 +12,16 @@ type UpdateTrigger interface {
 	SetPendingUpdate()
 }
 
+type NotificationManager interface {
+	SendNotification(text string)
+}
+
 type ConnectionManager struct {
-	connections    map[string]*Connection
-	commandManager *CommandManager
-	updateTrigger  UpdateTrigger
-	config         *config.Config
+	connections         map[string]*Connection
+	commandManager      *CommandManager
+	updateTrigger       UpdateTrigger
+	notificationManager NotificationManager
+	config              *config.Config
 }
 
 func NewConnectionManager(conf *config.Config) *ConnectionManager {

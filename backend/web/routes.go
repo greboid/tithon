@@ -375,11 +375,15 @@ func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
 	connection := s.connectionManager.GetConnection(serverID)
 	if connection == nil {
 		slog.Debug("Invalid change channel call, unknown server", "server", serverID)
+		s.setActiveWindow(nil)
+		s.handleIndex(w, r)
 		return
 	}
 	channel := connection.GetChannel(channelID)
 	if channel == nil {
 		slog.Debug("Invalid change channel call, unknown channel", "server", serverID, "channel", channelID)
+		s.setActiveWindow(nil)
+		s.handleIndex(w, r)
 		return
 	}
 	s.setActiveWindow(channel.Window)
@@ -412,6 +416,8 @@ func (s *Server) handleServer(w http.ResponseWriter, r *http.Request) {
 	connection := s.connectionManager.GetConnection(serverID)
 	if connection == nil {
 		slog.Debug("Invalid change server call, unknown server", "server", serverID)
+		s.setActiveWindow(nil)
+		s.handleIndex(w, r)
 		return
 	}
 	s.setActiveWindow(connection.Window)

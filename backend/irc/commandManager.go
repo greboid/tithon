@@ -36,6 +36,7 @@ func NewCommandManager(conf *config.Config) *CommandManager {
 			&Nick{},
 			&ChangeTopic{},
 			&SendNotice{},
+			&Whois{},
 		},
 		conf: conf,
 	}

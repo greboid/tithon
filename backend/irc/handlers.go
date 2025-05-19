@@ -88,6 +88,42 @@ func (h *Handler) addCallbacks() {
 		h.addEvent(GetTimeForMessage(message), "Password Mismatch: "+strings.Join(message.Params, " "))
 	})
 	h.callbackHandler.AddCallback("MODE", h.handleMode)
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISUSER, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[1:], " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISCERTFP, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[1:], " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISACCOUNT, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[2:], " ")+" "+message.Params[1])
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISBOT, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[1:], " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISACTUALLY, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params, " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISCHANNELS, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[1:], " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISIDLE, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[1:], " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISMODES, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params, " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISOPERATOR, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[1:], " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISSECURE, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[1:], " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_WHOISSERVER, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS "+strings.Join(message.Params[1:], " "))
+	})
+	h.callbackHandler.AddCallback(ircevent.RPL_ENDOFWHOIS, func(message ircmsg.Message) {
+		h.addEvent(GetTimeForMessage(message), "WHOIS END "+" "+message.Params[1])
+	})
 }
 
 func (h *Handler) handleTopic(message ircmsg.Message) {

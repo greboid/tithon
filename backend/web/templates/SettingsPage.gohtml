@@ -7,10 +7,10 @@
     <div>
         <form method="dialog">
             <div>
-                <h1>Settings</h1>
-                <button data-on-click="@get('/addServer', {contentType: 'form'})">Save</button>
+                <h1>Settings v{{.}}</h1>
             </div>
         </form>
+        <button data-on-click="@get('/addServer', {contentType: 'form'})">Save</button>
         <button data-on-click="document.getElementById('dialog').close()">Close</button>
     </div>
 </dialog>

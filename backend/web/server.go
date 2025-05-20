@@ -6,12 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/greboid/tithon/irc"
+	semver "github.com/hashicorp/go-version"
 	"html/template"
 	"log/slog"
 	"net"
 	"net/http"
+	"runtime/debug"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -55,6 +58,24 @@ type ServerListItem struct {
 	Link     string
 	Name     string
 	Children []*ServerListItem
+}
+
+func getVersion() string {
+	var versionString string
+	if info, ok := debug.ReadBuildInfo(); ok {
+		versionString = info.Main.Version
+		if version, err := semver.NewVersion(versionString); err == nil {
+			versionString = strings.Trim(strings.Join(strings.Fields(fmt.Sprint(version.Segments()[0:3])), "."), "[]")
+			if version.Prerelease() != "" {
+				versionString = versionString + "-dev"
+			}
+		} else {
+			versionString = "err"
+		}
+	} else {
+		versionString = "unknown"
+	}
+	return versionString
 }
 
 func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int) *Server {

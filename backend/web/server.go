@@ -46,6 +46,7 @@ type Server struct {
 	listlock             sync.Mutex
 	uiUpdate             atomic.Bool
 	pendingNotifications chan Notification
+	templateLock         sync.Mutex
 }
 
 type ServerList struct {

@@ -189,6 +189,8 @@ func (s *Server) updateTemplates(allTemplates fs.FS) {
 		slog.Error("Error parsing templates", "error", err)
 		panic("Unable to load templates")
 	}
+	s.templateLock.Lock()
+	defer s.templateLock.Unlock()
 	s.templates = allParsedTemplates
 	s.SetPendingUpdate()
 }
@@ -254,6 +256,8 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) outputTemplate(wr io.Writer, name string, data any) {
+	s.templateLock.Lock()
+	defer s.templateLock.Unlock()
 	err := s.templates.ExecuteTemplate(wr, name, data)
 	if err != nil {
 		slog.Debug("Error generating name", "error", err)

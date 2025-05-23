@@ -46,8 +46,8 @@ func main() {
 	connectionManager.Load()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)
-	listenAddr := server.GetListenAddress()
-	slog.Info("Listening on", "address", listenAddr)
+	host, port := server.GetListenAddress()
+	slog.Info("Listening on", "host", host, "port", port)
 	go func() {
 		connectionManager.Start()
 	}()

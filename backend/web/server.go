@@ -97,27 +97,26 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 	return server
 }
 
-func (s *Server) GetListenAddress() string {
+func (s *Server) GetListenAddress() (string, int) {
 	if s.httpServer.Addr != "" {
-		return fmt.Sprintf("http://%s", s.httpServer.Addr)
+		split := strings.Split(s.httpServer.Addr, ":")
+		port, _ := strconv.Atoi(split[1])
+		return split[0], port
 	}
 	ip, port, err := s.getPort()
 	if err != nil {
 		slog.Error("Unable to get free port", "error", err)
-		return ""
+		return "", -1
 	}
 	s.httpServer.Addr = net.JoinHostPort(ip.String(), strconv.Itoa(port))
-	return fmt.Sprintf("http://%s", s.httpServer.Addr)
+	return ip.String(), port
 }
 
-func (s *Server) Start() string {
-	clickAddr := s.GetListenAddress()
-	slog.Info("Starting webserver", "url", clickAddr)
+func (s *Server) Start() {
 	if err := s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("Error starting server:", slog.String("error", err.Error()))
 	}
 	slog.Debug("Server stopped")
-	return clickAddr
 }
 
 func (s *Server) Stop() {

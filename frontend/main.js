@@ -6,11 +6,15 @@ let child
 
 const createWindow = async () => {
   const win = new BrowserWindow({
-                                  icon:   'icon.png',
-                                  width:  800,
-                                  height: 600,
-                                  webPreferences: {     autoplayPolicy: 'no-user-gesture-required' }
-                                  })
+                                  icon:           'icon.png',
+                                  width:          800,
+                                  height:         600,
+                                  webPreferences: {
+                                    autoplayPolicy:       'no-user-gesture-required',
+                                    backgroundThrottling: false,
+                                    defaultEncoding:      'UTF-8',
+                                  },
+                                })
   const menu = new Menu()
   menu.append(new MenuItem({
                              label:       'Refresh',

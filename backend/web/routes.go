@@ -64,6 +64,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	if stat, err := os.Stat("./web/static"); err == nil && stat.IsDir() {
 		slog.Debug("Using on disk static resources")
 		static = os.DirFS("./web/static")
+		s.createStaticWatcher()
 	} else {
 		slog.Debug("Using on embedded static resources")
 		static, _ = fs.Sub(staticFS, "static")
@@ -74,7 +75,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 			slog.Debug("Unable to create empty user.css")
 		}
 	}
-	s.createStaticWatcher(usercss)
+	s.createUserCSSWatcher(usercss)
 	var allTemplates fs.FS
 	if stat, err := os.Stat("./web/templates"); err == nil && stat.IsDir() {
 		slog.Debug("Using on disk templates")
@@ -119,7 +120,7 @@ func (s *Server) createTemplateWatcher(templates fs.FS) {
 	}
 }
 
-func (s *Server) createStaticWatcher(usercss string) {
+func (s *Server) createStaticWatcher() {
 	staticWatches, err := fsnotify.NewWatcher()
 	if err != nil {
 		slog.Error("Unable to create watcher", "error", err)
@@ -129,6 +130,14 @@ func (s *Server) createStaticWatcher(usercss string) {
 	if err != nil {
 		slog.Error("Error add static watcher", "error", err)
 	}
+}
+
+func (s *Server) createUserCSSWatcher(usercss string) {
+	staticWatches, err := fsnotify.NewWatcher()
+	if err != nil {
+		slog.Error("Unable to create watcher", "error", err)
+	}
+	go s.staticLoop(staticWatches)
 	if _, err = os.UserConfigDir(); err == nil {
 		err = staticWatches.Add(usercss)
 		if err != nil {

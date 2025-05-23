@@ -33,7 +33,7 @@ const createWindow = async () => {
                            }))
   Menu.setApplicationMenu(menu)
   win.setMenuBarVisibility(false)
-  child = spawn(join(__dirname, 'backend'))
+  child = spawn(join(__dirname, 'backend'), [], {windowsHide: false})
   child.on('exit', () => {
     app.quit()
   })

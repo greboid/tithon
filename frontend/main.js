@@ -4,7 +4,27 @@ const {join} = require('node:path')
 
 let child
 
+const parsePort = (win) => {
+  return async (data) => {
+    const text = new TextDecoder().decode(data)
+    const { port } = /port=(?<port>\d+)/.exec(text).groups
+    win.loadURL(`http://localhost:${port}`)
+       .catch(quit)
+  }
+}
+
+const outputLogs = async (data) => {
+  const text = new TextDecoder().decode(data)
+  console.log(text)
+}
+
+const quit = (error) => {
+  console.log(`Quitting: ${error}`)
+  app.quit()
+}
+
 const createWindow = async () => {
+  let port = -1;
   const win = new BrowserWindow({
                                   icon:           'icon.png',
                                   width:          800,
@@ -15,12 +35,22 @@ const createWindow = async () => {
                                     defaultEncoding:      'UTF-8',
                                   },
                                 })
+  win.setMenuBarVisibility(false)
+  child = spawn(join(__dirname, 'backend'), [], {windowsHide: false})
+  child.on('exit', quit)
+  child.stdout.once('data', parsePort(win))
+  child.stdout.on('data', outputLogs)
+  win.webContents.setWindowOpenHandler(({url}) => {
+    shell.openExternal(url)
+    return {action: 'deny'}
+  })
   const menu = new Menu()
+  Menu.setApplicationMenu(menu)
   menu.append(new MenuItem({
                              label:       'Refresh',
                              accelerator: 'F5',
                              click:       () => {
-                               win.loadURL('http://localhost:8081')
+                               win.loadURL(`http://localhost:${port}`)
                                   .catch(() => app.quit())
                              },
                            }))
@@ -31,23 +61,6 @@ const createWindow = async () => {
                                win.webContents.toggleDevTools()
                              },
                            }))
-  Menu.setApplicationMenu(menu)
-  win.setMenuBarVisibility(false)
-  child = spawn(join(__dirname, 'backend'), [], {windowsHide: false})
-  child.on('exit', () => {
-    app.quit()
-  })
-  child.stdout.once('data', () => {
-    win.loadURL('http://localhost:8081')
-       .catch(() => app.quit())
-  })
-  // child.stdout.on('data', (data) => {
-  //   console.log(new TextDecoder().decode(data))
-  // })
-  win.webContents.setWindowOpenHandler(({url}) => {
-    shell.openExternal(url)
-    return {action: 'deny'}
-  })
 }
 app.setName('tithon')
 app.on('window-all-closed', () => {

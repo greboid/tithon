@@ -15,7 +15,7 @@ import (
 
 var (
 	OpenUI    = flag.Bool("openui", true, "Should the UI launch")
-	FixedPort = flag.Int("port", 8081, "Fixed port to use, 0 will use a random port")
+	FixedPort = flag.Int("port", 0, "Fixed port to use, 0 will use a random port")
 )
 
 func main() {

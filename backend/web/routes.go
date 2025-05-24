@@ -15,6 +15,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
@@ -373,7 +374,7 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
 	serverID := r.PathValue("server")
-	channelID := r.PathValue("channel")
+	channelName := r.PathValue("channel")
 	connection := s.connectionManager.GetConnection(serverID)
 	if connection == nil {
 		slog.Debug("Invalid change channel call, unknown server", "server", serverID)
@@ -381,9 +382,9 @@ func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
 		s.handleIndex(w, r)
 		return
 	}
-	channel := connection.GetChannel(channelID)
+	channel, _ := connection.GetChannelByName(channelName)
 	if channel == nil {
-		slog.Debug("Invalid change channel call, unknown channel", "server", serverID, "channel", channelID)
+		slog.Debug("Invalid change channel call, unknown channel", "server", serverID, "channel", channelName)
 		s.setActiveWindow(nil)
 		s.handleIndex(w, r)
 		return
@@ -409,7 +410,7 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	s.setActiveWindow(channel.Window)
 	slog.Debug("Changing Window", "window", channel.Window.GetID())
 	sse := datastar.NewSSE(w, r)
-	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"/"+channel.GetName()+"')", datastar.WithExecuteScriptAutoRemove(true))
+	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"/"+url.QueryEscape(channel.GetName())+"')", datastar.WithExecuteScriptAutoRemove(true))
 	s.UpdateUI(w, r)
 }
 
@@ -597,7 +598,7 @@ func (s *Server) handleNextWindowUp(w http.ResponseWriter, r *http.Request) {
 	if s.activeWindow.IsServer() {
 		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
 	} else {
-		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+s.activeWindow.GetName()+"')", datastar.WithExecuteScriptAutoRemove(true))
+		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+url.QueryEscape(s.activeWindow.GetName())+"')", datastar.WithExecuteScriptAutoRemove(true))
 	}
 	s.UpdateUI(w, r)
 }
@@ -607,7 +608,7 @@ func (s *Server) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
 	if s.activeWindow.IsServer() {
 		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
 	} else {
-		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+s.activeWindow.GetName()+"')", datastar.WithExecuteScriptAutoRemove(true))
+		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+url.QueryEscape(s.activeWindow.GetName())+"')", datastar.WithExecuteScriptAutoRemove(true))
 	}
 	s.UpdateUI(w, r)
 }

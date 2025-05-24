@@ -593,10 +593,22 @@ func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleNextWindowUp(w http.ResponseWriter, r *http.Request) {
 	s.changeWindow(-1)
+	sse := datastar.NewSSE(w, r)
+	if s.activeWindow.IsServer() {
+		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
+	} else {
+		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
+	}
 	s.UpdateUI(w, r)
 }
 func (s *Server) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
 	s.changeWindow(+1)
+	sse := datastar.NewSSE(w, r)
+	if s.activeWindow.IsServer() {
+		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
+	} else {
+		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
+	}
 	s.UpdateUI(w, r)
 }
 

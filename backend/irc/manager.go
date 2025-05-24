@@ -33,6 +33,7 @@ func NewConnectionManager(conf *config.Config) *ConnectionManager {
 }
 
 func (cm *ConnectionManager) AddConnection(
+	id string,
 	hostname string,
 	port int,
 	tls bool,
@@ -42,7 +43,7 @@ func (cm *ConnectionManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewConnection(cm.config, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger)
+	connection := NewConnection(cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger)
 	cm.connections[connection.id] = connection
 	if connect {
 		go func() {
@@ -89,7 +90,7 @@ func (cm *ConnectionManager) Stop() {
 
 func (cm *ConnectionManager) Load() {
 	for _, server := range cm.config.Servers {
-		cm.AddConnection(server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
+		cm.AddConnection(server.ID, server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
 	}
 }
 
@@ -98,6 +99,7 @@ func (cm *ConnectionManager) Save() {
 	servers := make([]config.Server, 0)
 	for _, server := range cm.connections {
 		servers = append(servers, config.Server{
+			ID:           server.id,
 			Hostname:     server.hostname,
 			Port:         server.port,
 			TLS:          server.tls,

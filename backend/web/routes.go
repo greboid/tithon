@@ -353,7 +353,7 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	sasllogin := r.URL.Query().Get("sasllogin")
 	saslpassword := r.URL.Query().Get("saslpassword")
 	password := r.URL.Query().Get("password")
-	s.connectionManager.AddConnection(hostname, portInt, tlsBool, password, sasllogin, saslpassword, irc.NewProfile(nickname), true)
+	s.connectionManager.AddConnection("", hostname, portInt, tlsBool, password, sasllogin, saslpassword, irc.NewProfile(nickname), true)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)

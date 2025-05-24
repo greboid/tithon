@@ -20,6 +20,7 @@ type Server struct {
 	SASLLogin    string  `yaml:"sasl_login"`
 	SASLPassword string  `yaml:"sasl_password"`
 	Profile      Profile `yaml:"profile"`
+	ID           string  `yaml:"id"`
 }
 
 type UISettings struct {

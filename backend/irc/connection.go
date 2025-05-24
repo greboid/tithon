@@ -40,8 +40,10 @@ type Connection struct {
 	conf              *config.Config
 }
 
-func NewConnection(conf *config.Config, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger) *Connection {
-	s, _ := uniqueid.Generateid("a", 5, "s")
+func NewConnection(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger) *Connection {
+	if id == "" {
+		id, _ = uniqueid.Generateid("a", 5, "s")
+	}
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
 	connection := &Connection{
@@ -74,13 +76,13 @@ func NewConnection(conf *config.Config, hostname string, port int, tls bool, pas
 				"draft/event-playback",
 			},
 			Debug: true,
-			Log:   slog.NewLogLogger(slog.Default().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", s)}), LevelTrace),
+			Log:   slog.NewLogLogger(slog.Default().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", id)}), LevelTrace),
 		},
 		ut:   ut,
 		conf: conf,
 	}
 	connection.Window = &Window{
-		id:           s,
+		id:           id,
 		name:         hostname,
 		title:        hostname,
 		messages:     make([]*Message, 0),

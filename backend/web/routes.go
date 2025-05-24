@@ -409,7 +409,7 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	s.setActiveWindow(channel.Window)
 	slog.Debug("Changing Window", "window", channel.Window.GetID())
 	sse := datastar.NewSSE(w, r)
-	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"/"+channelID+"')", datastar.WithExecuteScriptAutoRemove(true))
+	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"/"+channel.GetName()+"')", datastar.WithExecuteScriptAutoRemove(true))
 	s.UpdateUI(w, r)
 }
 
@@ -597,7 +597,7 @@ func (s *Server) handleNextWindowUp(w http.ResponseWriter, r *http.Request) {
 	if s.activeWindow.IsServer() {
 		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
 	} else {
-		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
+		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+s.activeWindow.GetName()+"')", datastar.WithExecuteScriptAutoRemove(true))
 	}
 	s.UpdateUI(w, r)
 }
@@ -607,7 +607,7 @@ func (s *Server) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
 	if s.activeWindow.IsServer() {
 		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
 	} else {
-		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
+		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+s.activeWindow.GetName()+"')", datastar.WithExecuteScriptAutoRemove(true))
 	}
 	s.UpdateUI(w, r)
 }

@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	instance   *config.Config
-	Servers    []Server   `yaml:"servers"`
-	UISettings UISettings `yaml:"ui_settings"`
+	instance      *config.Config
+	Servers       []Server      `yaml:"servers"`
+	UISettings    UISettings    `yaml:"ui_settings"`
+	Notifications Notifications `yaml:"notifications"`
 }
 
 type Server struct {
@@ -29,6 +30,17 @@ type UISettings struct {
 
 type Profile struct {
 	Nickname string `yaml:"nickname"`
+}
+
+type Notifications struct {
+	Triggers []NotificationTrigger `yaml:"triggers"`
+}
+
+type NotificationTrigger struct {
+	Network string `yaml:"network"`
+	Source  string `yaml:"source"`
+	Nick    string `yaml:"nick"`
+	Message string `yaml:"message"`
 }
 
 func (c *Config) Load() error {

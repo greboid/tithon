@@ -4,6 +4,7 @@ import (
 	"github.com/greboid/tithon/config"
 	"log/slog"
 	"maps"
+	"regexp"
 	"slices"
 	"strings"
 )
@@ -12,15 +13,20 @@ type UpdateTrigger interface {
 	SetPendingUpdate()
 }
 
-type NotificationManager interface {
-	SendNotification(text string)
+type Notification struct {
+	Text string
+}
+
+type NotificationManager struct {
+	notifications        []config.NotificationTrigger
+	pendingNotifications chan Notification
 }
 
 type ConnectionManager struct {
 	connections         map[string]*Connection
 	commandManager      *CommandManager
 	updateTrigger       UpdateTrigger
-	notificationManager NotificationManager
+	notificationManager *NotificationManager
 	config              *config.Config
 }
 
@@ -43,7 +49,7 @@ func (cm *ConnectionManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewConnection(cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger)
+	connection := NewConnection(cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
 	cm.connections[connection.id] = connection
 	if connect {
 		go func() {
@@ -117,4 +123,31 @@ func (cm *ConnectionManager) Save() {
 
 func (cm *ConnectionManager) SetUpdateTrigger(ut UpdateTrigger) {
 	cm.updateTrigger = ut
+}
+
+func (cm *ConnectionManager) SetNotificationManager(nm *NotificationManager) {
+	cm.notificationManager = nm
+}
+
+func NewNotificationManager(pendingNotifications chan Notification, triggers []config.NotificationTrigger) *NotificationManager {
+	return &NotificationManager{
+		pendingNotifications: pendingNotifications,
+		notifications:        triggers,
+	}
+}
+
+func (cm *NotificationManager) SendNotification(text string) {
+	cm.pendingNotifications <- Notification{Text: text}
+}
+
+func (cm *NotificationManager) IsNotification(network, source, nick, message string) bool {
+	for i := range cm.notifications {
+		if regexp.MustCompile(cm.notifications[i].Network).MatchString(network) &&
+			regexp.MustCompile(cm.notifications[i].Source).MatchString(source) &&
+			regexp.MustCompile(cm.notifications[i].Nick).MatchString(nick) &&
+			regexp.MustCompile(cm.notifications[i].Message).MatchString(message) {
+			return true
+		}
+	}
+	return false
 }

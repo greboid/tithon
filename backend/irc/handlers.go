@@ -47,24 +47,28 @@ type messageHandler interface {
 }
 
 type Handler struct {
-	channelHandler  channelHandler
-	callbackHandler callbackHandler
-	infoHandler     infoHandler
-	modeHandler     modeHandler
-	messageHandler  messageHandler
-	updateTrigger   UpdateTrigger
-	conf            *config.Config
+	channelHandler      channelHandler
+	callbackHandler     callbackHandler
+	infoHandler         infoHandler
+	modeHandler         modeHandler
+	messageHandler      messageHandler
+	updateTrigger       UpdateTrigger
+	notificationManager *NotificationManager
+	conf                *config.Config
+	batchMap            map[string]string
 }
 
 func NewHandler(connection *Connection) *Handler {
 	return &Handler{
-		channelHandler:  connection,
-		callbackHandler: connection,
-		infoHandler:     connection,
-		modeHandler:     connection,
-		messageHandler:  connection,
-		updateTrigger:   connection.ut,
-		conf:            connection.conf,
+		channelHandler:      connection,
+		callbackHandler:     connection,
+		infoHandler:         connection,
+		modeHandler:         connection,
+		messageHandler:      connection,
+		updateTrigger:       connection.ut,
+		notificationManager: connection.nm,
+		conf:                connection.conf,
+		batchMap:            make(map[string]string),
 	}
 }
 
@@ -175,7 +179,10 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 			slog.Warn("Message for unknown channel", "message", message)
 			return
 		}
-		channel.AddMessage(NewMessage(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick()))
+		if message.AllTags()["chathistory"] != "true" && h.notificationManager.IsNotification(h.infoHandler.GetName(), channel.GetName(), message.Nick(), strings.Join(message.Params[1:], " ")) {
+			h.notificationManager.SendNotification("Blah")
+		}
+		channel.AddMessage(NewMessage(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick()))
 	} else {
 		slog.Warn("Unsupported DM", "message", message)
 	}

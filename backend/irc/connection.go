@@ -37,10 +37,11 @@ type Connection struct {
 	currentModes      string
 	possibleUserModes []*UserMode
 	ut                UpdateTrigger
+	nm                *NotificationManager
 	conf              *config.Config
 }
 
-func NewConnection(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger) *Connection {
+func NewConnection(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) *Connection {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}
@@ -80,6 +81,7 @@ func NewConnection(conf *config.Config, id string, hostname string, port int, tl
 			Log:   slog.NewLogLogger(slog.Default().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", id)}), LevelTrace),
 		},
 		ut:   ut,
+		nm:   nm,
 		conf: conf,
 	}
 	connection.Window = &Window{

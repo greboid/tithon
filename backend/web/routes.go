@@ -409,8 +409,7 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	s.setActiveWindow(channel.Window)
 	slog.Debug("Changing Window", "window", channel.Window.GetID())
-	sse := datastar.NewSSE(w, r)
-	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"/"+url.QueryEscape(channel.GetName())+"')", datastar.WithExecuteScriptAutoRemove(true))
+	s.updateURL(w, r)
 	s.UpdateUI(w, r)
 }
 
@@ -437,9 +436,7 @@ func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 	}
 	s.setActiveWindow(connection.Window)
 	slog.Debug("Changing Window", "window", connection.Window.GetID())
-	sse := datastar.NewSSE(w, r)
-	_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+serverID+"')", datastar.WithExecuteScriptAutoRemove(true))
-
+	s.updateURL(w, r)
 	s.UpdateUI(w, r)
 }
 
@@ -594,23 +591,22 @@ func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleNextWindowUp(w http.ResponseWriter, r *http.Request) {
 	s.changeWindow(-1)
-	sse := datastar.NewSSE(w, r)
-	if s.activeWindow.IsServer() {
-		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
-	} else {
-		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+url.QueryEscape(s.activeWindow.GetName())+"')", datastar.WithExecuteScriptAutoRemove(true))
-	}
+	s.updateURL(w, r)
 	s.UpdateUI(w, r)
 }
 func (s *Server) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
 	s.changeWindow(+1)
+	s.updateURL(w, r)
+	s.UpdateUI(w, r)
+}
+
+func (s *Server) updateURL(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
 	if s.activeWindow.IsServer() {
 		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))
 	} else {
 		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetServer().GetID()+"/"+url.QueryEscape(s.activeWindow.GetName())+"')", datastar.WithExecuteScriptAutoRemove(true))
 	}
-	s.UpdateUI(w, r)
 }
 
 func (s *Server) changeWindow(change int) {

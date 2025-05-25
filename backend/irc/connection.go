@@ -74,6 +74,7 @@ func NewConnection(conf *config.Config, id string, hostname string, port int, tl
 				"soju.im/FILEHOST",
 				"draft/chathistory",
 				"draft/event-playback",
+				"batch",
 			},
 			Debug: true,
 			Log:   slog.NewLogLogger(slog.Default().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", id)}), LevelTrace),
@@ -129,6 +130,10 @@ func (c *Connection) AddConnectCallback(callback func(message ircmsg.Message)) {
 
 func (c *Connection) AddCallback(command string, callback func(ircmsg.Message)) {
 	c.connection.AddCallback(command, callback)
+}
+
+func (c *Connection) AddBatchCallback(callback func(batch *ircevent.Batch) bool) {
+	c.connection.AddBatchCallback(callback)
 }
 
 func (c *Connection) GetCredentials() (string, string) {
@@ -207,7 +212,7 @@ func (c *Connection) SendMessage(time time.Time, window string, message string) 
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(time, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message))
+		channel.AddMessage(NewMessage(time, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message, nil))
 	}
 	return c.connection.Send("PRIVMSG", channel.name, message)
 }
@@ -218,7 +223,7 @@ func (c *Connection) SendNotice(time time.Time, window string, message string) e
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(time, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message))
+		channel.AddMessage(NewMessage(time, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message, nil))
 	}
 	return c.connection.Send("NOTICE", channel.name, message)
 }

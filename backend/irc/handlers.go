@@ -22,6 +22,7 @@ type channelHandler interface {
 type callbackHandler interface {
 	AddConnectCallback(callback func(message ircmsg.Message))
 	AddCallback(command string, callback func(ircmsg.Message))
+	AddBatchCallback(callback func(*ircevent.Batch) bool)
 }
 
 type infoHandler interface {
@@ -123,6 +124,14 @@ func (h *Handler) addCallbacks() {
 	})
 	h.callbackHandler.AddCallback(ircevent.RPL_ENDOFWHOIS, func(message ircmsg.Message) {
 		h.addEvent(GetTimeForMessage(message), "WHOIS END "+" "+message.Params[1])
+	})
+	h.callbackHandler.AddBatchCallback(func(batch *ircevent.Batch) bool {
+		if batch.Params[1] == "chathistory" {
+			for i := range batch.Items {
+				batch.Items[i].Message.SetTag("chathistory", "true")
+			}
+		}
+		return false
 	})
 }
 
@@ -277,7 +286,7 @@ func (h *Handler) handleError(message ircmsg.Message) {
 
 func (h *Handler) handleNotice(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	mess := NewNotice(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), h.infoHandler.CurrentNick())
+	mess := NewNotice(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), nil, h.infoHandler.CurrentNick())
 	if message.Source == "" || (strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@")) {
 		h.messageHandler.AddMessage(mess)
 	} else if h.channelHandler.IsChannel(message.Params[0]) {

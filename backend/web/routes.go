@@ -601,6 +601,9 @@ func (s *Server) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) updateURL(w http.ResponseWriter, r *http.Request) {
+	if s.activeWindow == nil {
+		return
+	}
 	sse := datastar.NewSSE(w, r)
 	if s.activeWindow.IsServer() {
 		_ = sse.ExecuteScript("window.history.replaceState({}, '', '/s/"+s.activeWindow.GetID()+"')", datastar.WithExecuteScriptAutoRemove(true))

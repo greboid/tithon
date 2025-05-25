@@ -36,22 +36,23 @@ type Message struct {
 	highlights      []string
 	me              bool
 	timestampFormat string
+	tags            map[string]string
 }
 
-func NewNotice(messageTime time.Time, timeFormat string, me bool, nickname string, message string, highlights ...string) *Message {
-	return newMessage(messageTime, timeFormat, me, nickname, message, Notice, highlights)
+func NewNotice(messageTime time.Time, timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
+	return newMessage(messageTime, timeFormat, me, nickname, message, Notice, tags, highlights)
 }
 
 func NewEvent(messageTime time.Time, timeFormat string, me bool, message string) *Message {
-	return newMessage(messageTime, timeFormat, me, "", message, Event, nil)
+	return newMessage(messageTime, timeFormat, me, "", message, Event, nil, nil)
 }
 
 func NewError(messageTime time.Time, timeFormat string, me bool, message string) *Message {
-	return newMessage(messageTime, timeFormat, me, "", message, Error, nil)
+	return newMessage(messageTime, timeFormat, me, "", message, Error, nil, nil)
 }
 
-func NewMessage(messageTime time.Time, timeFormat string, me bool, nickname string, message string, highlights ...string) *Message {
-	return newMessage(messageTime, timeFormat, me, nickname, message, Normal, highlights)
+func NewMessage(messageTime time.Time, timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
+	return newMessage(messageTime, timeFormat, me, nickname, message, Normal, tags, highlights)
 }
 
 func GetTimeForMessage(message ircmsg.Message) time.Time {
@@ -67,7 +68,10 @@ func GetTimeForMessage(message ircmsg.Message) time.Time {
 	return parsedTime
 }
 
-func newMessage(parsedTime time.Time, timeFormat string, me bool, nickname string, message string, messageType MessageType, highlights []string) *Message {
+func newMessage(parsedTime time.Time, timeFormat string, me bool, nickname string, message string, messageType MessageType, tags map[string]string, highlights []string) *Message {
+	if tags == nil {
+		tags = make(map[string]string)
+	}
 	m := &Message{
 		timestamp:       parsedTime,
 		nickname:        nickname,
@@ -76,6 +80,7 @@ func newMessage(parsedTime time.Time, timeFormat string, me bool, nickname strin
 		highlights:      highlights,
 		me:              me,
 		timestampFormat: timeFormat,
+		tags:            tags,
 	}
 	return m.parse()
 }
@@ -158,6 +163,10 @@ func (m *Message) GetNameColour() string {
 
 func (m *Message) GetTimestamp() string {
 	return m.timestamp.Format(m.timestampFormat)
+}
+
+func (m *Message) GetTags() map[string]string {
+	return m.tags
 }
 
 func (m *Message) isHighlight() bool {

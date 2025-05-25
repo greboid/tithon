@@ -31,6 +31,9 @@ type Window struct {
 }
 
 func (c *Window) GetID() string {
+	if c == nil {
+		return ""
+	}
 	return c.id
 }
 
@@ -53,13 +56,15 @@ func (c *Window) AddMessage(message *Message) {
 	if c.state == Active {
 		return
 	}
-	switch message.messageType {
-	case Error, Event:
-		c.state = UnreadEvent
-	case Normal, Notice, Action:
-		c.state = UnreadMessage
-	case Highlight, HighlightNotice, HighlightAction:
-		c.state = UnreadHighlight
+	if message.tags["chathistory"] != "true" {
+		switch message.messageType {
+		case Error, Event:
+			c.state = UnreadEvent
+		case Normal, Notice, Action:
+			c.state = UnreadMessage
+		case Highlight, HighlightNotice, HighlightAction:
+			c.state = UnreadHighlight
+		}
 	}
 }
 

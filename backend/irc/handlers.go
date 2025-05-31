@@ -180,7 +180,7 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 			return
 		}
 		if message.AllTags()["chathistory"] != "true" && h.notificationManager.IsNotification(h.infoHandler.GetName(), channel.GetName(), message.Nick(), strings.Join(message.Params[1:], " ")) {
-			h.notificationManager.SendNotification("Blah")
+			h.notificationManager.SendNotification(fmt.Sprintf("%s<br>%s<br>%s", channel.GetName(), message.Nick(), strings.Join(message.Params[1:], " ")))
 		}
 		channel.AddMessage(NewMessage(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick()))
 	} else {

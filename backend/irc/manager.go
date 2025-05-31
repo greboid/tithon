@@ -142,10 +142,27 @@ func (cm *NotificationManager) SendNotification(text string) {
 
 func (cm *NotificationManager) IsNotification(network, source, nick, message string) bool {
 	for i := range cm.notifications {
-		if regexp.MustCompile(cm.notifications[i].Network).MatchString(network) &&
-			regexp.MustCompile(cm.notifications[i].Source).MatchString(source) &&
-			regexp.MustCompile(cm.notifications[i].Nick).MatchString(nick) &&
-			regexp.MustCompile(cm.notifications[i].Message).MatchString(message) {
+		networkPattern := cm.notifications[i].Network
+		if networkPattern == "" {
+			networkPattern = ".*"
+		}
+		sourcePattern := cm.notifications[i].Source
+		if sourcePattern == "" {
+			sourcePattern = ".*"
+		}
+		nickPattern := cm.notifications[i].Nick
+		if nickPattern == "" {
+			nickPattern = ".*"
+		}
+		messagePattern := cm.notifications[i].Message
+		if messagePattern == "" {
+			messagePattern = ".*"
+		}
+		
+		if regexp.MustCompile(networkPattern).MatchString(network) &&
+			regexp.MustCompile(sourcePattern).MatchString(source) &&
+			regexp.MustCompile(nickPattern).MatchString(nick) &&
+			regexp.MustCompile(messagePattern).MatchString(message) {
 			return true
 		}
 	}

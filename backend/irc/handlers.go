@@ -398,6 +398,9 @@ func (h *Handler) handleMode(message ircmsg.Message) {
 		}
 	}
 	channel.SortUsers()
+
+	// Add a message to the channel about the mode change
+	channel.AddMessage(NewEvent(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, false, fmt.Sprintf("%s sets mode %s", message.Nick(), strings.Join(message.Params[1:], ""))))
 }
 
 func (h *Handler) isMsgMe(message ircmsg.Message) bool {

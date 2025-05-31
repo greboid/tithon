@@ -292,7 +292,8 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 				s.UpdateUI(w, r)
 			}
 		case notification := <-s.pendingNotifications:
-			err := datastar.NewSSE(w, r).ExecuteScript(`notify("`+notification.Text+`")`, datastar.WithExecuteScriptAutoRemove(true))
+			slog.Debug("Sending notification", "notification", notification)
+			err := datastar.NewSSE(w, r).ExecuteScript(fmt.Sprintf(`notify("%s", %t, %t, "")`, notification.Text, notification.Popup, notification.Sound), datastar.WithExecuteScriptAutoRemove(true))
 			if err != nil {
 				slog.Error("Unable to send notification", "error", err)
 			}

@@ -45,14 +45,20 @@ const handlePaste = async (e) => {
 
 window.addEventListener('paste', handlePaste)
 
-const notify = (text, noise) => {
-  new Notification("Tithon", { body: text, icon: "/static/icon.png", data: {
-    channel: "#mdbot"
-    }});
-  if (!noise) {
-    noise = "/static/notification.mp3"
+const notify = (text, popup, sound, noise) => {
+  if (popup) {
+    new Notification("Tithon", {
+      body: text, icon: "/static/icon.png", data: {
+        channel: "#mdbot"
+      }
+    });
   }
-  new Audio(noise).play()
+  if (sound) {
+    if (!noise) {
+      noise = "/static/notification.mp3"
+    }
+    new Audio(noise).play()
+  }
 }
 
 Notification.requestPermission().catch(e => console.log(e))

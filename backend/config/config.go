@@ -41,6 +41,8 @@ type NotificationTrigger struct {
 	Source  string `yaml:"source"`
 	Nick    string `yaml:"nick"`
 	Message string `yaml:"message"`
+	Sound   bool   `yaml:"sound"`
+	Popup   bool   `yaml:"popup"`
 }
 
 func (c *Config) Load() error {

@@ -1,13 +1,16 @@
 package irc
 
 import (
+	"fmt"
 	"github.com/greboid/tithon/config"
 	"log/slog"
 	"regexp"
 )
 
 type Notification struct {
-	Text string
+	Text  string
+	Sound bool
+	Popup bool
 }
 
 type Trigger struct {
@@ -15,6 +18,8 @@ type Trigger struct {
 	Source  *regexp.Regexp
 	Nick    *regexp.Regexp
 	Message *regexp.Regexp
+	Sound   bool
+	Popup   bool
 }
 
 type NotificationManager struct {
@@ -27,7 +32,10 @@ func NewNotificationManager(pendingNotifications chan Notification, triggers []c
 		pendingNotifications: pendingNotifications,
 	}
 	for i := range triggers {
-		trigger := Trigger{}
+		trigger := Trigger{
+			Sound: triggers[i].Sound,
+			Popup: triggers[i].Popup,
+		}
 
 		if triggers[i].Network == "" {
 			triggers[i].Network = ".*"
@@ -74,20 +82,18 @@ func NewNotificationManager(pendingNotifications chan Notification, triggers []c
 	return nm
 }
 
-func (cm *NotificationManager) SendNotification(text string) {
-	cm.pendingNotifications <- Notification{Text: text}
-}
-
-func (cm *NotificationManager) IsNotification(network, source, nick, message string) bool {
+func (cm *NotificationManager) CheckAndNotify(network, source, nick, message string) bool {
 	for i := range cm.notifications {
 		if cm.notifications[i].Network.MatchString(network) &&
 			cm.notifications[i].Source.MatchString(source) &&
 			cm.notifications[i].Nick.MatchString(nick) &&
 			cm.notifications[i].Message.MatchString(message) {
-			slog.Debug("Notification matched")
-			return true
+			cm.pendingNotifications <- Notification{
+				Text:  fmt.Sprintf("%s<br>%s<br>%s", source, nick, message),
+				Sound: cm.notifications[i].Sound,
+				Popup: cm.notifications[i].Popup,
+			}
 		}
 	}
-	slog.Debug("Notification miss")
 	return false
 }

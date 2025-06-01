@@ -1,6 +1,6 @@
 # Maintainer: Greboid <greboid@github>
 pkgname=tithon
-pkgver=0.0.7
+pkgver=0.0.9
 pkgrel=1
 pkgdesc="Modern IRC client"
 arch=('x86_64')

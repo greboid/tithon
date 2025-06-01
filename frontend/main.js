@@ -3,12 +3,14 @@ const {spawn} = require('child_process')
 const {join} = require('node:path')
 
 let child
+let globalPort
 
 const parsePort = (win) => {
   return async (data) => {
     const text = new TextDecoder().decode(data)
     const { port } = /port=(?<port>\d+)/.exec(text).groups
-    win.loadURL(`http://localhost:${port}`)
+    globalPort = port
+    win.loadURL(`http://localhost:${globalPort}`)
        .catch(quit)
   }
 }
@@ -35,7 +37,6 @@ const createWindow = async () => {
                                     defaultEncoding:      'UTF-8',
                                   },
                                 })
-  win.setMenuBarVisibility(false)
   child = spawn(join(__dirname, 'backend'), [], {windowsHide: false})
   child.on('exit', quit)
   child.stdout.once('data', parsePort(win))
@@ -45,13 +46,15 @@ const createWindow = async () => {
     return {action: 'deny'}
   })
   const menu = new Menu()
-  Menu.setApplicationMenu(menu)
   menu.append(new MenuItem({
                              label:       'Refresh',
                              accelerator: 'F5',
                              click:       () => {
-                               win.loadURL(`http://localhost:${port}`)
-                                  .catch(() => app.quit())
+                               win.loadURL(`http://localhost:${globalPort}`)
+                                  .catch(e => {
+                                    console.log(e)
+                                    app.quit()
+                                  })
                              },
                            }))
   menu.append(new MenuItem({
@@ -61,6 +64,8 @@ const createWindow = async () => {
                                win.webContents.toggleDevTools()
                              },
                            }))
+  Menu.setApplicationMenu(menu)
+  win.setMenuBarVisibility(false)
 }
 app.setName('tithon')
 app.on('window-all-closed', () => {

@@ -20,10 +20,10 @@ type ConnectionManager struct {
 	config              *config.Config
 }
 
-func NewConnectionManager(conf *config.Config) *ConnectionManager {
+func NewConnectionManager(conf *config.Config, commandManager *CommandManager) *ConnectionManager {
 	return &ConnectionManager{
 		connections:    map[string]*Connection{},
-		commandManager: NewCommandManager(conf),
+		commandManager: commandManager,
 		config:         conf,
 	}
 }
@@ -117,4 +117,5 @@ func (cm *ConnectionManager) SetUpdateTrigger(ut UpdateTrigger) {
 
 func (cm *ConnectionManager) SetNotificationManager(nm *NotificationManager) {
 	cm.notificationManager = nm
+	cm.commandManager.SetNotificationManager(nm)
 }

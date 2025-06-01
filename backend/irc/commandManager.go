@@ -20,26 +20,32 @@ type Command interface {
 	Execute(*ConnectionManager, *Window, string) error
 }
 
+type Notifier interface {
+	showNotification(notification Notification)
+}
+
 type CommandManager struct {
 	commands []Command
 	conf     *config.Config
+	nm       *NotificationManager
 }
 
 func NewCommandManager(conf *config.Config) *CommandManager {
-	return &CommandManager{
-		commands: []Command{
-			&SendAction{},
-			&Msg{},
-			&Quit{},
-			&Join{},
-			&Part{},
-			&Nick{},
-			&ChangeTopic{},
-			&SendNotice{},
-			&Whois{},
-		},
-		conf: conf,
+	cm := &CommandManager{}
+	cm.commands = []Command{
+		&SendAction{},
+		&Msg{},
+		&Quit{},
+		&Join{},
+		&Part{},
+		&Nick{},
+		&ChangeTopic{},
+		&SendNotice{},
+		&Whois{},
+		&Notify{nm: cm},
 	}
+	cm.conf = conf
+	return cm
 }
 
 func (cm *CommandManager) Execute(connections *ConnectionManager, window *Window, input string) {
@@ -60,6 +66,14 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, window *Window
 		}
 	}
 	cm.showError(window, "Unknown command: "+input)
+}
+
+func (cm *CommandManager) SetNotificationManager(nm *NotificationManager) {
+	cm.nm = nm
+}
+
+func (cm *CommandManager) showNotification(notification Notification) {
+	cm.nm.pendingNotifications <- notification
 }
 
 func (cm *CommandManager) showCommandError(window *Window, command Command, message string) {

@@ -45,12 +45,11 @@ const handlePaste = async (e) => {
 
 window.addEventListener('paste', handlePaste)
 
-const notify = (text, popup, sound, noise) => {
+const notify = (title, text, popup, sound, noise) => {
   if (popup) {
-    new Notification("Tithon", {
-      body: text, icon: "/static/icon.png", data: {
-        channel: "#mdbot"
-      }
+    new Notification(title, {
+      body: text,
+      icon: "/static/icon.png"
     });
   }
   if (sound) {

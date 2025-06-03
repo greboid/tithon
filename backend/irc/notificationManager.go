@@ -8,6 +8,7 @@ import (
 )
 
 type Notification struct {
+	Title string
 	Text  string
 	Sound bool
 	Popup bool
@@ -89,7 +90,8 @@ func (cm *NotificationManager) CheckAndNotify(network, source, nick, message str
 			cm.notifications[i].Nick.MatchString(nick) &&
 			cm.notifications[i].Message.MatchString(message) {
 			cm.pendingNotifications <- Notification{
-				Text:  fmt.Sprintf("%s<br>%s<br>%s", source, nick, message),
+				Title: fmt.Sprintf("%s (%s)", nick, source),
+				Text:  fmt.Sprintf("%s", message),
 				Sound: cm.notifications[i].Sound,
 				Popup: cm.notifications[i].Popup,
 			}

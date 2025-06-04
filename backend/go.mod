@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/albinj12/unique-id v1.1.0
-	github.com/csmith/config v1.2.0
+	github.com/csmith/config v1.3.0
 	github.com/csmith/envflag/v2 v2.0.0
 	github.com/csmith/slogflags v1.1.0
 	github.com/enescakir/emoji v1.0.0
@@ -21,6 +21,7 @@ require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/delaneyj/gostar v0.8.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/igrmk/treemap/v2 v2.0.1 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/samber/lo v1.50.0 // indirect
@@ -28,5 +29,4 @@ require (
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

@@ -179,10 +179,11 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 			slog.Warn("Message for unknown channel", "message", message)
 			return
 		}
-		if message.AllTags()["chathistory"] != "true" && !h.isMsgMe(message) {
-			h.notificationManager.CheckAndNotify(h.infoHandler.GetName(), channel.GetName(), message.Nick(), strings.Join(message.Params[1:], " "))
+		msg := NewMessage(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
+		if msg.tags["chathistory"] != "true" && !msg.isMe() {
+			h.notificationManager.CheckAndNotify(h.infoHandler.GetName(), channel.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 		}
-		channel.AddMessage(NewMessage(GetTimeForMessage(message), h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick()))
+		channel.AddMessage(msg)
 	} else {
 		slog.Warn("Unsupported DM", "message", message)
 	}

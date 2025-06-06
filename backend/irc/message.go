@@ -1,10 +1,11 @@
 package irc
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/ergochat/irc-go/ircfmt"
 	"github.com/ergochat/irc-go/ircmsg"
-	"html"
+	"golang.org/x/net/html"
 	"log/slog"
 	"regexp"
 	"strconv"
@@ -145,7 +146,45 @@ func (m *Message) GetMessage() string {
 	return m.message
 }
 
+func (m *Message) GetDisplayMessage() string {
+	if m.messageType == Action {
+		return fmt.Sprintf(`<span class="%s">%s</span> %s`, m.GetNameColour(), m.nickname, m.message)
+	}
+	return m.message
+}
+
+func (m *Message) GetPlainDisplayMessage() string {
+	// TODO: This is awful, I should store the message before I add HTML to it
+	node, err := html.Parse(strings.NewReader(m.GetDisplayMessage()))
+	if err != nil {
+		slog.Error("Error parsing message", "message", m, "error", err)
+		return m.GetDisplayMessage()
+	}
+	var stripper func(node *html.Node, buf *bytes.Buffer)
+	stripper = func(node *html.Node, buf *bytes.Buffer) {
+		if node.Type == html.TextNode {
+			buf.WriteString(node.Data)
+		}
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			stripper(child, buf)
+		}
+	}
+	stripped := &bytes.Buffer{}
+	if m.messageType == Action {
+		stripped.WriteString("* ")
+	}
+	stripper(node, stripped)
+	return stripped.String()
+}
+
 func (m *Message) GetNickname() string {
+	return m.nickname
+}
+
+func (m *Message) GetDisplayNickname() string {
+	if m.messageType == Action {
+		return ""
+	}
 	return m.nickname
 }
 
@@ -167,6 +206,10 @@ func (m *Message) GetTimestamp() string {
 
 func (m *Message) GetTags() map[string]string {
 	return m.tags
+}
+
+func (m *Message) isMe() bool {
+	return m.me
 }
 
 func (m *Message) isHighlight() bool {

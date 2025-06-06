@@ -2,8 +2,8 @@
     {{ range . }}
         <p class={{.GetTypeDisplay}}>
             <span class="timestamp">{{ .GetTimestamp }}</span>
-            <span class="nickname"><span class="{{.GetNameColour}}">{{ .GetNickname }}</span></span>
-            <span class="message">{{ .GetMessage | unsafe }}</span>
+            <span class="nickname"><span class="{{.GetNameColour}}">{{ .GetDisplayNickname }}</span></span>
+            <span class="message">{{ .GetDisplayMessage | unsafe }}</span>
         </p>
     {{end}}
 </div>

@@ -13,6 +13,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/starfederation/datastar v1.0.0-beta.11
+	golang.org/x/net v0.39.0
 )
 
 require (

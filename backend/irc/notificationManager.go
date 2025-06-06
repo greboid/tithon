@@ -97,11 +97,5 @@ func (cm *NotificationManager) CheckAndNotify(network, source, nick, message str
 			}
 		}
 	}
-	cm.pendingNotifications <- Notification{
-		Title: fmt.Sprintf("%s (%s)", nick, source),
-		Text:  fmt.Sprintf("%s", message),
-		Sound: false,
-		Popup: true,
-	}
 	return false
 }

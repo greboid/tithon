@@ -130,6 +130,7 @@ func (cm *NotificationManager) CheckAndNotify(network, source, nick, message str
 				Sound: cm.notifications[i].Sound,
 				Popup: cm.notifications[i].Popup,
 			}
+			break
 		}
 	}
 	return false

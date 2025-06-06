@@ -26,18 +26,18 @@ const quit = (error) => {
 }
 
 const createWindow = async () => {
-  let port = -1
-  const win = new BrowserWindow({
-                                  icon:           'icon.png',
-                                  width:          800,
-                                  height:         600,
-                                  webPreferences: {
-                                    autoplayPolicy:       'no-user-gesture-required',
-                                    backgroundThrottling: false,
-                                    defaultEncoding:      'UTF-8',
-                                    spellcheck:           true,
-                                  },
-                                })
+  const win = new BrowserWindow(
+      {
+        icon:           'icon.png',
+        width:          800,
+        height:         600,
+        webPreferences: {
+          autoplayPolicy:       'no-user-gesture-required',
+          backgroundThrottling: false,
+          defaultEncoding:      'UTF-8',
+          spellcheck:           true,
+        },
+      })
   child = spawn(join(__dirname, 'backend'), [], {windowsHide: false})
   child.on('exit', quit)
   child.stdout.once('data', parsePort(win))

@@ -5,5 +5,20 @@ on:
       - master
 jobs:
   test:
-    uses: greboid/.github/.github/workflows/go-test.yml@master
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Build
+        working-directory: ./backend
+        run: go build -v ./...
+
+      - name: Test
+        working-directory: ./backend
+        run: go test ./...

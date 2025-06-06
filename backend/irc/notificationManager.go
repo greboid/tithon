@@ -5,6 +5,7 @@ import (
 	"github.com/greboid/tithon/config"
 	"log/slog"
 	"regexp"
+	"sort"
 )
 
 type Notification struct {
@@ -32,6 +33,8 @@ func NewNotificationManager(pendingNotifications chan Notification, triggers []c
 	nm := &NotificationManager{
 		pendingNotifications: pendingNotifications,
 	}
+	triggers = nm.sortTriggers(triggers)
+
 	for i := range triggers {
 		trigger := Trigger{
 			Sound: triggers[i].Sound,
@@ -81,6 +84,38 @@ func NewNotificationManager(pendingNotifications chan Notification, triggers []c
 		nm.notifications = append(nm.notifications, trigger)
 	}
 	return nm
+}
+
+func (cm *NotificationManager) sortTriggers(triggers []config.NotificationTrigger) []config.NotificationTrigger {
+	sort.SliceStable(triggers, func(i, j int) bool {
+		lenI := cm.getTriggerSpecificity(triggers[i])
+		lenJ := cm.getTriggerSpecificity(triggers[j])
+		if lenI != lenJ {
+			return lenI > lenJ
+		}
+		if triggers[i].Sound != triggers[j].Sound {
+			return triggers[i].Sound
+		}
+		return triggers[i].Popup
+	})
+	return triggers
+}
+
+func (cm *NotificationManager) getTriggerSpecificity(trigger config.NotificationTrigger) int {
+	length := 0
+	if trigger.Network != "" && trigger.Network != ".*" {
+		length += len(trigger.Network)
+	}
+	if trigger.Source != "" && trigger.Source != ".*" {
+		length += len(trigger.Source)
+	}
+	if trigger.Nick != "" && trigger.Nick != ".*" {
+		length += len(trigger.Nick)
+	}
+	if trigger.Message != "" && trigger.Message != ".*" {
+		length += len(trigger.Message)
+	}
+	return length
 }
 
 func (cm *NotificationManager) CheckAndNotify(network, source, nick, message string) bool {

@@ -35,55 +35,61 @@ func NewNotificationManager(pendingNotifications chan Notification, triggers []c
 	}
 	triggers = nm.sortTriggers(triggers)
 
-	for i := range triggers {
-		trigger := Trigger{
-			Sound: triggers[i].Sound,
-			Popup: triggers[i].Popup,
-		}
-
-		if triggers[i].Network == "" {
-			triggers[i].Network = ".*"
-		}
-		reg, err := regexp.Compile(triggers[i].Network)
-		if err != nil {
-			slog.Error("Invalid network regexp", "error", err)
-			continue
-		}
-		trigger.Network = reg
-
-		if triggers[i].Source == "" {
-			triggers[i].Source = ".*"
-		}
-		reg, err = regexp.Compile(triggers[i].Source)
-		if err != nil {
-			slog.Error("Invalid source regexp", "error", err)
-			continue
-		}
-		trigger.Source = reg
-
-		if triggers[i].Nick == "" {
-			triggers[i].Nick = ".*"
-		}
-		reg, err = regexp.Compile(triggers[i].Nick)
-		if err != nil {
-			slog.Error("Invalid nick regexp", "error", err)
-			continue
-		}
-		trigger.Nick = reg
-
-		if triggers[i].Message == "" {
-			triggers[i].Message = ".*"
-		}
-		reg, err = regexp.Compile(triggers[i].Message)
-		if err != nil {
-			slog.Error("Invalid message regexp", "error", err)
-			continue
-		}
-		trigger.Message = reg
-
-		nm.notifications = append(nm.notifications, trigger)
-	}
+	nm.notifications = nm.convertFromConfig(triggers)
 	return nm
+}
+
+func (cm *NotificationManager) convertFromConfig(triggers []config.NotificationTrigger) []Trigger {
+	triggers = cm.sortTriggers(triggers)
+	var result []Trigger
+	for i := range triggers {
+		trigger, err := cm.AddNotification(triggers[i].Network, triggers[i].Source, triggers[i].Nick, triggers[i].Message, triggers[i].Sound, triggers[i].Popup)
+		if err != nil {
+			slog.Error("Invalid notification", "error", err)
+			continue
+		}
+		result = append(result, *trigger)
+	}
+	return result
+}
+
+func (cm *NotificationManager) AddNotification(network, source, nick, message string, sound bool, popup bool) (*Trigger, error) {
+	trigger := &Trigger{
+		Sound: sound,
+		Popup: popup,
+	}
+
+	reg, err := cm.compileRegex(network)
+	if err != nil {
+		return nil, fmt.Errorf("invalid network regex: %w", err)
+	}
+	trigger.Network = reg
+
+	reg, err = cm.compileRegex(source)
+	if err != nil {
+		return nil, fmt.Errorf("invalid source regex: %w", err)
+	}
+	trigger.Source = reg
+
+	reg, err = cm.compileRegex(nick)
+	if err != nil {
+		return nil, fmt.Errorf("invalid nick regex: %w", err)
+	}
+	trigger.Nick = reg
+
+	reg, err = cm.compileRegex(message)
+	if err != nil {
+		return nil, fmt.Errorf("invalid message regex: %w", err)
+	}
+	trigger.Message = reg
+	return trigger, nil
+}
+
+func (cm *NotificationManager) compileRegex(regex string) (*regexp.Regexp, error) {
+	if regex == "" {
+		return regexp.Compile(".*")
+	}
+	return regexp.Compile(regex)
 }
 
 func (cm *NotificationManager) sortTriggers(triggers []config.NotificationTrigger) []config.NotificationTrigger {

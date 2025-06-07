@@ -286,3 +286,37 @@ func (c *Connection) GetCurrentModes() string {
 func (c *Connection) SetCurrentModes(modes string) {
 	c.currentModes = modes
 }
+
+// GetChannelModeType returns the type of channel mode
+// A = modes that add/remove addresses
+// B = modes that change settings with parameters
+// C = modes that change settings only when set
+// D = modes that change simple boolean settings
+func (c *Connection) GetChannelModeType(mode string) rune {
+	prefixes := c.GetModePrefixes()
+	if strings.Contains(prefixes[0], mode) {
+		return 'P'
+	}
+
+	//Get modes, use default
+	chanModes := c.ISupport("CHANMODES")
+	if chanModes == "" {
+		chanModes = "beI,k,l,imnpst"
+	}
+
+	parts := strings.Split(chanModes, ",")
+	if len(parts) != 4 {
+		slog.Error("Invalid CHANMODES format", "CHANMODES", chanModes)
+		return '?'
+	}
+	if strings.Contains(parts[0], mode) {
+		return 'A'
+	} else if strings.Contains(parts[1], mode) {
+		return 'B'
+	} else if strings.Contains(parts[2], mode) {
+		return 'C'
+	} else if strings.Contains(parts[3], mode) {
+		return 'D'
+	}
+	return '?'
+}

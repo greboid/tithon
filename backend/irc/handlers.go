@@ -38,11 +38,20 @@ type modeHandler interface {
 	GetModePrefixes() []string
 	GetCurrentModes() string
 	SetCurrentModes(modes string)
+	GetChannelModeType(mode string) rune
 }
 
 type messageHandler interface {
 	AddMessage(message *Message)
 	SendRaw(message string)
+}
+
+type modeChange struct {
+	mode      string
+	change    bool
+	nickname  string
+	parameter string
+	modeType  rune
 }
 
 type Handler struct {
@@ -81,7 +90,7 @@ func (h *Handler) addCallbacks() {
 	h.callbackHandler.AddCallback("PART", h.handlePart)
 	h.callbackHandler.AddCallback("KICK", h.handleKick)
 	h.callbackHandler.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
-	h.callbackHandler.AddCallback(ircevent.RPL_UMODEIS, h.handleUserMode)
+	h.callbackHandler.AddCallback(ircevent.RPL_UMODEIS, h.handleUserModeSet)
 	h.callbackHandler.AddCallback("ERROR", h.handleError)
 	h.callbackHandler.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
 		h.addEvent("Nickname (" + message.Params[1] + ") already in use")
@@ -280,7 +289,7 @@ func (h *Handler) stripChannelPrefixes(name string) (string, string) {
 	return modes, nickname
 }
 
-func (h *Handler) handleUserMode(message ircmsg.Message) {
+func (h *Handler) handleUserModeSet(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
 	h.modeHandler.SetCurrentModes(message.Params[1])
 	h.messageHandler.AddMessage(NewEvent(h.conf.UISettings.TimestampFormat, false, "Your modes changed: "+message.Params[1]))
@@ -353,21 +362,19 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 
 func (h *Handler) handleMode(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
-	if err != nil {
-		slog.Warn("Received mode for unknown channel", "channel", message.Params[0])
-		return
+
+	if h.channelHandler.IsChannel(message.Params[0]) {
+		h.handleChannelModes(message)
+	} else {
+		h.handleUserMode(message)
 	}
-	// TODO: Need to check the modes are in prefixes or channel modes and act accordingly, rather than assume
-	// all modes are user modes
-	type modeChange struct {
-		mode     string
-		change   bool
-		nickname string
-	}
+}
+
+func (h *Handler) handleChannelModes(message ircmsg.Message) {
 	var ops []modeChange
 	var add bool
 	param := 2
+
 	for i := 0; i < len(message.Params[1]); i++ {
 		switch message.Params[1][i] {
 		case '+':
@@ -375,32 +382,115 @@ func (h *Handler) handleMode(message ircmsg.Message) {
 		case '-':
 			add = false
 		default:
+			modeChar := string(message.Params[1][i])
+			modeType := h.modeHandler.GetChannelModeType(modeChar)
 
-			ops = append(ops, modeChange{
-				mode:     string(message.Params[1][i]),
+			change := modeChange{
+				mode:     modeChar,
 				change:   add,
-				nickname: message.Params[param],
-			})
-			param++
-		}
-	}
-	for i := range ops {
-		users := channel.GetUsers()
-		for j := range users {
-			if users[j].nickname == ops[i].nickname {
-				mode := h.modeHandler.GetModeNameForMode(ops[i].mode)
-				if ops[i].change {
-					users[j].modes += mode
-				} else {
-					users[j].modes = strings.Replace(users[j].modes, mode, "", -1)
+				modeType: modeType,
+			}
+
+			needsParam := false
+
+			switch modeType {
+			case 'P':
+				if param < len(message.Params) {
+					change.nickname = message.Params[param]
+					needsParam = true
 				}
+			case 'A':
+				if param < len(message.Params) {
+					change.parameter = message.Params[param]
+					needsParam = true
+				}
+			case 'B':
+				if param < len(message.Params) {
+					change.parameter = message.Params[param]
+					needsParam = true
+				}
+			case 'C':
+				if add && param < len(message.Params) {
+					change.parameter = message.Params[param]
+					needsParam = true
+				}
+			case 'D': // Boolean setting
+			}
+
+			ops = append(ops, change)
+
+			if needsParam {
+				param++
 			}
 		}
 	}
+
+	for _, op := range ops {
+		h.applyChannelMode(op, message)
+	}
+}
+
+func (h *Handler) applyChannelMode(change modeChange, message ircmsg.Message) {
+	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
+	if err != nil {
+		slog.Warn("Received mode for unknown channel", "channel", message.Params[0])
+		return
+	}
+
+	switch change.modeType {
+	case 'P':
+		h.handleUserPrivilegeMode(change, channel, message)
+	case 'A', 'B', 'C', 'D':
+		channel.SetChannelMode(change.modeType, change.mode, change.parameter, change.change)
+
+		var modeStr string
+		if change.change {
+			modeStr = "+" + change.mode
+		} else {
+			modeStr = "-" + change.mode
+		}
+
+		var paramStr string
+		if change.parameter != "" {
+			paramStr = " " + change.parameter
+		}
+
+		channel.AddMessage(NewEvent(h.conf.UISettings.TimestampFormat, false,
+			fmt.Sprintf("%s sets mode %s%s", message.Nick(), modeStr, paramStr)))
+	default:
+		slog.Warn("Unknown mode type", "mode", change.mode, "type", change.modeType)
+	}
+}
+
+func (h *Handler) handleUserPrivilegeMode(change modeChange, channel *Channel, message ircmsg.Message) {
+	mode := h.modeHandler.GetModeNameForMode(change.mode)
+
+	users := channel.GetUsers()
+	for j := range users {
+		if users[j].nickname == change.nickname {
+			if change.change {
+				users[j].modes += mode
+			} else {
+				users[j].modes = strings.Replace(users[j].modes, mode, "", -1)
+			}
+		}
+	}
+
 	channel.SortUsers()
 
-	// Add a message to the channel about the mode change
-	channel.AddMessage(NewEvent(h.conf.UISettings.TimestampFormat, false, fmt.Sprintf("%s sets mode %s", message.Nick(), strings.Join(message.Params[1:], ""))))
+	var modeStr string
+	if change.change {
+		modeStr = "+" + change.mode
+	} else {
+		modeStr = "-" + change.mode
+	}
+
+	channel.AddMessage(NewEvent(h.conf.UISettings.TimestampFormat, false,
+		fmt.Sprintf("%s sets mode %s %s", message.Nick(), modeStr, change.nickname)))
+}
+
+func (h *Handler) handleUserMode(ircmsg.Message) {
+	// TODO: Implement user mode changes
 }
 
 func (h *Handler) isMsgMe(message ircmsg.Message) bool {

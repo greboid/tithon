@@ -1,16 +1,21 @@
 package config
 
 import (
-	"github.com/csmith/config"
 	"log/slog"
 	"time"
 )
 
 type Config struct {
-	instance      *config.Config
+	instance      Provider
 	Servers       []Server      `yaml:"servers"`
 	UISettings    UISettings    `yaml:"ui_settings"`
 	Notifications Notifications `yaml:"notifications"`
+}
+
+func NewConfig(provider Provider) *Config {
+	return &Config{
+		instance: provider,
+	}
 }
 
 type Server struct {
@@ -47,15 +52,9 @@ type NotificationTrigger struct {
 
 func (c *Config) Load() error {
 	slog.Debug("Loading config")
-	conf, err := config.New(config.DirectoryName("tithon"), config.FileName("config.yaml"))
-	if err != nil {
+	if err := c.instance.Load(c); err != nil {
 		return err
 	}
-	err = conf.Load(c)
-	if err != nil {
-		return err
-	}
-	c.instance = conf
 	if c.UISettings.TimestampFormat == "" {
 		c.UISettings.TimestampFormat = time.TimeOnly
 	}

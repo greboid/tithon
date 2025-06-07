@@ -25,8 +25,13 @@ func main() {
 		slogflags.WithSetDefault(true),
 	)
 
-	conf := &config.Config{}
-	err := conf.Load()
+	provider, err := config.NewDefaultConfigProvider()
+	if err != nil {
+		slog.Error("Unable to load config", "error", err)
+		return
+	}
+	conf := config.NewConfig(provider)
+	err = conf.Load()
 	if err != nil {
 		slog.Error("Unable to load config", "error", err)
 		return

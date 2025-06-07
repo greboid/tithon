@@ -73,19 +73,19 @@ func newMessage(timeFormat string, me bool, nickname string, message string, mes
 }
 
 func (m *Message) parseTime() {
-	var err error
 	if m.nowFunc == nil {
 		m.nowFunc = time.Now
 	}
-	parsedTime := m.nowFunc()
 	if messageTime := m.tags["time"]; messageTime != "" {
-		parsedTime, err = time.Parse(v3TimestampFormat, messageTime)
+		parsedTime, err := time.Parse(v3TimestampFormat, messageTime)
 		if err != nil {
-			slog.Error("Error parsing time from server", "time", messageTime, "error", err)
+			m.timestamp = m.nowFunc().In(time.Local)
+			return
 		}
-		parsedTime = parsedTime.In(time.Local)
+		m.timestamp = parsedTime.In(time.Local)
+		return
 	}
-	m.timestamp = parsedTime
+	m.timestamp = m.nowFunc().In(time.Local)
 }
 
 func (m *Message) parse() *Message {

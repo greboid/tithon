@@ -61,6 +61,15 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 			want:     "HENLO dumbo",
 			want1:    11,
 		},
+		{
+			name:     "No matches",
+			channel:  newFakeUserList("dataforce", "demented", "dumbo"),
+			input:    "HENLO z",
+			position: 7,
+			runs:     3,
+			want:     "HENLO z",
+			want1:    7,
+		},
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {

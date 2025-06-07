@@ -281,8 +281,21 @@ func (h *Handler) handleNameReply(message ircmsg.Message) {
 	}
 	names := strings.Split(message.Params[3], " ")
 	for i := range names {
-		modes, user := h.stripChannelPrefixes(names[i])
-		channel.AddUser(NewUser(user, modes))
+		modes, nickname := h.stripChannelPrefixes(names[i])
+
+		existingUsers := channel.GetUsers()
+		userExists := false
+
+		for j := range existingUsers {
+			if existingUsers[j].nickname == nickname {
+				existingUsers[j].modes = modes
+				userExists = true
+				break
+			}
+		}
+		if !userExists {
+			channel.AddUser(NewUser(nickname, modes))
+		}
 	}
 }
 

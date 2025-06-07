@@ -4,6 +4,9 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestChannelTabCompleter_Complete(t1 *testing.T) {
@@ -82,12 +85,8 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 			for _ = range tt.runs {
 				got, got1 = t.Complete(got, got1)
 			}
-			if got != tt.want {
-				t1.Errorf("Complete() got = `%v`, want `%v`", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t1.Errorf("Complete() got1 = `%v`, want `%v`", got1, tt.want1)
-			}
+			assert.Equal(t1, tt.want, got, "Complete() returned unexpected string")
+			assert.Equal(t1, tt.want1, got1, "Complete() returned unexpected position")
 		})
 	}
 }
@@ -99,16 +98,15 @@ func TestChannelTabCompleter_MultipleInputs(t1 *testing.T) {
 		channel:       channel,
 		previousIndex: -1,
 	}
+	require.NotNil(t1, t, "Tab completer should not be nil")
 
 	input1, pos1 := t.Complete("d", 1)
-	if input1 != "dataforce" || pos1 != 9 {
-		t1.Errorf("First Complete() got `%v` at position %v, want `dataforce` at position 9", input1, pos1)
-	}
+	assert.Equal(t1, "dataforce", input1, "First Complete() returned unexpected string")
+	assert.Equal(t1, 9, pos1, "First Complete() returned unexpected position")
 
 	input2, pos2 := t.Complete("dataforce d", 11)
-	if input2 != "dataforce dataforce" || pos2 != 19 {
-		t1.Errorf("Second Complete() got `%v` at position %v, want `dataforce dataforce` at position 19", input2, pos2)
-	}
+	assert.Equal(t1, "dataforce dataforce", input2, "Second Complete() returned unexpected string")
+	assert.Equal(t1, 19, pos2, "Second Complete() returned unexpected position")
 }
 
 type fakeUserListGetter struct {

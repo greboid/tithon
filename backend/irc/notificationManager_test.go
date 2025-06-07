@@ -2,9 +2,11 @@ package irc
 
 import (
 	"github.com/greboid/tithon/config"
-	"reflect"
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNotificationManager_sortTriggers(t *testing.T) {
@@ -206,9 +208,7 @@ func TestNotificationManager_sortTriggers(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nm := &NotificationManager{}
 			got := nm.sortTriggers(tt.triggers)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("sortTriggers() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got, "sortTriggers() returned unexpected result")
 		})
 	}
 }
@@ -248,15 +248,13 @@ func TestNotificationManager_compileRegex(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			nm := &NotificationManager{}
+			require.NotNil(t, nm, "NotificationManager should not be nil")
 			got, err := nm.compileRegex(tt.regex)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("compileRegex() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if err == nil {
-				if got.String() != tt.want {
-					t.Errorf("compileRegex() got = %v, want %v", got.String(), tt.want)
-				}
+			if tt.wantErr {
+				assert.Error(t, err, "compileRegex() should return an error")
+			} else {
+				assert.NoError(t, err, "compileRegex() should not return an error")
+				assert.Equal(t, tt.want, got.String(), "compileRegex() returned unexpected result")
 			}
 		})
 	}
@@ -395,32 +393,22 @@ func TestNotificationManager_AddNotification(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nm := &NotificationManager{}
 			got, err := nm.AddNotification(tt.network, tt.source, tt.nick, tt.message, tt.sound, tt.popup)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("AddNotification() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+
 			if tt.wantErr {
+				assert.Error(t, err, "AddNotification() should return an error")
+				assert.Nil(t, got, "AddNotification() should return nil when there's an error")
 				return
 			}
 
-			if got.Network.String() != tt.want.Network.String() {
-				t.Errorf("AddNotification() Network = %v, want %v", got.Network.String(), tt.want.Network.String())
-			}
-			if got.Source.String() != tt.want.Source.String() {
-				t.Errorf("AddNotification() Source = %v, want %v", got.Source.String(), tt.want.Source.String())
-			}
-			if got.Nick.String() != tt.want.Nick.String() {
-				t.Errorf("AddNotification() Nick = %v, want %v", got.Nick.String(), tt.want.Nick.String())
-			}
-			if got.Message.String() != tt.want.Message.String() {
-				t.Errorf("AddNotification() Message = %v, want %v", got.Message.String(), tt.want.Message.String())
-			}
-			if got.Sound != tt.want.Sound {
-				t.Errorf("AddNotification() Sound = %v, want %v", got.Sound, tt.want.Sound)
-			}
-			if got.Popup != tt.want.Popup {
-				t.Errorf("AddNotification() Popup = %v, want %v", got.Popup, tt.want.Popup)
-			}
+			require.NotNil(t, got, "AddNotification() should not return nil")
+			assert.NoError(t, err, "AddNotification() should not return an error")
+
+			assert.Equal(t, tt.want.Network.String(), got.Network.String(), "AddNotification() Network mismatch")
+			assert.Equal(t, tt.want.Source.String(), got.Source.String(), "AddNotification() Source mismatch")
+			assert.Equal(t, tt.want.Nick.String(), got.Nick.String(), "AddNotification() Nick mismatch")
+			assert.Equal(t, tt.want.Message.String(), got.Message.String(), "AddNotification() Message mismatch")
+			assert.Equal(t, tt.want.Sound, got.Sound, "AddNotification() Sound mismatch")
+			assert.Equal(t, tt.want.Popup, got.Popup, "AddNotification() Popup mismatch")
 		})
 	}
 }
@@ -568,30 +556,15 @@ func TestNotificationManager_convertFromConfig(t *testing.T) {
 			nm := &NotificationManager{}
 			got := nm.convertFromConfig(tt.triggers)
 
-			if len(got) != len(tt.want) {
-				t.Errorf("convertFromConfig() got %d triggers, want %d", len(got), len(tt.want))
-				return
-			}
+			assert.Equal(t, len(tt.want), len(got), "convertFromConfig() returned unexpected number of triggers")
 
 			for i := range got {
-				if got[i].Network.String() != tt.want[i].Network.String() {
-					t.Errorf("convertFromConfig() trigger[%d].Network = %v, want %v", i, got[i].Network.String(), tt.want[i].Network.String())
-				}
-				if got[i].Source.String() != tt.want[i].Source.String() {
-					t.Errorf("convertFromConfig() trigger[%d].Source = %v, want %v", i, got[i].Source.String(), tt.want[i].Source.String())
-				}
-				if got[i].Nick.String() != tt.want[i].Nick.String() {
-					t.Errorf("convertFromConfig() trigger[%d].Nick = %v, want %v", i, got[i].Nick.String(), tt.want[i].Nick.String())
-				}
-				if got[i].Message.String() != tt.want[i].Message.String() {
-					t.Errorf("convertFromConfig() trigger[%d].Message = %v, want %v", i, got[i].Message.String(), tt.want[i].Message.String())
-				}
-				if got[i].Sound != tt.want[i].Sound {
-					t.Errorf("convertFromConfig() trigger[%d].Sound = %v, want %v", i, got[i].Sound, tt.want[i].Sound)
-				}
-				if got[i].Popup != tt.want[i].Popup {
-					t.Errorf("convertFromConfig() trigger[%d].Popup = %v, want %v", i, got[i].Popup, tt.want[i].Popup)
-				}
+				assert.Equal(t, tt.want[i].Network.String(), got[i].Network.String(), "convertFromConfig() trigger[%d].Network mismatch", i)
+				assert.Equal(t, tt.want[i].Source.String(), got[i].Source.String(), "convertFromConfig() trigger[%d].Source mismatch", i)
+				assert.Equal(t, tt.want[i].Nick.String(), got[i].Nick.String(), "convertFromConfig() trigger[%d].Nick mismatch", i)
+				assert.Equal(t, tt.want[i].Message.String(), got[i].Message.String(), "convertFromConfig() trigger[%d].Message mismatch", i)
+				assert.Equal(t, tt.want[i].Sound, got[i].Sound, "convertFromConfig() trigger[%d].Sound mismatch", i)
+				assert.Equal(t, tt.want[i].Popup, got[i].Popup, "convertFromConfig() trigger[%d].Popup mismatch", i)
 			}
 		})
 	}
@@ -815,30 +788,19 @@ func TestNotificationManager_CheckAndNotify(t *testing.T) {
 				notifications:        tt.notifications,
 				pendingNotifications: notificationChan,
 			}
+			require.NotNil(t, nm, "NotificationManager should not be nil")
 			nm.CheckAndNotify(tt.network, tt.source, tt.nick, tt.message)
 
 			var receivedNotification Notification
 			select {
 			case receivedNotification = <-notificationChan:
-				if !tt.expectNotification {
-					t.Errorf("CheckAndNotify() sent a notification when none was expected")
-				}
-				if receivedNotification.Title != tt.expectedTitle {
-					t.Errorf("CheckAndNotify() notification title = %v, want %v", receivedNotification.Title, tt.expectedTitle)
-				}
-				if receivedNotification.Text != tt.expectedText {
-					t.Errorf("CheckAndNotify() notification text = %v, want %v", receivedNotification.Text, tt.expectedText)
-				}
-				if receivedNotification.Sound != tt.expectedSound {
-					t.Errorf("CheckAndNotify() notification sound = %v, want %v", receivedNotification.Sound, tt.expectedSound)
-				}
-				if receivedNotification.Popup != tt.expectedPopup {
-					t.Errorf("CheckAndNotify() notification popup = %v, want %v", receivedNotification.Popup, tt.expectedPopup)
-				}
+				assert.True(t, tt.expectNotification, "CheckAndNotify() sent a notification when none was expected")
+				assert.Equal(t, tt.expectedTitle, receivedNotification.Title, "CheckAndNotify() notification title mismatch")
+				assert.Equal(t, tt.expectedText, receivedNotification.Text, "CheckAndNotify() notification text mismatch")
+				assert.Equal(t, tt.expectedSound, receivedNotification.Sound, "CheckAndNotify() notification sound mismatch")
+				assert.Equal(t, tt.expectedPopup, receivedNotification.Popup, "CheckAndNotify() notification popup mismatch")
 			default:
-				if tt.expectNotification {
-					t.Errorf("CheckAndNotify() did not send a notification when one was expected")
-				}
+				assert.False(t, tt.expectNotification, "CheckAndNotify() did not send a notification when one was expected")
 			}
 		})
 	}

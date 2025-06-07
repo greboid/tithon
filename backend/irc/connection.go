@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"maps"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -208,16 +209,64 @@ func (c *Connection) HasCapability(name string) bool {
 	return exists
 }
 
+func (c *Connection) GetMaxLineLen() int {
+	maxLineLen := 512 // Default IRC line length
+	linelen := c.ISupport("LINELEN")
+	if linelen != "" {
+		if val, err := strconv.Atoi(linelen); err == nil && val > 0 {
+			maxLineLen = val
+		}
+	}
+	return maxLineLen
+}
+
+func (c *Connection) SplitMessage(prefixLength int, message string) []string {
+	maxMsgLen := c.GetMaxLineLen() - prefixLength
+	if len(message) <= maxMsgLen {
+		return []string{message}
+	}
+	var parts []string
+	for len(message) > 0 {
+		if len(message) <= maxMsgLen {
+			parts = append(parts, message)
+			break
+		}
+		splitPos := maxMsgLen
+		for splitPos > 0 && message[splitPos] != ' ' {
+			splitPos--
+		}
+		if splitPos == 0 {
+			splitPos = maxMsgLen
+		}
+		parts = append(parts, message[:splitPos])
+		message = message[splitPos:]
+		message = strings.TrimLeft(message, " ")
+	}
+
+	return parts
+}
+
 func (c *Connection) SendMessage(window string, message string) error {
 	defer c.ut.SetPendingUpdate()
 	channel := c.GetChannel(window)
 	if channel == nil {
 		return errors.New("not on a channel")
 	}
-	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message, nil))
+
+	//PRIVMSG #channel :message == 10 + channel name
+	messageParts := c.SplitMessage(10+len(channel.name), message)
+
+	for _, part := range messageParts {
+		if !c.HasCapability("echo-message") {
+			channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+		}
+		err := c.connection.Send("PRIVMSG", channel.name, part)
+		if err != nil {
+			return err
+		}
 	}
-	return c.connection.Send("PRIVMSG", channel.name, message)
+
+	return nil
 }
 
 func (c *Connection) SendNotice(window string, message string) error {
@@ -225,10 +274,21 @@ func (c *Connection) SendNotice(window string, message string) error {
 	if channel == nil {
 		return errors.New("not on a channel")
 	}
-	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message, nil))
+
+	//NOTICE #channel :message == 9 + channel name
+	messageParts := c.SplitMessage(9+len(channel.name), message)
+
+	for _, part := range messageParts {
+		if !c.HasCapability("echo-message") {
+			channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+		}
+		err := c.connection.Send("NOTICE", channel.name, part)
+		if err != nil {
+			return err
+		}
 	}
-	return c.connection.Send("NOTICE", channel.name, message)
+
+	return nil
 }
 
 func (c *Connection) CurrentNick() string {

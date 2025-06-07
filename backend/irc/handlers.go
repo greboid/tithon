@@ -489,8 +489,46 @@ func (h *Handler) handleUserPrivilegeMode(change modeChange, channel *Channel, m
 		fmt.Sprintf("%s sets mode %s %s", message.Nick(), modeStr, change.nickname)))
 }
 
-func (h *Handler) handleUserMode(ircmsg.Message) {
-	// TODO: Implement user mode changes
+func (h *Handler) handleUserMode(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
+	var add bool
+
+	if len(message.Params) < 2 {
+		slog.Warn("Invalid user mode message", "message", message)
+		return
+	}
+
+	modeStr := message.Params[1]
+	newModes := h.modeHandler.GetCurrentModes()
+
+	for i := 0; i < len(modeStr); i++ {
+		switch modeStr[i] {
+		case '+':
+			add = true
+		case '-':
+			add = false
+		default:
+			mode := string(modeStr[i])
+			if add {
+				if !strings.Contains(newModes, mode) {
+					newModes += mode
+				}
+			} else {
+				newModes = strings.Replace(newModes, mode, "", -1)
+			}
+		}
+	}
+
+	h.modeHandler.SetCurrentModes(newModes)
+	var displayModeStr string
+	if strings.HasPrefix(modeStr, "+") || strings.HasPrefix(modeStr, "-") {
+		displayModeStr = modeStr
+	} else {
+		displayModeStr = "+" + modeStr
+	}
+
+	h.messageHandler.AddMessage(NewEvent(h.conf.UISettings.TimestampFormat, false,
+		fmt.Sprintf("Your modes changed: %s", displayModeStr)))
 }
 
 func (h *Handler) isMsgMe(message ircmsg.Message) bool {

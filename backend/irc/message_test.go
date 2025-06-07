@@ -655,6 +655,66 @@ func TestMessage_GetPlainDisplayMessage(t *testing.T) {
 	}
 }
 
+func TestMessage_parseFormatting(t *testing.T) {
+	tests := []struct {
+		name    string
+		message string
+		want    string
+	}{
+		{
+			name:    "Plain text without formatting",
+			message: "Hello, world!",
+			want:    "Hello, world!",
+		},
+		{
+			name:    "Text with HTML special characters",
+			message: "Hello <world> & \"friends\"",
+			want:    "Hello &lt;world&gt; &amp; &#34;friends&#34;",
+		},
+		{
+			name:    "Text with URL",
+			message: "Check out https://example.com",
+			want:    "Check out <a target='_blank' href='https://example.com'>https://example.com</a>",
+		},
+		// TODO: This needs resolving, but I'm not sure how to resolve it at the minute.
+		//{
+		//	name:    "Text with URL in a tag",
+		//	message: "Check out <a href=\"https://example.com\">https://example.com</a>",
+		//	want:    "Check out <a target='_blank' href='<a target='_blank' href='https://example.com'>https://example.com</a>'>https://example.com</a>",
+		//},
+		{
+			name:    "Text with multiple URLs",
+			message: "Visit https://example.com and http://test.org",
+			want:    "Visit <a target='_blank' href='https://example.com'>https://example.com</a> and <a target='_blank' href='http://test.org'>http://test.org</a>",
+		},
+		{
+			name:    "URL with path and query parameters",
+			message: "https://example.com/path?param=value&other=123",
+			want:    "<a target='_blank' href='https://example.com/path?param=value&amp;other=123'>https://example.com/path?param=value&amp;other=123</a>",
+		},
+		{
+			name:    "URL with special characters in path",
+			message: "https://example.com/path-with-[brackets]",
+			want:    "<a target='_blank' href='https://example.com/path-with-[brackets]'>https://example.com/path-with-[brackets]</a>",
+		},
+		{
+			name:    "Text with IRC formatting and URL",
+			message: "\x02Bold\x02 text with https://example.com link",
+			want:    "<span class=\"bold\">Bold</span> text with <a target='_blank' href='https://example.com'>https://example.com</a> link",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Message{
+				message: tt.message,
+			}
+			m.parseFormatting()
+			assert.Equal(t, tt.want, m.message, "parseFormatting() message mismatch")
+		})
+	}
+}
+
 func TestMessage_parseIRCFormatting(t *testing.T) {
 	tests := []struct {
 		name    string

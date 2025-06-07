@@ -6,7 +6,6 @@ import (
 	"github.com/greboid/tithon/config"
 	"log/slog"
 	"strings"
-	"time"
 )
 
 var (
@@ -82,7 +81,7 @@ func (cm *CommandManager) showCommandError(window *Window, command Command, mess
 
 func (cm *CommandManager) showError(window *Window, message string) {
 	if window != nil {
-		window.AddMessage(NewError(time.Now(), cm.conf.UISettings.TimestampFormat, false, message))
+		window.AddMessage(NewError(cm.conf.UISettings.TimestampFormat, false, message))
 	} else {
 		slog.Error("Command error", "message", message)
 	}

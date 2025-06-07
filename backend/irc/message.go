@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/ergochat/irc-go/ircfmt"
-	"github.com/ergochat/irc-go/ircmsg"
 	"golang.org/x/net/html"
 	"log/slog"
 	"regexp"
@@ -38,43 +37,30 @@ type Message struct {
 	me              bool
 	timestampFormat string
 	tags            map[string]string
+	nowFunc         func() time.Time
 }
 
-func NewNotice(messageTime time.Time, timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
-	return newMessage(messageTime, timeFormat, me, nickname, message, Notice, tags, highlights)
+func NewNotice(timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
+	return newMessage(timeFormat, me, nickname, message, Notice, tags, highlights)
 }
 
-func NewEvent(messageTime time.Time, timeFormat string, me bool, message string) *Message {
-	return newMessage(messageTime, timeFormat, me, "", message, Event, nil, nil)
+func NewEvent(timeFormat string, me bool, message string) *Message {
+	return newMessage(timeFormat, me, "", message, Event, nil, nil)
 }
 
-func NewError(messageTime time.Time, timeFormat string, me bool, message string) *Message {
-	return newMessage(messageTime, timeFormat, me, "", message, Error, nil, nil)
+func NewError(timeFormat string, me bool, message string) *Message {
+	return newMessage(timeFormat, me, "", message, Error, nil, nil)
 }
 
-func NewMessage(messageTime time.Time, timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
-	return newMessage(messageTime, timeFormat, me, nickname, message, Normal, tags, highlights)
+func NewMessage(timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
+	return newMessage(timeFormat, me, nickname, message, Normal, tags, highlights)
 }
 
-func GetTimeForMessage(message ircmsg.Message) time.Time {
-	var err error
-	parsedTime := time.Now()
-	if found, messageTime := message.GetTag("time"); found {
-		parsedTime, err = time.Parse(v3TimestampFormat, messageTime)
-		if err != nil {
-			slog.Error("Error parsing time from server", "time", messageTime, "error", err)
-		}
-		parsedTime = parsedTime.In(time.Local)
-	}
-	return parsedTime
-}
-
-func newMessage(parsedTime time.Time, timeFormat string, me bool, nickname string, message string, messageType MessageType, tags map[string]string, highlights []string) *Message {
+func newMessage(timeFormat string, me bool, nickname string, message string, messageType MessageType, tags map[string]string, highlights []string) *Message {
 	if tags == nil {
 		tags = make(map[string]string)
 	}
 	m := &Message{
-		timestamp:       parsedTime,
 		nickname:        nickname,
 		message:         message,
 		messageType:     messageType,
@@ -86,7 +72,24 @@ func newMessage(parsedTime time.Time, timeFormat string, me bool, nickname strin
 	return m.parse()
 }
 
+func (m *Message) parseTime() {
+	var err error
+	if m.nowFunc == nil {
+		m.nowFunc = time.Now
+	}
+	parsedTime := m.nowFunc()
+	if messageTime := m.tags["time"]; messageTime != "" {
+		parsedTime, err = time.Parse(v3TimestampFormat, messageTime)
+		if err != nil {
+			slog.Error("Error parsing time from server", "time", messageTime, "error", err)
+		}
+		parsedTime = parsedTime.In(time.Local)
+	}
+	m.timestamp = parsedTime
+}
+
 func (m *Message) parse() *Message {
+	m.parseTime()
 	m.parseAction()
 	m.parseHighlight()
 	m.parseFormatting()

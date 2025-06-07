@@ -2,7 +2,6 @@ package irc
 
 import (
 	"fmt"
-	"time"
 )
 
 type SendAction struct{}
@@ -20,5 +19,5 @@ func (c SendAction) Execute(_ *ConnectionManager, window *Window, input string) 
 		return NoServerError
 	}
 	input = fmt.Sprintf("\001ACTION %s\001", input)
-	return window.connection.SendMessage(time.Now(), window.GetID(), input)
+	return window.connection.SendMessage(window.GetID(), input)
 }

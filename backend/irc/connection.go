@@ -117,12 +117,12 @@ func (c *Connection) Connect() {
 		c.callbackHandler = NewHandler(c)
 		c.callbackHandler.addCallbacks()
 	}
-	c.AddMessage(NewEvent(time.Now(), c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
+	c.AddMessage(NewEvent(c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
 	//TODO Need to store a connection state
 	if !c.connection.Connected() {
 		err := c.connection.Connect()
 		if err != nil {
-			c.AddMessage(NewError(time.Now(), c.conf.UISettings.TimestampFormat, false, "Connection error: "+err.Error()))
+			c.AddMessage(NewError(c.conf.UISettings.TimestampFormat, false, "Connection error: "+err.Error()))
 		}
 	}
 }
@@ -208,25 +208,25 @@ func (c *Connection) HasCapability(name string) bool {
 	return exists
 }
 
-func (c *Connection) SendMessage(time time.Time, window string, message string) error {
+func (c *Connection) SendMessage(window string, message string) error {
 	defer c.ut.SetPendingUpdate()
 	channel := c.GetChannel(window)
 	if channel == nil {
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(time, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message, nil))
+		channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message, nil))
 	}
 	return c.connection.Send("PRIVMSG", channel.name, message)
 }
 
-func (c *Connection) SendNotice(time time.Time, window string, message string) error {
+func (c *Connection) SendNotice(window string, message string) error {
 	channel := c.GetChannel(window)
 	if channel == nil {
 		return errors.New("not on a channel")
 	}
 	if !c.HasCapability("echo-message") {
-		channel.AddMessage(NewMessage(time, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message, nil))
+		channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), message, nil))
 	}
 	return c.connection.Send("NOTICE", channel.name, message)
 }

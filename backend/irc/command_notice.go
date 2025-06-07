@@ -1,7 +1,5 @@
 package irc
 
-import "time"
-
 type SendNotice struct{}
 
 func (c SendNotice) GetName() string {
@@ -16,5 +14,5 @@ func (c SendNotice) Execute(_ *ConnectionManager, window *Window, input string) 
 	if window == nil {
 		return NoServerError
 	}
-	return window.connection.SendNotice(time.Now(), window.GetID(), input)
+	return window.connection.SendNotice(window.GetID(), input)
 }

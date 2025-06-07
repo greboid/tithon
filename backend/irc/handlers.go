@@ -208,7 +208,11 @@ func (h *Handler) handleJoin(message ircmsg.Message) {
 
 func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 	slog.Debug("Joining channel", "channel", message.Params[0])
-	h.channelHandler.AddChannel(message.Params[0])
+	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
+	if err != nil {
+		channel = h.channelHandler.AddChannel(message.Params[0])
+	}
+	channel.AddMessage(NewEvent(h.conf.UISettings.TimestampFormat, false, "You have joined "+channel.GetName()))
 	if h.infoHandler.HasCapability("draft/chathistory") {
 		h.messageHandler.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
 	}

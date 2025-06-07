@@ -596,3 +596,250 @@ func TestNotificationManager_convertFromConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestNotificationManager_CheckAndNotify(t *testing.T) {
+	tests := []struct {
+		name               string
+		notifications      []Trigger
+		network            string
+		source             string
+		nick               string
+		message            string
+		expectNotification bool
+		expectedTitle      string
+		expectedText       string
+		expectedSound      bool
+		expectedPopup      bool
+	}{
+		{
+			name: "Match all",
+			notifications: []Trigger{
+				{
+					Network: regexp.MustCompile("testnet"),
+					Source:  regexp.MustCompile("#testchannel"),
+					Nick:    regexp.MustCompile("testnick"),
+					Message: regexp.MustCompile("testmessage"),
+					Sound:   true,
+					Popup:   true,
+				},
+			},
+			network:            "testnet",
+			source:             "#testchannel",
+			nick:               "testnick",
+			message:            "testmessage",
+			expectNotification: true,
+			expectedTitle:      "testnick (#testchannel)",
+			expectedText:       "testmessage",
+			expectedSound:      true,
+			expectedPopup:      true,
+		},
+		{
+			name: "Match with wildcards",
+			notifications: []Trigger{
+				{
+					Network: regexp.MustCompile(".*"),
+					Source:  regexp.MustCompile(".*"),
+					Nick:    regexp.MustCompile("user.*"),
+					Message: regexp.MustCompile(".*hello.*"),
+					Sound:   false,
+					Popup:   true,
+				},
+			},
+			network:            "anynetwork",
+			source:             "#anychannel",
+			nick:               "user123",
+			message:            "saying hello world",
+			expectNotification: true,
+			expectedTitle:      "user123 (#anychannel)",
+			expectedText:       "saying hello world",
+			expectedSound:      false,
+			expectedPopup:      true,
+		},
+		{
+			name: "wrong network",
+			notifications: []Trigger{
+				{
+					Network: regexp.MustCompile("testnet"),
+					Source:  regexp.MustCompile("#testchannel"),
+					Nick:    regexp.MustCompile("testnick"),
+					Message: regexp.MustCompile("testmessage"),
+					Sound:   true,
+					Popup:   true,
+				},
+			},
+			network:            "wrongnet",
+			source:             "#testchannel",
+			nick:               "testnick",
+			message:            "testmessage",
+			expectNotification: false,
+			expectedPopup:      false,
+			expectedSound:      false,
+		},
+		{
+			name: "wrong source",
+			notifications: []Trigger{
+				{
+					Network: regexp.MustCompile("testnet"),
+					Source:  regexp.MustCompile("#testchannel"),
+					Nick:    regexp.MustCompile("testnick"),
+					Message: regexp.MustCompile("testmessage"),
+					Sound:   true,
+					Popup:   true,
+				},
+			},
+			network:            "testnet",
+			source:             "#wrongchannel",
+			nick:               "testnick",
+			message:            "testmessage",
+			expectNotification: false,
+			expectedPopup:      false,
+			expectedSound:      false,
+		},
+		{
+			name: "wrong nick",
+			notifications: []Trigger{
+				{
+					Network: regexp.MustCompile("testnet"),
+					Source:  regexp.MustCompile("#testchannel"),
+					Nick:    regexp.MustCompile("testnick"),
+					Message: regexp.MustCompile("testmessage"),
+					Sound:   true,
+					Popup:   true,
+				},
+			},
+			network:            "testnet",
+			source:             "#testchannel",
+			nick:               "wrongnick",
+			message:            "testmessage",
+			expectNotification: false,
+			expectedPopup:      false,
+			expectedSound:      false,
+		},
+		{
+			name: "No match - wrong message",
+			notifications: []Trigger{
+				{
+					Network: regexp.MustCompile("testnet"),
+					Source:  regexp.MustCompile("#testchannel"),
+					Nick:    regexp.MustCompile("testnick"),
+					Message: regexp.MustCompile("testmessage"),
+					Sound:   true,
+					Popup:   true,
+				},
+			},
+			network:            "testnet",
+			source:             "#testchannel",
+			nick:               "testnick",
+			message:            "wrongmessage",
+			expectNotification: false,
+			expectedPopup:      false,
+			expectedSound:      false,
+		},
+		{
+			name: "Multiple triggers - first",
+			notifications: []Trigger{
+				{
+					Network: regexp.MustCompile("testnet"),
+					Source:  regexp.MustCompile("#testchannel"),
+					Nick:    regexp.MustCompile("testnick"),
+					Message: regexp.MustCompile("testmessage"),
+					Sound:   true,
+					Popup:   false,
+				},
+				{
+					Network: regexp.MustCompile("othernet"),
+					Source:  regexp.MustCompile("#otherchannel"),
+					Nick:    regexp.MustCompile("othernick"),
+					Message: regexp.MustCompile("othermessage"),
+					Sound:   false,
+					Popup:   true,
+				},
+			},
+			network:            "testnet",
+			source:             "#testchannel",
+			nick:               "testnick",
+			message:            "testmessage",
+			expectNotification: true,
+			expectedTitle:      "testnick (#testchannel)",
+			expectedText:       "testmessage",
+			expectedSound:      true,
+			expectedPopup:      false,
+		},
+		{
+			name: "Multiple triggers - second",
+			notifications: []Trigger{
+				{
+					Network: regexp.MustCompile("testnet"),
+					Source:  regexp.MustCompile("#testchannel"),
+					Nick:    regexp.MustCompile("testnick"),
+					Message: regexp.MustCompile("testmessage"),
+					Sound:   true,
+					Popup:   false,
+				},
+				{
+					Network: regexp.MustCompile("othernet"),
+					Source:  regexp.MustCompile("#otherchannel"),
+					Nick:    regexp.MustCompile("othernick"),
+					Message: regexp.MustCompile("othermessage"),
+					Sound:   false,
+					Popup:   true,
+				},
+			},
+			network:            "othernet",
+			source:             "#otherchannel",
+			nick:               "othernick",
+			message:            "othermessage",
+			expectNotification: true,
+			expectedTitle:      "othernick (#otherchannel)",
+			expectedText:       "othermessage",
+			expectedSound:      false,
+			expectedPopup:      true,
+		},
+		{
+			name:               "No triggers",
+			notifications:      []Trigger{},
+			network:            "testnet",
+			source:             "#testchannel",
+			nick:               "testnick",
+			message:            "testmessage",
+			expectNotification: false,
+			expectedPopup:      false,
+			expectedSound:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			notificationChan := make(chan Notification, 1)
+			nm := &NotificationManager{
+				notifications:        tt.notifications,
+				pendingNotifications: notificationChan,
+			}
+			nm.CheckAndNotify(tt.network, tt.source, tt.nick, tt.message)
+
+			var receivedNotification Notification
+			select {
+			case receivedNotification = <-notificationChan:
+				if !tt.expectNotification {
+					t.Errorf("CheckAndNotify() sent a notification when none was expected")
+				}
+				if receivedNotification.Title != tt.expectedTitle {
+					t.Errorf("CheckAndNotify() notification title = %v, want %v", receivedNotification.Title, tt.expectedTitle)
+				}
+				if receivedNotification.Text != tt.expectedText {
+					t.Errorf("CheckAndNotify() notification text = %v, want %v", receivedNotification.Text, tt.expectedText)
+				}
+				if receivedNotification.Sound != tt.expectedSound {
+					t.Errorf("CheckAndNotify() notification sound = %v, want %v", receivedNotification.Sound, tt.expectedSound)
+				}
+				if receivedNotification.Popup != tt.expectedPopup {
+					t.Errorf("CheckAndNotify() notification popup = %v, want %v", receivedNotification.Popup, tt.expectedPopup)
+				}
+			default:
+				if tt.expectNotification {
+					t.Errorf("CheckAndNotify() did not send a notification when one was expected")
+				}
+			}
+		})
+	}
+}

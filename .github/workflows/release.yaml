@@ -21,3 +21,10 @@ jobs:
           cd frontend
           npm install
           npm run publish
+      - Name: Update AUR
+        uses: varrcan/aur-publish-action@v1
+        with:
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          package_name: tithon
+          git_username: Github Action
+          git_email: greboid@github

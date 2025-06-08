@@ -20,6 +20,7 @@ type channelHandler interface {
 
 type callbackHandler interface {
 	AddConnectCallback(callback func(message ircmsg.Message))
+	AddDisconnectCallback(callback func(message ircmsg.Message))
 	AddCallback(command string, callback func(ircmsg.Message))
 	AddBatchCallback(callback func(*ircevent.Batch) bool)
 }
@@ -87,6 +88,7 @@ func (h *Handler) addCallbacks() {
 	h.callbackHandler.AddCallback(ircevent.RPL_TOPIC, h.handleRPLTopic)
 	h.callbackHandler.AddCallback("TOPIC", h.handleTopic)
 	h.callbackHandler.AddConnectCallback(h.handleConnected)
+	h.callbackHandler.AddDisconnectCallback(h.handleDisconnected)
 	h.callbackHandler.AddCallback("PART", h.handlePart)
 	h.callbackHandler.AddCallback("KICK", h.handleKick)
 	h.callbackHandler.AddCallback(ircevent.RPL_NAMREPLY, h.handleNameReply)
@@ -261,6 +263,13 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 	}
 	channel.users = append(channel.users, NewUser(message.Nick(), ""))
 	channel.AddMessage(NewEvent(h.conf.UISettings.TimestampFormat, false, message.Source+" has joined "+channel.GetName()))
+}
+
+func (h *Handler) handleDisconnected(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
+	h.messageHandler.AddMessage(NewEvent(h.conf.UISettings.TimestampFormat, false,
+		fmt.Sprintf("Disconnected from %s: %s", h.infoHandler.GetHostname(), strings.Join(message.Params, " "))))
+	// TODO: Do something more with this?
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {

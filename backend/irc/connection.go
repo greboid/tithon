@@ -40,6 +40,10 @@ type Connection struct {
 	ut                UpdateTrigger
 	nm                *NotificationManager
 	conf              *config.Config
+	reconnecting      bool
+	reconnectAttempts int
+	reconnectTimer    *time.Timer
+	manualDisconnect  bool
 }
 
 func NewConnection(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) *Connection {
@@ -59,17 +63,16 @@ func NewConnection(conf *config.Config, id string, hostname string, port int, tl
 		channels:          map[string]*Channel{},
 		pms:               map[string]*PrivateMessage{},
 		connection: &ircevent.Connection{
-			Timeout:       10 * time.Second,
-			Server:        fmt.Sprintf("%s:%d", hostname, port),
-			Nick:          profile.nickname,
-			SASLLogin:     sasllogin,
-			SASLPassword:  saslpassword,
-			QuitMessage:   " ",
-			Version:       " ",
-			UseTLS:        tls,
-			UseSASL:       useSasl,
-			EnableCTCP:    false,
-			ReconnectFreq: 5 * time.Second,
+			Timeout:      10 * time.Second,
+			Server:       fmt.Sprintf("%s:%d", hostname, port),
+			Nick:         profile.nickname,
+			SASLLogin:    sasllogin,
+			SASLPassword: saslpassword,
+			QuitMessage:  " ",
+			Version:      " ",
+			UseTLS:       tls,
+			UseSASL:      useSasl,
+			EnableCTCP:   false,
 			RequestCaps: []string{
 				"message-tags",
 				"echo-message",
@@ -82,9 +85,13 @@ func NewConnection(conf *config.Config, id string, hostname string, port int, tl
 			Debug: true,
 			Log:   slog.NewLogLogger(slog.Default().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", id)}), LevelTrace),
 		},
-		ut:   ut,
-		nm:   nm,
-		conf: conf,
+		ut:                ut,
+		nm:                nm,
+		conf:              conf,
+		reconnecting:      false,
+		reconnectAttempts: 0,
+		reconnectTimer:    nil,
+		manualDisconnect:  false,
 	}
 	connection.Window = &Window{
 		id:           id,
@@ -118,14 +125,93 @@ func (c *Connection) Connect() {
 		c.callbackHandler = NewHandler(c)
 		c.callbackHandler.addCallbacks()
 	}
+	c.manualDisconnect = false
+
+	c.AddDisconnectCallback(func(message ircmsg.Message) {
+		slog.Debug("Disconnected", "message", message)
+		c.mutex.Lock()
+		defer c.mutex.Unlock()
+		if c.reconnecting || c.manualDisconnect {
+			return
+		}
+		go c.scheduleReconnect()
+	})
+	c.AddConnectCallback(func(message ircmsg.Message) {
+		c.mutex.Lock()
+		defer c.mutex.Unlock()
+		c.reconnecting = false
+		c.reconnectAttempts = 0
+		if c.reconnectTimer != nil {
+			c.reconnectTimer.Stop()
+			c.reconnectTimer = nil
+		}
+	})
+	c.AddCallback("ERROR", func(message ircmsg.Message) {
+		go c.scheduleReconnect()
+	})
+
 	c.AddMessage(NewEvent(c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
-	//TODO Need to store a connection state
 	if !c.connection.Connected() {
+		c.resetReconnectValues()
 		err := c.connection.Connect()
 		if err != nil {
 			c.AddMessage(NewError(c.conf.UISettings.TimestampFormat, false, "Connection error: "+err.Error()))
+			go c.scheduleReconnect()
 		}
 	}
+}
+
+func (c *Connection) resetReconnectValues() {
+	c.reconnecting = false
+	c.reconnectAttempts = 0
+	if c.reconnectTimer != nil {
+		c.reconnectTimer.Stop()
+		c.reconnectTimer = nil
+	}
+}
+
+func (c *Connection) scheduleReconnect() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	defer c.ut.SetPendingUpdate()
+	if c.reconnecting {
+		return
+	}
+	c.reconnecting = true
+	c.reconnectAttempts++
+
+	// TODO: Look at something better?
+	delay := 1 << c.reconnectAttempts * time.Second
+	if delay > 1*time.Minute {
+		delay = 1 * time.Minute
+	}
+
+	c.AddMessage(NewEvent(c.conf.UISettings.TimestampFormat, false,
+		fmt.Sprintf("Reconnection attempt %d scheduled in %v", c.reconnectAttempts, delay)))
+
+	if c.reconnectTimer != nil {
+		c.reconnectTimer.Stop()
+	}
+
+	c.reconnectTimer = time.AfterFunc(delay, func() {
+		c.mutex.Lock()
+		defer c.mutex.Unlock()
+		defer c.ut.SetPendingUpdate()
+		c.reconnecting = false
+
+		c.AddMessage(NewEvent(c.conf.UISettings.TimestampFormat, false,
+			fmt.Sprintf("Attempting to reconnect (attempt %d)...", c.reconnectAttempts)))
+
+		if !c.connection.Connected() {
+			err := c.connection.Connect()
+			if err != nil {
+				c.AddMessage(NewError(c.conf.UISettings.TimestampFormat, false,
+					fmt.Sprintf("Reconnection attempt %d failed: %s", c.reconnectAttempts, err.Error())))
+				go c.scheduleReconnect()
+				return
+			}
+		}
+	})
 }
 
 func (c *Connection) AddConnectCallback(callback func(message ircmsg.Message)) {
@@ -140,6 +226,10 @@ func (c *Connection) AddBatchCallback(callback func(batch *ircevent.Batch) bool)
 	c.connection.AddBatchCallback(callback)
 }
 
+func (c *Connection) AddDisconnectCallback(callback func(message ircmsg.Message)) {
+	c.connection.AddDisconnectCallback(callback)
+}
+
 func (c *Connection) GetCredentials() (string, string) {
 	return c.saslLogin, c.saslPassword
 }
@@ -148,6 +238,8 @@ func (c *Connection) Disconnect() {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	c.manualDisconnect = true
+	c.resetReconnectValues()
 	c.connection.Quit()
 }
 

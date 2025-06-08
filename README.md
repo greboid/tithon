@@ -9,7 +9,7 @@ It is currently missing a lot of basic functionality, please do raise an issue i
 Tithon is available in the AUR:
 
 ### Debian/Ubuntu
-.deb files are available on the [Releases page](/releases/latest).
+.deb files are available on the [Releases page](../releases/latest).
 
 ## Getting Started
 1. Add a new server connection using the icon in the bottom left

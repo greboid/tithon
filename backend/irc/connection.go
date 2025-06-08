@@ -222,25 +222,39 @@ func (c *Connection) GetMaxLineLen() int {
 
 func (c *Connection) SplitMessage(prefixLength int, message string) []string {
 	maxMsgLen := c.GetMaxLineLen() - prefixLength
-	if len(message) <= maxMsgLen {
+	if len(message) <= maxMsgLen && !strings.Contains(message, "\n") {
 		return []string{message}
 	}
 	var parts []string
-	for len(message) > 0 {
-		if len(message) <= maxMsgLen {
-			parts = append(parts, message)
-			break
+	lines := strings.Split(message, "\n")
+
+	for _, line := range lines {
+		if len(line) == 0 {
+			continue
 		}
-		splitPos := maxMsgLen
-		for splitPos > 0 && message[splitPos] != ' ' {
-			splitPos--
+
+		if len(line) <= maxMsgLen {
+			parts = append(parts, line)
+			continue
 		}
-		if splitPos == 0 {
-			splitPos = maxMsgLen
+
+		remainingLine := line
+		for len(remainingLine) > 0 {
+			if len(remainingLine) <= maxMsgLen {
+				parts = append(parts, remainingLine)
+				break
+			}
+			splitPos := maxMsgLen
+			for splitPos > 0 && remainingLine[splitPos] != ' ' {
+				splitPos--
+			}
+			if splitPos == 0 {
+				splitPos = maxMsgLen
+			}
+			parts = append(parts, remainingLine[:splitPos])
+			remainingLine = remainingLine[splitPos:]
+			remainingLine = strings.TrimLeft(remainingLine, " ")
 		}
-		parts = append(parts, message[:splitPos])
-		message = message[splitPos:]
-		message = strings.TrimLeft(message, " ")
 	}
 
 	return parts

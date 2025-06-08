@@ -1,5 +1,6 @@
 <div id="input" data-signals="{files: [], filesMimes: [], filesNames: [], location: ''}">
     <form
+            data-ref="inputForm"
             data-signals-char__ifmissing="0"
             data-signals-bs__ifmissing="0"
             data-signals-tab__ifmissing="1"
@@ -8,8 +9,7 @@
             data-on-signal-change-tab="@get('/tab')"
             data-on-submit="@get('/input')">
         <label for="textInput" hidden aria-hidden="true">Input</label>
-        <input
-                type="text"
+        <textarea
                 id="textInput"
                 name="input"
                 spellcheck="true"
@@ -17,8 +17,9 @@
                 data-bind-input=""
                 data-on-selectionChange="$char = evt.target.selectionStart"
                 data-on-signal-change-bs="$inputField.selectionStart = $bs; $inputField.selectionEnd = $bs; $bs = -1"
+                data-on-keydown="evt.key == 'Enter' && !evt.shiftKey ? @get('/input') : null"
                 autocomplete="off"
-        />
+        ></textarea>
     </form>
     <label data-signals-filehost__ifmissing="" data-attr-hidden="$filehost.length == 0" data-on-signals-change-files__debounce.500ms="$files.length > 0 && @post('/upload')">
         <input hidden type="file" data-bind="files" multiple />

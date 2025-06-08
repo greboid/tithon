@@ -197,13 +197,15 @@ h1 {
     display: flex;
     flex-grow: 1;
 
-    & input {
+    & textarea {
       flex-grow: 1;
       border: 0;
       padding: 0.5rem;
       border-radius: 0.5rem;
       background-color: var(--background2);
       color: var(--foreground);
+      resize: none;
+      height: calc(1.5rem + 1rem);
 
       &:focus {
         outline: none;
@@ -244,6 +246,7 @@ h1 {
   display: grid;
   grid-template-columns: auto auto 1fr;
   align-content: safe end;
+  white-space: pre-wrap;
 
   .bold {
     font-weight: bold;

@@ -19,8 +19,8 @@ type channelHandler interface {
 }
 
 type queryHandler interface {
-	GetPrivateMessageByName(name string) (*PrivateMessage, error)
-	AddPrivateMessage(name string) *PrivateMessage
+	GetQueryByName(name string) (*Query, error)
+	AddQuery(name string) *Query
 }
 
 type callbackHandler interface {
@@ -202,9 +202,9 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 		}
 		channel.AddMessage(msg)
 	} else if strings.ToLower(message.Params[0]) == strings.ToLower(h.infoHandler.CurrentNick()) {
-		pm, err := h.queryHandler.GetPrivateMessageByName(message.Nick())
+		pm, err := h.queryHandler.GetQueryByName(message.Nick())
 		if err != nil {
-			pm = h.queryHandler.AddPrivateMessage(message.Nick())
+			pm = h.queryHandler.AddQuery(message.Nick())
 		}
 
 		msg := NewMessage(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
@@ -213,9 +213,9 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 		}
 		pm.AddMessage(msg)
 	} else if message.Nick() == h.infoHandler.CurrentNick() {
-		pm, err := h.queryHandler.GetPrivateMessageByName(message.Params[0])
+		pm, err := h.queryHandler.GetQueryByName(message.Params[0])
 		if err != nil {
-			pm = h.queryHandler.AddPrivateMessage(message.Nick())
+			pm = h.queryHandler.AddQuery(message.Nick())
 		}
 		msg := NewMessage(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
 		pm.AddMessage(msg)
@@ -364,9 +364,9 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 		}
 		channel.AddMessage(mess)
 	} else if message.Params[0] == h.infoHandler.CurrentNick() {
-		pm, err := h.queryHandler.GetPrivateMessageByName(message.Nick())
+		pm, err := h.queryHandler.GetQueryByName(message.Nick())
 		if err != nil {
-			pm = h.queryHandler.AddPrivateMessage(message.Nick())
+			pm = h.queryHandler.AddQuery(message.Nick())
 		}
 		pm.AddMessage(mess)
 	} else {

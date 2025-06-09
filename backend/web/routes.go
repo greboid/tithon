@@ -405,7 +405,7 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	channel := connection.GetChannel(channelID)
 	if channel == nil {
-		privateMessage := connection.GetPrivateMessage(channelID)
+		privateMessage := connection.GetQuery(channelID)
 		if privateMessage == nil {
 			slog.Debug("Invalid change channel call, unknown channel or private message", "server", serverID, "id", channelID)
 			return

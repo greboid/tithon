@@ -4,13 +4,13 @@ import (
 	uniqueid "github.com/albinj12/unique-id"
 )
 
-type PrivateMessage struct {
+type Query struct {
 	*Window
 }
 
-func NewPrivateMessage(connection *Connection, name string) *PrivateMessage {
+func NewQuery(connection *Connection, name string) *Query {
 	s, _ := uniqueid.Generateid("a", 5, "p")
-	privateMessage := &PrivateMessage{
+	query := &Query{
 		Window: &Window{
 			id:         s,
 			name:       name,
@@ -18,6 +18,6 @@ func NewPrivateMessage(connection *Connection, name string) *PrivateMessage {
 			connection: connection,
 		},
 	}
-	privateMessage.Window.tabCompleter = NewPrivateMessageTabCompleter(privateMessage)
-	return privateMessage
+	query.Window.tabCompleter = NewQueryTabCompleter(query)
+	return query
 }

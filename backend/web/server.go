@@ -33,7 +33,7 @@ type Server struct {
 	connectionManager    *irc.ConnectionManager
 	commands             *irc.CommandManager
 	activeWindow         *irc.Window
-	activePrivateMessage *irc.PrivateMessage
+	activeQuery          *irc.Query
 	fixedPort            int
 	templates            *template.Template
 	activeLock           sync.Mutex
@@ -176,16 +176,16 @@ func (s *Server) getServerList() *ServerList {
 			}
 		}
 
-		privateMessages := connections[i].GetPrivateMessages()
-		for j := range privateMessages {
+		queries := connections[i].GetQueries()
+		for j := range queries {
 			windowIndex := slices.IndexFunc(server.Children, func(item *ServerListItem) bool {
-				return item.Window == privateMessages[j].Window
+				return item.Window == queries[j].Window
 			})
 			if windowIndex == -1 {
 				child := &ServerListItem{
-					Window:   privateMessages[j].Window,
-					Link:     connections[i].GetID() + "/" + privateMessages[j].GetID(),
-					Name:     privateMessages[j].GetName(),
+					Window:   queries[j].Window,
+					Link:     connections[i].GetID() + "/" + queries[j].GetID(),
+					Name:     queries[j].GetName(),
 					Children: nil,
 				}
 				server.Children = append(server.Children, child)

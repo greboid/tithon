@@ -14,7 +14,7 @@ type TabCompleter interface {
 
 type NoopTabCompleter struct{}
 
-type PMTabCompleter struct{}
+type QueryTabCompleter struct{}
 
 type ChannelTabCompleter struct {
 	channel        userList
@@ -26,7 +26,7 @@ type ChannelTabCompleter struct {
 	orpos          int
 }
 
-func NewPrivateMessageTabCompleter(pm *PrivateMessage) TabCompleter {
+func NewQueryTabCompleter(query *Query) TabCompleter {
 	return &NoopTabCompleter{}
 }
 

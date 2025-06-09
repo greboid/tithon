@@ -31,7 +31,7 @@ type Connection struct {
 	saslPassword      string
 	preferredNickname string
 	channels          map[string]*Channel
-	pms               map[string]*PrivateMessage
+	pms               map[string]*Query
 	mutex             sync.Mutex
 	callbackHandler   *Handler
 	supportsFileHost  bool
@@ -60,8 +60,8 @@ func NewConnection(conf *config.Config, id string, hostname string, port int, tl
 		saslLogin:         sasllogin,
 		saslPassword:      saslpassword,
 		preferredNickname: profile.nickname,
-		channels:          map[string]*Channel{},
-		pms:               map[string]*PrivateMessage{},
+ 	channels:          map[string]*Channel{},
+ 	pms:               map[string]*Query{},
 		connection: &ircevent.Connection{
 			Timeout:      10 * time.Second,
 			Server:       fmt.Sprintf("%s:%d", hostname, port),
@@ -296,39 +296,39 @@ func (c *Connection) RemoveChannel(s string) {
 	delete(c.channels, s)
 }
 
-func (c *Connection) GetPrivateMessages() []*PrivateMessage {
+func (c *Connection) GetQueries() []*Query {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	pms := slices.Collect(maps.Values(c.pms))
-	slices.SortStableFunc(pms, func(a, b *PrivateMessage) int {
+	slices.SortStableFunc(pms, func(a, b *Query) int {
 		return strings.Compare(strings.ToLower(a.name), strings.ToLower(b.name))
 	})
 	return pms
 }
 
-func (c *Connection) GetPrivateMessage(id string) *PrivateMessage {
+func (c *Connection) GetQuery(id string) *Query {
 	return c.pms[id]
 }
 
-func (c *Connection) GetPrivateMessageByName(name string) (*PrivateMessage, error) {
-	for _, pm := range c.GetPrivateMessages() {
+func (c *Connection) GetQueryByName(name string) (*Query, error) {
+	for _, pm := range c.GetQueries() {
 		if strings.ToLower(pm.name) == strings.ToLower(name) {
 			return pm, nil
 		}
 	}
-	return nil, errors.New("private message not found")
+	return nil, errors.New("query not found")
 }
 
-func (c *Connection) AddPrivateMessage(name string) *PrivateMessage {
+func (c *Connection) AddQuery(name string) *Query {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	pm := NewPrivateMessage(c, name)
+	pm := NewQuery(c, name)
 	c.pms[pm.id] = pm
 	return pm
 }
 
-func (c *Connection) RemovePrivateMessage(id string) {
+func (c *Connection) RemoveQuery(id string) {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -395,11 +395,11 @@ func (c *Connection) SendMessage(window string, message string) error {
 	defer c.ut.SetPendingUpdate()
 	channel := c.GetChannel(window)
 	if channel == nil {
-		pm := c.GetPrivateMessage(window)
+		pm := c.GetQuery(window)
 		if pm == nil {
-			return errors.New("not on a channel or in a private message")
+			return errors.New("not on a channel or in a query")
 		}
-		return c.SendPrivateMessage(pm.name, message)
+		return c.SendQuery(pm.name, message)
 	}
 
 	//PRIVMSG #channel :message == 10 + channel name
@@ -418,11 +418,11 @@ func (c *Connection) SendMessage(window string, message string) error {
 	return nil
 }
 
-func (c *Connection) SendPrivateMessage(target string, message string) error {
+func (c *Connection) SendQuery(target string, message string) error {
 	defer c.ut.SetPendingUpdate()
-	pm, err := c.GetPrivateMessageByName(target)
+	pm, err := c.GetQueryByName(target)
 	if err != nil {
-		pm = c.AddPrivateMessage(target)
+		pm = c.AddQuery(target)
 	}
 
 	//PRIVMSG nickname :message == 10 + nickname
@@ -444,11 +444,11 @@ func (c *Connection) SendPrivateMessage(target string, message string) error {
 func (c *Connection) SendNotice(window string, message string) error {
 	channel := c.GetChannel(window)
 	if channel == nil {
-		pm := c.GetPrivateMessage(window)
+		pm := c.GetQuery(window)
 		if pm == nil {
-			return errors.New("not on a channel or in a private message")
+			return errors.New("not on a channel or in a query")
 		}
-		return c.SendPrivateNotice(pm.name, message)
+		return c.SendQueryNotice(pm.name, message)
 	}
 
 	//NOTICE #channel :message == 9 + channel name
@@ -467,11 +467,11 @@ func (c *Connection) SendNotice(window string, message string) error {
 	return nil
 }
 
-func (c *Connection) SendPrivateNotice(target string, message string) error {
+func (c *Connection) SendQueryNotice(target string, message string) error {
 	defer c.ut.SetPendingUpdate()
-	pm, err := c.GetPrivateMessageByName(target)
+	pm, err := c.GetQueryByName(target)
 	if err != nil {
-		pm = c.AddPrivateMessage(target)
+		pm = c.AddQuery(target)
 	}
 
 	//NOTICE nickname :message == 9 + nickname

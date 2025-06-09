@@ -7,7 +7,7 @@ func (c Msg) GetName() string {
 }
 
 func (c Msg) GetHelp() string {
-	return "Performs an action in a channel or private message"
+	return "Sends a message to a channel"
 }
 
 func (c Msg) Execute(_ *ConnectionManager, window *Window, input string) error {

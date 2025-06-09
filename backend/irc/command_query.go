@@ -5,17 +5,17 @@ import (
 	"strings"
 )
 
-type Query struct{}
+type QueryCommand struct{}
 
-func (c Query) GetName() string {
+func (c QueryCommand) GetName() string {
 	return "query"
 }
 
-func (c Query) GetHelp() string {
-	return "Opens a private message window with the specified user"
+func (c QueryCommand) GetHelp() string {
+	return "Opens a query window with the specified user"
 }
 
-func (c Query) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c QueryCommand) Execute(_ *ConnectionManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
@@ -26,13 +26,13 @@ func (c Query) Execute(_ *ConnectionManager, window *Window, input string) error
 	}
 	target := parts[0]
 
-	_, err := window.connection.GetPrivateMessageByName(target)
+	_, err := window.connection.GetQueryByName(target)
 	if err != nil {
-		window.connection.AddPrivateMessage(target)
+		window.connection.AddQuery(target)
 	}
 
 	if len(parts) > 1 && parts[1] != "" {
-		err = window.connection.SendPrivateMessage(target, parts[1])
+		err = window.connection.SendQuery(target, parts[1])
 		if err != nil {
 			return err
 		}

@@ -8,6 +8,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      SSH_AUTH_SOCK: /tmp/ssh_agent.sock
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
@@ -21,10 +23,54 @@ jobs:
           cd frontend
           npm install
           npm run publish
+
       - name: Update AUR
-        uses: varrcan/aur-publish-action@v1
-        with:
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          package_name: tithon
-          git_username: Github Action
-          git_email: greboid@github
+        run: |
+          #Get new version from REF, stripping v
+          VERSION=${GITHUB_REF#refs/tags/v}
+          
+          #Install Arch package tools
+          sudo apt update
+          sudo apt install -y pacman-package-manager
+
+          #Setup SSH Agent
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          touch ~/.ssh/github_actions
+          chmod 600 ~/.ssh/github_actions
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/github_actions
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add ~/.ssh/github_actions
+
+          #Add aur to known hosts
+          mkdir -p ~/.ssh
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+          #Configure git
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "greboid@github"
+          git config --global advice.detachedHead false
+
+          #Clone the AUR package
+          git clone ssh://aur@aur.archlinux.org/tithon.git aur-repo
+          cd aur-repo
+
+          #Update the PKGBUILD with the version
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+
+          #Update .SRCINFO
+          makepkg --printsrcinfo > .SRCINFO
+
+          #Stage file in git
+          git add PKGBUILD .SRCINFO
+
+          #Check if no changed and exit
+          if git diff --staged --quiet; then
+            echo "No changes to commit. PKGBUILD is already up to date."
+            exit 0
+          fi
+
+          #Push changes
+          git commit -m "Update to version $VERSION"
+          git push

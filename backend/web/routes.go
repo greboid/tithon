@@ -405,11 +405,17 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	channel := connection.GetChannel(channelID)
 	if channel == nil {
-		slog.Debug("Changing Window", "window", s.getActiveWindow().GetID())
-		return
+		privateMessage := connection.GetPrivateMessage(channelID)
+		if privateMessage == nil {
+			slog.Debug("Invalid change channel call, unknown channel or private message", "server", serverID, "id", channelID)
+			return
+		}
+		s.setActiveWindow(privateMessage.Window)
+		slog.Debug("Changing Window to private message", "window", privateMessage.Window.GetID())
+	} else {
+		s.setActiveWindow(channel.Window)
+		slog.Debug("Changing Window to channel", "window", channel.Window.GetID())
 	}
-	s.setActiveWindow(channel.Window)
-	slog.Debug("Changing Window", "window", channel.Window.GetID())
 	s.updateURL(w, r)
 	s.UpdateUI(w, r)
 }

@@ -175,6 +175,23 @@ func (s *Server) getServerList() *ServerList {
 				s.serverList.OrderedList = append(s.serverList.OrderedList, child)
 			}
 		}
+
+		privateMessages := connections[i].GetPrivateMessages()
+		for j := range privateMessages {
+			windowIndex := slices.IndexFunc(server.Children, func(item *ServerListItem) bool {
+				return item.Window == privateMessages[j].Window
+			})
+			if windowIndex == -1 {
+				child := &ServerListItem{
+					Window:   privateMessages[j].Window,
+					Link:     connections[i].GetID() + "/" + privateMessages[j].GetID(),
+					Name:     privateMessages[j].GetName(),
+					Children: nil,
+				}
+				server.Children = append(server.Children, child)
+				s.serverList.OrderedList = append(s.serverList.OrderedList, child)
+			}
+		}
 	}
 	return s.serverList
 }

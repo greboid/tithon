@@ -296,6 +296,45 @@ func (c *Connection) RemoveChannel(s string) {
 	delete(c.channels, s)
 }
 
+func (c *Connection) GetPrivateMessages() []*PrivateMessage {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	pms := slices.Collect(maps.Values(c.pms))
+	slices.SortStableFunc(pms, func(a, b *PrivateMessage) int {
+		return strings.Compare(strings.ToLower(a.name), strings.ToLower(b.name))
+	})
+	return pms
+}
+
+func (c *Connection) GetPrivateMessage(id string) *PrivateMessage {
+	return c.pms[id]
+}
+
+func (c *Connection) GetPrivateMessageByName(name string) (*PrivateMessage, error) {
+	for _, pm := range c.GetPrivateMessages() {
+		if strings.ToLower(pm.name) == strings.ToLower(name) {
+			return pm, nil
+		}
+	}
+	return nil, errors.New("private message not found")
+}
+
+func (c *Connection) AddPrivateMessage(name string) *PrivateMessage {
+	defer c.ut.SetPendingUpdate()
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	pm := NewPrivateMessage(c, name)
+	c.pms[pm.id] = pm
+	return pm
+}
+
+func (c *Connection) RemovePrivateMessage(id string) {
+	defer c.ut.SetPendingUpdate()
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	delete(c.pms, id)
+}
+
 func (c *Connection) HasCapability(name string) bool {
 	_, exists := c.connection.AcknowledgedCaps()[name]
 	return exists
@@ -356,7 +395,11 @@ func (c *Connection) SendMessage(window string, message string) error {
 	defer c.ut.SetPendingUpdate()
 	channel := c.GetChannel(window)
 	if channel == nil {
-		return errors.New("not on a channel")
+		pm := c.GetPrivateMessage(window)
+		if pm == nil {
+			return errors.New("not on a channel or in a private message")
+		}
+		return c.SendPrivateMessage(pm.name, message)
 	}
 
 	//PRIVMSG #channel :message == 10 + channel name
@@ -375,10 +418,37 @@ func (c *Connection) SendMessage(window string, message string) error {
 	return nil
 }
 
+func (c *Connection) SendPrivateMessage(target string, message string) error {
+	defer c.ut.SetPendingUpdate()
+	pm, err := c.GetPrivateMessageByName(target)
+	if err != nil {
+		pm = c.AddPrivateMessage(target)
+	}
+
+	//PRIVMSG nickname :message == 10 + nickname
+	messageParts := c.SplitMessage(10+len(target), message)
+
+	for _, part := range messageParts {
+		if !c.HasCapability("echo-message") {
+			pm.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+		}
+		err = c.connection.Send("PRIVMSG", target, part)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *Connection) SendNotice(window string, message string) error {
 	channel := c.GetChannel(window)
 	if channel == nil {
-		return errors.New("not on a channel")
+		pm := c.GetPrivateMessage(window)
+		if pm == nil {
+			return errors.New("not on a channel or in a private message")
+		}
+		return c.SendPrivateNotice(pm.name, message)
 	}
 
 	//NOTICE #channel :message == 9 + channel name
@@ -389,6 +459,29 @@ func (c *Connection) SendNotice(window string, message string) error {
 			channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err := c.connection.Send("NOTICE", channel.name, part)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Connection) SendPrivateNotice(target string, message string) error {
+	defer c.ut.SetPendingUpdate()
+	pm, err := c.GetPrivateMessageByName(target)
+	if err != nil {
+		pm = c.AddPrivateMessage(target)
+	}
+
+	//NOTICE nickname :message == 9 + nickname
+	messageParts := c.SplitMessage(9+len(target), message)
+
+	for _, part := range messageParts {
+		if !c.HasCapability("echo-message") {
+			pm.AddMessage(NewNotice(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+		}
+		err = c.connection.Send("NOTICE", target, part)
 		if err != nil {
 			return err
 		}

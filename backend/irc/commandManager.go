@@ -42,6 +42,7 @@ func NewCommandManager(conf *config.Config) *CommandManager {
 		&SendNotice{},
 		&Whois{},
 		&Notify{nm: cm},
+		&Query{},
 	}
 	cm.conf = conf
 	return cm

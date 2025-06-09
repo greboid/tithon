@@ -18,6 +18,11 @@ type channelHandler interface {
 	RemoveChannel(s string)
 }
 
+type queryHandler interface {
+	GetPrivateMessageByName(name string) (*PrivateMessage, error)
+	AddPrivateMessage(name string) *PrivateMessage
+}
+
 type callbackHandler interface {
 	AddConnectCallback(callback func(message ircmsg.Message))
 	AddDisconnectCallback(callback func(message ircmsg.Message))
@@ -57,6 +62,7 @@ type modeChange struct {
 
 type Handler struct {
 	channelHandler      channelHandler
+	queryHandler        queryHandler
 	callbackHandler     callbackHandler
 	infoHandler         infoHandler
 	modeHandler         modeHandler
@@ -70,6 +76,7 @@ type Handler struct {
 func NewHandler(connection *Connection) *Handler {
 	return &Handler{
 		channelHandler:      connection,
+		queryHandler:        connection,
 		callbackHandler:     connection,
 		infoHandler:         connection,
 		modeHandler:         connection,
@@ -194,8 +201,26 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 			h.notificationManager.CheckAndNotify(h.infoHandler.GetName(), channel.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 		}
 		channel.AddMessage(msg)
+	} else if strings.ToLower(message.Params[0]) == strings.ToLower(h.infoHandler.CurrentNick()) {
+		pm, err := h.queryHandler.GetPrivateMessageByName(message.Nick())
+		if err != nil {
+			pm = h.queryHandler.AddPrivateMessage(message.Nick())
+		}
+
+		msg := NewMessage(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
+		if msg.tags["chathistory"] != "true" && !msg.isMe() {
+			h.notificationManager.CheckAndNotify(h.infoHandler.GetName(), pm.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
+		}
+		pm.AddMessage(msg)
+	} else if message.Nick() == h.infoHandler.CurrentNick() {
+		pm, err := h.queryHandler.GetPrivateMessageByName(message.Params[0])
+		if err != nil {
+			pm = h.queryHandler.AddPrivateMessage(message.Nick())
+		}
+		msg := NewMessage(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
+		pm.AddMessage(msg)
 	} else {
-		slog.Warn("Unsupported DM", "message", message)
+		slog.Warn("Unsupported message target", "message", message)
 	}
 }
 
@@ -338,8 +363,14 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 			return
 		}
 		channel.AddMessage(mess)
+	} else if message.Params[0] == h.infoHandler.CurrentNick() {
+		pm, err := h.queryHandler.GetPrivateMessageByName(message.Nick())
+		if err != nil {
+			pm = h.queryHandler.AddPrivateMessage(message.Nick())
+		}
+		pm.AddMessage(mess)
 	} else {
-		slog.Warn("Unsupported DN", "notice", message)
+		slog.Warn("Unsupported notice target", "notice", message)
 	}
 }
 

@@ -5,13 +5,13 @@ import (
 )
 
 type PrivateMessage struct {
-	Window
+	*Window
 }
 
 func NewPrivateMessage(connection *Connection, name string) *PrivateMessage {
 	s, _ := uniqueid.Generateid("a", 5, "p")
 	privateMessage := &PrivateMessage{
-		Window: Window{
+		Window: &Window{
 			id:         s,
 			name:       name,
 			messages:   make([]*Message, 0),

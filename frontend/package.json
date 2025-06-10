@@ -1,6 +1,6 @@
 {
   "name": "tithon",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Modern IRC client",
   "homepage": "https://github.com/greboid/tithon#readme",
   "bugs": {

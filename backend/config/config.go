@@ -31,6 +31,7 @@ type Server struct {
 
 type UISettings struct {
 	TimestampFormat string `yaml:"timestamp_format"`
+	ShowNicklist    bool   `yaml:"show_nicklist"`
 }
 
 type Profile struct {

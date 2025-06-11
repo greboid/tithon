@@ -5,8 +5,10 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"github.com/greboid/tithon/config"
 	"github.com/greboid/tithon/irc"
 	semver "github.com/hashicorp/go-version"
+	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
 	"log/slog"
 	"net"
@@ -43,6 +45,7 @@ type Server struct {
 	uiUpdate             atomic.Bool
 	pendingNotifications chan irc.Notification
 	templateLock         sync.Mutex
+	conf                 *config.Config
 }
 
 type ServerList struct {
@@ -75,7 +78,7 @@ func getVersion() string {
 	return versionString
 }
 
-func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification) *Server {
+func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification, conf *config.Config) *Server {
 	mux := http.NewServeMux()
 	server := &Server{
 		fixedPort: fixedPort,
@@ -88,6 +91,7 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 		activeWindow:         nil,
 		serverList:           &ServerList{},
 		pendingNotifications: pendingNotifications,
+		conf:                 conf,
 	}
 	server.addRoutes(mux)
 	return server
@@ -221,4 +225,17 @@ func (s *Server) SetPendingUpdate() {
 
 func (s *Server) SetUIUpdate() {
 	s.uiUpdate.Store(true)
+}
+
+func (s *Server) handleUpdateNicklist(_ http.ResponseWriter, r *http.Request) {
+	type showNicklist struct {
+		ShowNicklist bool `json:"nicklistshow"`
+	}
+	sn := &showNicklist{}
+	err := datastar.ReadSignals(r, sn)
+	if err != nil {
+		slog.Debug("Error reading input", "error", err)
+		return
+	}
+	s.conf.UISettings.ShowNicklist = sn.ShowNicklist
 }

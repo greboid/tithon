@@ -48,7 +48,7 @@ func main() {
 	commandManager := irc.NewCommandManager(conf)
 	connectionManager := irc.NewConnectionManager(conf, commandManager)
 	defer connectionManager.Stop()
-	server := web.NewServer(connectionManager, commandManager, *FixedPort, pendingNotifications)
+	server := web.NewServer(connectionManager, commandManager, *FixedPort, pendingNotifications, conf)
 	defer server.Stop()
 	connectionManager.SetUpdateTrigger(server)
 	connectionManager.SetNotificationManager(notificationManager)

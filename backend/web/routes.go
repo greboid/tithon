@@ -107,6 +107,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /nextWindowUp", s.handleNextWindowUp)
 	mux.HandleFunc("GET /nextWindowDown", s.handleNextWindowDown)
 	mux.HandleFunc("GET /tab", s.handleTab)
+	mux.HandleFunc("GET /nicklistshow", s.handleUpdateNicklist)
 }
 
 func (s *Server) createTemplateWatcher(templates fs.FS) {
@@ -231,7 +232,15 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
+	dataBytes, _ := json.Marshal(struct {
+		Show bool `json:"nicklistshow"`
+	}{s.conf.UISettings.ShowNicklist})
 	var data bytes.Buffer
+	data.WriteString(datastar.DoubleNewLine)
+	err := sse.MergeSignals(dataBytes, datastar.WithOnlyIfMissing(true))
+	if err != nil {
+		slog.Debug("Error merging nicklist signal", "error", err)
+	}
 	s.outputTemplate(&data, "Serverlist.gohtml", s.getServerList())
 	s.outputTemplate(&data, "Nicksettings.gohtml", nil)
 	if s.getActiveWindow() == nil {
@@ -243,7 +252,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		s.outputTemplate(&data, "Messages.gohtml", s.getActiveWindow().GetMessages())
 		s.outputTemplate(&data, "Nicklist.gohtml", s.getActiveWindow().GetUsers())
 	}
-	err := sse.MergeFragments(data.String())
+	err = sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return

@@ -62,7 +62,6 @@ jobs:
           git clone ssh://aur@aur.archlinux.org/tithon.git aur-repo
           cd aur-repo
           git pull --tags
-          git checkout v${VERSION}
 
           #Update the PKGBUILD with the version
           sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD

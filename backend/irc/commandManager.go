@@ -29,7 +29,7 @@ type CommandManager struct {
 	nm       *NotificationManager
 }
 
-func NewCommandManager(conf *config.Config) *CommandManager {
+func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandManager {
 	cm := &CommandManager{}
 	cm.commands = []Command{
 		&SendAction{},
@@ -43,6 +43,9 @@ func NewCommandManager(conf *config.Config) *CommandManager {
 		&Whois{},
 		&Notify{nm: cm},
 		&QueryCommand{},
+		&Settings{
+			showSettings: showSettings,
+		},
 	}
 	cm.conf = conf
 	return cm

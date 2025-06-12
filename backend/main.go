@@ -43,12 +43,13 @@ func main() {
 			return
 		}
 	}()
+	showSettings := make(chan bool)
 	pendingNotifications := make(chan irc.Notification)
 	notificationManager := irc.NewNotificationManager(pendingNotifications, conf.Notifications.Triggers)
-	commandManager := irc.NewCommandManager(conf)
+	commandManager := irc.NewCommandManager(conf, showSettings)
 	connectionManager := irc.NewConnectionManager(conf, commandManager)
 	defer connectionManager.Stop()
-	server := web.NewServer(connectionManager, commandManager, *FixedPort, pendingNotifications, conf)
+	server := web.NewServer(connectionManager, commandManager, *FixedPort, pendingNotifications, conf, showSettings)
 	defer server.Stop()
 	connectionManager.SetUpdateTrigger(server)
 	connectionManager.SetNotificationManager(notificationManager)

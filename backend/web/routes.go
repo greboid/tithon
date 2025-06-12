@@ -254,6 +254,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		s.outputTemplate(&data, "Messages.gohtml", s.getActiveWindow().GetMessages())
 		s.outputTemplate(&data, "Nicklist.gohtml", s.getActiveWindow().GetUsers())
 	}
+
 	err = sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
@@ -302,6 +303,8 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 			if yes := s.pendingUpdate.Swap(false); yes {
 				s.UpdateUI(w, r)
 			}
+		case <-s.showSettings:
+			s.handleShowSettings(w, r)
 		case notification := <-s.pendingNotifications:
 			slog.Debug("Sending notification", "notification", notification)
 			err := datastar.NewSSE(w, r).ExecuteScript(fmt.Sprintf(`notify("%s", "%s", %t, %t, "")`, notification.Title, notification.Text, notification.Popup, notification.Sound), datastar.WithExecuteScriptAutoRemove(true))

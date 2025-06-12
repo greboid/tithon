@@ -49,6 +49,7 @@ type Server struct {
 	inputHistory         []string
 	historyPosition      int
 	historyLock          sync.Mutex
+	showSettings         chan bool
 }
 
 type ServerList struct {
@@ -85,7 +86,7 @@ func getVersion() string {
 	return versionString
 }
 
-func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification, conf *config.Config) *Server {
+func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification, conf *config.Config, showSettings chan bool) *Server {
 	mux := http.NewServeMux()
 	server := &Server{
 		fixedPort: fixedPort,
@@ -101,6 +102,7 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 		conf:                 conf,
 		inputHistory:         make([]string, 0),
 		historyPosition:      -1,
+		showSettings:         showSettings,
 	}
 	server.addRoutes(mux)
 	return server

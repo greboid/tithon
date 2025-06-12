@@ -108,6 +108,8 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /nextWindowDown", s.handleNextWindowDown)
 	mux.HandleFunc("GET /tab", s.handleTab)
 	mux.HandleFunc("GET /nicklistshow", s.handleUpdateNicklist)
+	mux.HandleFunc("GET /historyUp", s.handleHistoryUp)
+	mux.HandleFunc("GET /historyDown", s.handleHistoryDown)
 }
 
 func (s *Server) createTemplateWatcher(templates fs.FS) {
@@ -470,6 +472,14 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	if input == "" {
 		return
 	}
+
+	s.historyLock.Lock()
+	if len(s.inputHistory) == 0 || s.inputHistory[len(s.inputHistory)-1] != input {
+		s.inputHistory = append(s.inputHistory, input)
+	}
+	s.historyPosition = -1
+	s.historyLock.Unlock()
+
 	s.commands.Execute(s.connectionManager, s.getActiveWindow(), input)
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)

@@ -46,6 +46,9 @@ type Server struct {
 	pendingNotifications chan irc.Notification
 	templateLock         sync.Mutex
 	conf                 *config.Config
+	inputHistory         []string
+	historyPosition      int
+	historyLock          sync.Mutex
 }
 
 type ServerList struct {
@@ -58,6 +61,10 @@ type ServerListItem struct {
 	Link     string
 	Name     string
 	Children []*ServerListItem
+}
+
+type inputValues struct {
+	Input string `json:"input"`
 }
 
 func getVersion() string {
@@ -92,6 +99,8 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 		serverList:           &ServerList{},
 		pendingNotifications: pendingNotifications,
 		conf:                 conf,
+		inputHistory:         make([]string, 0),
+		historyPosition:      -1,
 	}
 	server.addRoutes(mux)
 	return server
@@ -238,4 +247,76 @@ func (s *Server) handleUpdateNicklist(_ http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.conf.UISettings.ShowNicklist = sn.ShowNicklist
+}
+
+func (s *Server) handleHistoryUp(w http.ResponseWriter, r *http.Request) {
+	s.historyLock.Lock()
+	defer s.historyLock.Unlock()
+
+	if len(s.inputHistory) == 0 {
+		return
+	}
+
+	if s.historyPosition == -1 {
+		inputData := &inputValues{}
+		err := datastar.ReadSignals(r, inputData)
+		if err != nil {
+			slog.Debug("Error reading input", "error", err)
+			return
+		}
+
+		if inputData.Input != "" && (len(s.inputHistory) == 0 || s.inputHistory[len(s.inputHistory)-1] != inputData.Input) {
+			s.inputHistory = append(s.inputHistory, inputData.Input)
+			s.historyPosition = len(s.inputHistory) - 1
+		}
+	}
+
+	if s.historyPosition == -1 {
+		s.historyPosition = len(s.inputHistory) - 1
+	} else if s.historyPosition > 0 {
+		s.historyPosition--
+	}
+
+	inputData := &inputValues{
+		Input: s.inputHistory[s.historyPosition],
+	}
+	sse := datastar.NewSSE(w, r)
+	err := sse.MarshalAndMergeSignals(inputData)
+	if err != nil {
+		slog.Debug("Error merging signals", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleHistoryDown(w http.ResponseWriter, r *http.Request) {
+	s.historyLock.Lock()
+	defer s.historyLock.Unlock()
+
+	if len(s.inputHistory) == 0 || s.historyPosition == -1 {
+		return
+	}
+
+	if s.historyPosition < len(s.inputHistory)-1 {
+		s.historyPosition++
+
+		inputData := &inputValues{
+			Input: s.inputHistory[s.historyPosition],
+		}
+		sse := datastar.NewSSE(w, r)
+		err := sse.MarshalAndMergeSignals(inputData)
+		if err != nil {
+			slog.Debug("Error merging signals", "error", err)
+		}
+	} else {
+		inputData := &inputValues{
+			Input: "",
+		}
+		sse := datastar.NewSSE(w, r)
+		err := sse.MarshalAndMergeSignals(inputData)
+		if err != nil {
+			slog.Debug("Error merging signals", "error", err)
+			return
+		}
+		s.historyPosition = -1
+	}
 }

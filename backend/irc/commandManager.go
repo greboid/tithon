@@ -59,6 +59,13 @@ func (cm *CommandManager) Execute(connections *ConnectionManager, window *Window
 	first := strings.Split(input, " ")[0]
 	for i := range cm.commands {
 		if first == cm.commands[i].GetName() {
+			if len(input) == len(first) {
+				err := cm.commands[i].Execute(connections, window, "")
+				if err != nil {
+					cm.showCommandError(window, cm.commands[i], err.Error())
+				}
+				return
+			}
 			input = strings.TrimPrefix(input, first+" ")
 			input = emoji.Parse(input)
 			err := cm.commands[i].Execute(connections, window, input)

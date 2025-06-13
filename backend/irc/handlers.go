@@ -368,6 +368,12 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 			pm = h.queryHandler.AddQuery(message.Nick())
 		}
 		pm.AddMessage(mess)
+	} else if strings.ToLower(message.Params[0]) == strings.ToLower(h.infoHandler.CurrentNick()) {
+		pm, err := h.queryHandler.GetQueryByName(message.Nick())
+		if err != nil {
+			pm = h.queryHandler.AddQuery(message.Nick())
+		}
+		pm.AddMessage(mess)
 	} else {
 		slog.Warn("Unsupported notice target", "notice", message)
 	}

@@ -60,8 +60,8 @@ func NewConnection(conf *config.Config, id string, hostname string, port int, tl
 		saslLogin:         sasllogin,
 		saslPassword:      saslpassword,
 		preferredNickname: profile.nickname,
- 	channels:          map[string]*Channel{},
- 	pms:               map[string]*Query{},
+		channels:          map[string]*Channel{},
+		pms:               map[string]*Query{},
 		connection: &ircevent.Connection{
 			Timeout:      10 * time.Second,
 			Server:       fmt.Sprintf("%s:%d", hostname, port),
@@ -150,7 +150,7 @@ func (c *Connection) Connect() {
 		go c.scheduleReconnect()
 	})
 
-	c.AddMessage(NewEvent(c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
+	c.callbackHandler.addEvent(EventConnecting, false, fmt.Sprintf("Connecting to %s", c.connection.Server))
 	if !c.connection.Connected() {
 		c.resetReconnectValues()
 		err := c.connection.Connect()
@@ -186,8 +186,7 @@ func (c *Connection) scheduleReconnect() {
 		delay = 1 * time.Minute
 	}
 
-	c.AddMessage(NewEvent(c.conf.UISettings.TimestampFormat, false,
-		fmt.Sprintf("Reconnection attempt %d scheduled in %v", c.reconnectAttempts, delay)))
+	c.callbackHandler.addEvent(EventConnecting, false, fmt.Sprintf("Reconnection attempt %d scheduled in %v", c.reconnectAttempts, delay))
 
 	if c.reconnectTimer != nil {
 		c.reconnectTimer.Stop()
@@ -199,8 +198,7 @@ func (c *Connection) scheduleReconnect() {
 		defer c.ut.SetPendingUpdate()
 		c.reconnecting = false
 
-		c.AddMessage(NewEvent(c.conf.UISettings.TimestampFormat, false,
-			fmt.Sprintf("Attempting to reconnect (attempt %d)...", c.reconnectAttempts)))
+		c.callbackHandler.addEvent(EventConnecting, false, fmt.Sprintf("Attempting to reconnect (attempt %d)...", c.reconnectAttempts))
 
 		if !c.connection.Connected() {
 			err := c.connection.Connect()

@@ -15,6 +15,7 @@ import (
 const v3TimestampFormat = "2006-01-02T15:04:05.000Z"
 
 type MessageType int
+type EventType int
 
 const (
 	Normal = iota
@@ -26,6 +27,19 @@ const (
 	Highlight
 	HighlightAction
 	HighlightNotice
+)
+
+const (
+	EventJoin = iota
+	EventPart
+	EventQuit
+	EventKick
+	EventNick
+	EventTopic
+	EventMode
+	EventConnecting
+	EventDisconnected
+	EventWhois
 )
 
 type Message struct {
@@ -44,7 +58,7 @@ func NewNotice(timeFormat string, me bool, nickname string, message string, tags
 	return newMessage(timeFormat, me, nickname, message, Notice, tags, highlights)
 }
 
-func NewEvent(timeFormat string, me bool, message string) *Message {
+func NewEvent(eventType EventType, timeFormat string, me bool, message string) *Message {
 	return newMessage(timeFormat, me, "", message, Event, nil, nil)
 }
 

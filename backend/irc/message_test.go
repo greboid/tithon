@@ -166,7 +166,7 @@ func TestNewEvent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := NewEvent(tt.timeFormat, tt.me, tt.message)
+			msg := NewEvent(EventJoin, tt.timeFormat, tt.me, tt.message)
 
 			assert.NotNil(t, msg, "NewEvent() should not return nil")
 			assert.Equal(t, tt.wantType, msg.GetType(), "NewEvent() type mismatch")

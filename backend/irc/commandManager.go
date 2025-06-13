@@ -43,6 +43,7 @@ func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandMana
 		&Whois{},
 		&Notify{nm: cm},
 		&QueryCommand{},
+		&AddServer{},
 		&Settings{
 			showSettings: showSettings,
 		},

@@ -5,7 +5,6 @@
             data-signals-bs__ifmissing="0"
             data-signals-tab__ifmissing="1"
             data-signals-input__ifmissing=""
-            data-on-keydown="evt.key == 'Tab' ? $tab++ && evt.preventDefault() : null"
             data-on-signal-change-tab="@get('/tab')"
             data-on-submit="@get('/input')">
         <label for="textInput" hidden aria-hidden="true">Input</label>
@@ -17,7 +16,12 @@
                 data-bind-input=""
                 data-on-selectionChange="$char = evt.target.selectionStart"
                 data-on-signal-change-bs="$inputField.selectionStart = $bs; $inputField.selectionEnd = $bs; $bs = -1"
-                data-on-keydown="evt.key == 'Enter' && !evt.shiftKey ? @get('/input') && evt.preventDefault() : evt.key == 'ArrowUp' ? @get('/historyUp') && evt.preventDefault() : evt.key == 'ArrowDown' ? @get('/historyDown') && evt.preventDefault() : null"
+                data-on-keydown="
+                    evt.key == 'Tab' && $tab++ && evt.preventDefault();
+                    evt.key == 'Enter' && !evt.shiftKey && @get('/input') && evt.preventDefault();
+                    evt.key == 'ArrowUp' && @get('/historyUp') && evt.preventDefault();
+                    evt.key == 'ArrowDown' && @get('/historyDown') && evt.preventDefault();
+                "
                 autocomplete="off"
         ></textarea>
     </form>

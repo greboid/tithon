@@ -44,6 +44,7 @@ func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandMana
 		&Notify{nm: cm},
 		&QueryCommand{},
 		&AddServer{},
+		&Disconnect{},
 		&Settings{
 			showSettings: showSettings,
 		},

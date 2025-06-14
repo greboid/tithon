@@ -94,6 +94,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{$}", s.handleIndex)
 	mux.HandleFunc("GET /update", s.handleUpdate)
 	mux.HandleFunc("GET /showSettings", s.handleShowSettings)
+	mux.HandleFunc("GET /saveSettings", s.handleSaveSettings)
 	mux.HandleFunc("GET /showAddServer", s.handleShowAddServer)
 	mux.HandleFunc("GET /addServer", s.handleAddServer)
 	mux.HandleFunc("GET /changeWindow/{server}", s.handleChangeServer)
@@ -321,13 +322,24 @@ func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
 	slog.Debug("Showing settings")
 	var data bytes.Buffer
-	err := s.templates.ExecuteTemplate(&data, "SettingsPage.gohtml", getVersion())
+
+	type SettingsData struct {
+		Version         string
+		TimestampFormat string
+		ShowNicklist    bool
+	}
+
+	settingsData := SettingsData{
+		Version:         getVersion(),
+		TimestampFormat: s.conf.UISettings.TimestampFormat,
+		ShowNicklist:    s.conf.UISettings.ShowNicklist,
+	}
+
+	err := s.templates.ExecuteTemplate(&data, "SettingsPage.gohtml", settingsData)
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
 	}
-	err = sse.MergeFragments(data.String(), func(options *datastar.MergeFragmentOptions) {
-		options.Selector = "#dialog"
-	})
+	err = sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
@@ -378,9 +390,7 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
 	}
-	err = sse.MergeFragments(data.String(), func(options *datastar.MergeFragmentOptions) {
-		options.Selector = "#dialog"
-	})
+	err = sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
@@ -693,5 +703,122 @@ func (s *Server) handleTab(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Unable to merge signals", "error", err)
 		return
+	}
+}
+
+func (s *Server) handleUpdateNicklist(_ http.ResponseWriter, r *http.Request) {
+	type showNicklist struct {
+		ShowNicklist bool `json:"nicklistshow"`
+	}
+	sn := &showNicklist{}
+	err := datastar.ReadSignals(r, sn)
+	if err != nil {
+		slog.Debug("Error reading input", "error", err)
+		return
+	}
+	s.conf.UISettings.ShowNicklist = sn.ShowNicklist
+}
+
+func (s *Server) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	timestampFormat := r.URL.Query().Get("timestampFormat")
+	showNicklist := r.URL.Query().Get("showNicklist") == "on"
+
+	s.conf.UISettings.TimestampFormat = timestampFormat
+	s.conf.UISettings.ShowNicklist = showNicklist
+
+	err := s.conf.Save()
+	if err != nil {
+		slog.Error("Error saving config", "error", err)
+	}
+
+	sse := datastar.NewSSE(w, r)
+	var data bytes.Buffer
+	err = s.templates.ExecuteTemplate(&data, "EmptyDialog.gohtml", nil)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = sse.ExecuteScript(`document.getElementById('dialog').close()`)
+	if err != nil {
+		slog.Debug("Error executing script", "error", err)
+		return
+	}
+	err = sse.MergeFragments(data.String())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleHistoryUp(w http.ResponseWriter, r *http.Request) {
+	s.historyLock.Lock()
+	defer s.historyLock.Unlock()
+
+	if len(s.inputHistory) == 0 {
+		return
+	}
+
+	if s.historyPosition == -1 {
+		inputData := &inputValues{}
+		err := datastar.ReadSignals(r, inputData)
+		if err != nil {
+			slog.Debug("Error reading input", "error", err)
+			return
+		}
+
+		if inputData.Input != "" && (len(s.inputHistory) == 0 || s.inputHistory[len(s.inputHistory)-1] != inputData.Input) {
+			s.inputHistory = append(s.inputHistory, inputData.Input)
+			s.historyPosition = len(s.inputHistory) - 1
+		}
+	}
+
+	if s.historyPosition == -1 {
+		s.historyPosition = len(s.inputHistory) - 1
+	} else if s.historyPosition > 0 {
+		s.historyPosition--
+	}
+
+	inputData := &inputValues{
+		Input: s.inputHistory[s.historyPosition],
+	}
+	sse := datastar.NewSSE(w, r)
+	err := sse.MarshalAndMergeSignals(inputData)
+	if err != nil {
+		slog.Debug("Error merging signals", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleHistoryDown(w http.ResponseWriter, r *http.Request) {
+	s.historyLock.Lock()
+	defer s.historyLock.Unlock()
+
+	if len(s.inputHistory) == 0 || s.historyPosition == -1 {
+		return
+	}
+
+	if s.historyPosition < len(s.inputHistory)-1 {
+		s.historyPosition++
+
+		inputData := &inputValues{
+			Input: s.inputHistory[s.historyPosition],
+		}
+		sse := datastar.NewSSE(w, r)
+		err := sse.MarshalAndMergeSignals(inputData)
+		if err != nil {
+			slog.Debug("Error merging signals", "error", err)
+		}
+	} else {
+		inputData := &inputValues{
+			Input: "",
+		}
+		sse := datastar.NewSSE(w, r)
+		err := sse.MarshalAndMergeSignals(inputData)
+		if err != nil {
+			slog.Debug("Error merging signals", "error", err)
+			return
+		}
+		s.historyPosition = -1
 	}
 }

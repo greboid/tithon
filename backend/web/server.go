@@ -8,7 +8,6 @@ import (
 	"github.com/greboid/tithon/config"
 	"github.com/greboid/tithon/irc"
 	semver "github.com/hashicorp/go-version"
-	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
 	"log/slog"
 	"net"
@@ -236,89 +235,4 @@ func (s *Server) SetPendingUpdate() {
 
 func (s *Server) SetUIUpdate() {
 	s.uiUpdate.Store(true)
-}
-
-func (s *Server) handleUpdateNicklist(_ http.ResponseWriter, r *http.Request) {
-	type showNicklist struct {
-		ShowNicklist bool `json:"nicklistshow"`
-	}
-	sn := &showNicklist{}
-	err := datastar.ReadSignals(r, sn)
-	if err != nil {
-		slog.Debug("Error reading input", "error", err)
-		return
-	}
-	s.conf.UISettings.ShowNicklist = sn.ShowNicklist
-}
-
-func (s *Server) handleHistoryUp(w http.ResponseWriter, r *http.Request) {
-	s.historyLock.Lock()
-	defer s.historyLock.Unlock()
-
-	if len(s.inputHistory) == 0 {
-		return
-	}
-
-	if s.historyPosition == -1 {
-		inputData := &inputValues{}
-		err := datastar.ReadSignals(r, inputData)
-		if err != nil {
-			slog.Debug("Error reading input", "error", err)
-			return
-		}
-
-		if inputData.Input != "" && (len(s.inputHistory) == 0 || s.inputHistory[len(s.inputHistory)-1] != inputData.Input) {
-			s.inputHistory = append(s.inputHistory, inputData.Input)
-			s.historyPosition = len(s.inputHistory) - 1
-		}
-	}
-
-	if s.historyPosition == -1 {
-		s.historyPosition = len(s.inputHistory) - 1
-	} else if s.historyPosition > 0 {
-		s.historyPosition--
-	}
-
-	inputData := &inputValues{
-		Input: s.inputHistory[s.historyPosition],
-	}
-	sse := datastar.NewSSE(w, r)
-	err := sse.MarshalAndMergeSignals(inputData)
-	if err != nil {
-		slog.Debug("Error merging signals", "error", err)
-		return
-	}
-}
-
-func (s *Server) handleHistoryDown(w http.ResponseWriter, r *http.Request) {
-	s.historyLock.Lock()
-	defer s.historyLock.Unlock()
-
-	if len(s.inputHistory) == 0 || s.historyPosition == -1 {
-		return
-	}
-
-	if s.historyPosition < len(s.inputHistory)-1 {
-		s.historyPosition++
-
-		inputData := &inputValues{
-			Input: s.inputHistory[s.historyPosition],
-		}
-		sse := datastar.NewSSE(w, r)
-		err := sse.MarshalAndMergeSignals(inputData)
-		if err != nil {
-			slog.Debug("Error merging signals", "error", err)
-		}
-	} else {
-		inputData := &inputValues{
-			Input: "",
-		}
-		sse := datastar.NewSSE(w, r)
-		err := sse.MarshalAndMergeSignals(inputData)
-		if err != nil {
-			slog.Debug("Error merging signals", "error", err)
-			return
-		}
-		s.historyPosition = -1
-	}
 }

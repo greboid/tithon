@@ -5,12 +5,14 @@
         data-on-keydown__window="evt.key === 'Escape' && document.getElementById('dialog').close()"
 >
     <div>
-        <form method="dialog">
-            <div>
-                <h1>Settings v{{.}}</h1>
-            </div>
+        <form method="dialog" id="settingsForm">
+                <h1>Settings v{{.Version}}</h1>
+                    <label for="timestampFormat">Timestamp Format:</label>
+                    <input type="text" id="timestampFormat" name="timestampFormat" value="{{.TimestampFormat}}" />
+                    <label for="showNicklist">Show Nicklist:</label>
+                    <input type="checkbox" id="showNicklist" name="showNicklist" {{if .ShowNicklist}}checked{{end}} />
+            <button data-on-click="@get('/saveSettings', {contentType: 'form'})">Save</button>
+            <button data-on-click="document.getElementById('dialog').close()">Close</button>
         </form>
-        <button data-on-click="@get('/addServer', {contentType: 'form'})">Save</button>
-        <button data-on-click="document.getElementById('dialog').close()">Close</button>
     </div>
 </dialog>

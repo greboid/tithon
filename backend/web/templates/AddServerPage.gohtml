@@ -21,7 +21,7 @@
             <input type="text" name="sasllogin"/>
             <label for="saslpassword">SASL Password</label>
             <input type="password" name="saslpassword"/>
-            <button data-on-click="@get('/addServer', {contentType: 'form'})">Add</button>
+            <button data-on-click="@get('/addServer', {contentType: 'form'}) && document.getElementById('dialog').close()">Add</button>
         </form>
         <button data-on-click="document.getElementById('dialog').close()">Close</button>
     </div>

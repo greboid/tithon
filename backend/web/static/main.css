@@ -655,3 +655,28 @@ input, textarea, button {
     width: auto;
   }
 }
+
+/* Context menu styles */
+.context-menu {
+  display: none;
+  position: absolute;
+  background-color: var(--background2);
+  border: 1px solid var(--highlight);
+  border-radius: 0.25rem;
+  padding: 0.5rem 0;
+  min-width: 150px;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.context-menu-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.context-menu-item:hover {
+  background-color: var(--highlight);
+  color: var(--background);
+}
+

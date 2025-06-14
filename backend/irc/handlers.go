@@ -19,6 +19,7 @@ type channelHandler interface {
 }
 
 type queryHandler interface {
+	GetQueries() []*Query
 	GetQueryByName(name string) (*Query, error)
 	AddQuery(name string) *Query
 }
@@ -292,16 +293,31 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 
 func (h *Handler) handleDisconnected(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	h.addEvent(EventDisconnected, false, fmt.Sprintf("Disconnected from %s: %s", h.infoHandler.GetHostname(), strings.Join(message.Params, " ")))
-	// TODO: Do something more with this?
+	disconnectMessage := fmt.Sprintf("Disconnected from %s: %s", h.infoHandler.GetHostname(), strings.Join(message.Params, " "))
+
+	h.addEvent(EventDisconnected, false, disconnectMessage)
+	for _, channel := range h.channelHandler.GetChannels() {
+		channel.AddMessage(NewEvent(EventDisconnected, h.conf.UISettings.TimestampFormat, false, disconnectMessage))
+	}
+	for _, query := range h.queryHandler.GetQueries() {
+		query.AddMessage(NewEvent(EventDisconnected, h.conf.UISettings.TimestampFormat, false, disconnectMessage))
+	}
 }
 
 func (h *Handler) handleConnected(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	h.addEvent(EventConnecting, false, fmt.Sprintf("Connected to %s", h.infoHandler.GetHostname()))
 	network := h.infoHandler.ISupport("NETWORK")
 	if len(network) > 0 {
 		h.infoHandler.SetName(network)
+	}
+	connectMessage := fmt.Sprintf("Connected to %s", h.infoHandler.GetHostname())
+
+	h.addEvent(EventConnecting, false, connectMessage)
+	for _, channel := range h.channelHandler.GetChannels() {
+		channel.AddMessage(NewEvent(EventConnecting, h.conf.UISettings.TimestampFormat, false, connectMessage))
+	}
+	for _, query := range h.queryHandler.GetQueries() {
+		query.AddMessage(NewEvent(EventConnecting, h.conf.UISettings.TimestampFormat, false, connectMessage))
 	}
 }
 

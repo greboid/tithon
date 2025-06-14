@@ -3,16 +3,46 @@
         data-on-load="document.getElementById('dialog').showModal()"
         data-on-click="evt.target == document.getElementById('dialog') && document.getElementById('dialog').close()"
         data-on-keydown__window="evt.key === 'Escape' && document.getElementById('dialog').close()"
+        data-signals__ifmissing="{settings: {tab: 'general'}}"
 >
     <div>
         <form method="dialog" id="settingsForm">
-                <h1>Settings v{{.Version}}</h1>
-                    <label for="timestampFormat">Timestamp Format:</label>
+            <h1>Settings</h1>
+            <div class="tab-switcher">
+                <button type="button" data-on-click="$settings.tab='general'" data-class-active="$settings.tab=='general'" class="tab-button">
+                    General
+                </button>
+                <button type="button" data-on-click="$settings.tab='servers'" data-class-active="$settings.tab=='servers'" class="tab-button">
+                    Servers
+                </button>
+                <button type="button" data-on-click="$settings.tab='notifications'" data-class-active="$settings.tab=='notifications'" class="tab-button">
+                    Notifications
+                </button>
+                v{{.Version}}
+            </div>
+
+            <div>
+                <div class="tab-content autoform" data-show="$settings.tab=='general'" style="display: none;">
+                    <label for="timestampFormat">Timestamp Format</label>
                     <input type="text" id="timestampFormat" name="timestampFormat" value="{{.TimestampFormat}}" />
-                    <label for="showNicklist">Show Nicklist:</label>
+                    <label for="showNicklist">Show Nicklist</label>
                     <input type="checkbox" id="showNicklist" name="showNicklist" {{if .ShowNicklist}}checked{{end}} />
+                </div>
+
+                <div class="tab-content autoform" data-show="$settings.tab=='servers'" style="display: none;">
+                    <p>Servers</p>
+                </div>
+
+                <div class="tab-content autoform" data-show="$settings.tab=='notifications'" style="display: none;">
+                    <p>Notifications</p>
+                </div>
+            </div>
+
+
+            <div class="buttons">
             <button data-on-click="@get('/saveSettings', {contentType: 'form'})">Save</button>
             <button data-on-click="document.getElementById('dialog').close()">Close</button>
+            </div>
         </form>
     </div>
 </dialog>

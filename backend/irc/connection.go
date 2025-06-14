@@ -497,7 +497,11 @@ func (c *Connection) JoinChannel(channel string, password string) error {
 }
 
 func (c *Connection) PartChannel(channel string) error {
-	return c.connection.Part(c.GetChannel(channel).GetName())
+	channelInstance := c.GetChannel(channel)
+	if channelInstance != nil {
+		return c.connection.Part(channelInstance.GetName())
+	}
+	return fmt.Errorf("channel %s not found", channel)
 }
 
 func (c *Connection) GetModePrefixes() []string {

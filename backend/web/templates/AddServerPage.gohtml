@@ -1,12 +1,7 @@
-<dialog
-        id="dialog"
-        data-on-load="document.getElementById('dialog').showModal()"
-        data-on-click="evt.target == document.getElementById('dialog') && document.getElementById('dialog').close()"
-        data-on-keydown__window="evt.key === 'Escape' && document.getElementById('dialog').close()"
->
-    <div>
-        <form method="dialog" id="addServerForm">
-            <h1>Add Server</h1>
+<div id="settingsContent">
+    <div class="tab-content">
+        <h1>Add Server</h1>
+        <form id="addServerForm">
             <div class="autoform">
                 <label for="hostname">Hostname</label>
                 <input type="text" name="hostname" required/>
@@ -23,12 +18,13 @@
                 <label for="saslpassword">SASL Password</label>
                 <input type="password" name="saslpassword"/>
             </div>
-            <div class="buttons">
-                <button data-on-click="@get('/addServer', {contentType: 'form'}) && document.getElementById('dialog').close()">
-                    Add
-                </button>
-                <button data-on-click="document.getElementById('dialog').close()">Close</button>
-            </div>
+        </form>
+        <div class="buttons">
+            <button data-on-click="@get('/addServer', {contentType: 'form', selector: '#addServerForm'})">
+                Save
+            </button>
+            <button type="button" data-on-click="@get('/cancelEditServer')">Cancel</button>
+        </div>
         </form>
     </div>
-</dialog>
+</div>

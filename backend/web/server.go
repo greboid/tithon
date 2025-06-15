@@ -21,6 +21,14 @@ import (
 	"time"
 )
 
+type SettingsData struct {
+	Version         string
+	TimestampFormat string
+	ShowNicklist    bool
+	Servers         []config.Server
+	Notifications   []config.NotificationTrigger
+}
+
 var (
 	//go:embed static
 	staticFS embed.FS
@@ -49,6 +57,7 @@ type Server struct {
 	historyPosition      int
 	historyLock          sync.Mutex
 	showSettings         chan bool
+	settingsData         SettingsData
 }
 
 type ServerList struct {
@@ -102,6 +111,13 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 		inputHistory:         make([]string, 0),
 		historyPosition:      -1,
 		showSettings:         showSettings,
+		settingsData: SettingsData{
+			Version:         getVersion(),
+			TimestampFormat: conf.UISettings.TimestampFormat,
+			ShowNicklist:    conf.UISettings.ShowNicklist,
+			Servers:         conf.Servers,
+			Notifications:   conf.Notifications.Triggers,
+		},
 	}
 	server.addRoutes(mux)
 	return server

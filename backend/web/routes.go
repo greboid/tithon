@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/greboid/tithon/config"
-	"github.com/greboid/tithon/irc"
 	"github.com/kirsle/configdir"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
@@ -97,7 +96,11 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /showSettings", s.handleShowSettings)
 	mux.HandleFunc("GET /saveSettings", s.handleSaveSettings)
 	mux.HandleFunc("GET /showAddServer", s.handleShowAddServer)
+	mux.HandleFunc("GET /deleteServer", s.handleDeleteServer)
 	mux.HandleFunc("GET /addServer", s.handleAddServer)
+	mux.HandleFunc("GET /showEditServer", s.handleShowEditServer)
+	mux.HandleFunc("GET /editServer", s.handleEditServer)
+	mux.HandleFunc("GET /cancelEditServer", s.handleDefaultSettings)
 	mux.HandleFunc("GET /changeWindow/{server}", s.handleChangeServer)
 	mux.HandleFunc("GET /changeWindow/{server}/{channel}", s.handleChangeChannel)
 	mux.HandleFunc("GET /s/{server}", s.handleServer)
@@ -324,15 +327,7 @@ func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("Showing settings")
 	var data bytes.Buffer
 
-	type SettingsData struct {
-		Version         string
-		TimestampFormat string
-		ShowNicklist    bool
-		Servers         []config.Server
-		Notifications   []config.NotificationTrigger
-	}
-
-	settingsData := SettingsData{
+	s.settingsData = SettingsData{
 		Version:         getVersion(),
 		TimestampFormat: s.conf.UISettings.TimestampFormat,
 		ShowNicklist:    s.conf.UISettings.ShowNicklist,
@@ -340,7 +335,55 @@ func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 		Notifications:   s.conf.Notifications.Triggers,
 	}
 
-	err := s.templates.ExecuteTemplate(&data, "SettingsPage.gohtml", settingsData)
+	err := s.templates.ExecuteTemplate(&data, "SettingsPage.gohtml", nil)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsData)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = sse.MergeFragments(data.String())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleDefaultSettings(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	sse := datastar.NewSSE(w, r)
+	slog.Debug("Showing settings")
+	var data bytes.Buffer
+
+	err := s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsData)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = sse.MergeFragments(data.String())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleDeleteServer(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	sse := datastar.NewSSE(w, r)
+	slog.Debug("Showing settings")
+	var data bytes.Buffer
+	serverID := r.URL.Query().Get("id")
+
+	fmt.Println(s.settingsData.Servers)
+
+	s.settingsData.Servers = slices.DeleteFunc(s.settingsData.Servers, func(server config.Server) bool {
+		return server.ID == serverID
+	})
+	fmt.Println(s.settingsData.Servers)
+
+	err := s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsData)
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
 	}
@@ -361,9 +404,7 @@ func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
 	}
-	err = sse.MergeFragments(data.String(), func(options *datastar.MergeFragmentOptions) {
-		options.Selector = "#dialog"
-	})
+	err = sse.MergeFragments(data.String())
 	if err != nil {
 		slog.Debug("Error merging fragments", "error", err)
 		return
@@ -386,14 +427,149 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	sasllogin := r.URL.Query().Get("sasllogin")
 	saslpassword := r.URL.Query().Get("saslpassword")
 	password := r.URL.Query().Get("password")
-	s.connectionManager.AddConnection("", hostname, portInt, tlsBool, password, sasllogin, saslpassword, irc.NewProfile(nickname), true)
+
+	s.settingsData.Servers = append(s.settingsData.Servers, config.Server{
+		Hostname:     hostname,
+		Port:         portInt,
+		TLS:          tlsBool,
+		Password:     password,
+		SASLLogin:    sasllogin,
+		SASLPassword: saslpassword,
+		Profile: config.Profile{
+			Nickname: nickname,
+		},
+	})
+
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	sse := datastar.NewSSE(w, r)
+	var data bytes.Buffer
+	err = s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsData)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = sse.MergeFragments(data.String())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleShowEditServer(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	sse := datastar.NewSSE(w, r)
+	slog.Debug("Showing edit server dialog")
+
+	serverID := r.URL.Query().Get("id")
+
+	index := slices.IndexFunc(s.settingsData.Servers, func(server config.Server) bool {
+		return server.ID == serverID
+	})
+	con := s.settingsData.Servers[index]
+	if index == -1 {
+		slog.Debug("Unknown server specified", "Server ID", serverID)
+		return
+	}
+
+	serverToEdit := config.Server{
+		Hostname:     con.Hostname,
+		Port:         con.Port,
+		TLS:          con.TLS,
+		Password:     con.Password,
+		SASLLogin:    con.SASLLogin,
+		SASLPassword: con.SASLPassword,
+		Profile: config.Profile{
+			Nickname: con.Profile.Nickname,
+		},
+		ID: con.ID,
+	}
+
+	var data bytes.Buffer
+	err := s.templates.ExecuteTemplate(&data, "EditServerPage.gohtml", serverToEdit)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = sse.MergeFragments(data.String())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleEditServer(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	hostname := r.URL.Query().Get("hostname")
+	port := r.URL.Query().Get("port")
+	var err error
+	portInt := 6697
+	portInt, _ = strconv.Atoi(port)
+	tlsBool := true
+	tls := r.URL.Query().Get("tls")
+	if tls == "" {
+		tlsBool = false
+	}
+	tlsBool, _ = strconv.ParseBool(tls)
+	nickname := r.URL.Query().Get("nickname")
+	sasllogin := r.URL.Query().Get("sasllogin")
+	saslpassword := r.URL.Query().Get("saslpassword")
+	password := r.URL.Query().Get("password")
+
+	for i := range s.settingsData.Servers {
+		if s.settingsData.Servers[i].ID == id {
+			s.settingsData.Servers[i].Hostname = hostname
+			s.settingsData.Servers[i].Port = portInt
+			s.settingsData.Servers[i].TLS = tlsBool
+			s.settingsData.Servers[i].Password = password
+			s.settingsData.Servers[i].SASLLogin = sasllogin
+			s.settingsData.Servers[i].SASLPassword = saslpassword
+			s.settingsData.Servers[i].Profile.Nickname = nickname
+		}
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	sse := datastar.NewSSE(w, r)
+	var data bytes.Buffer
+	err = s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsData)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = sse.MergeFragments(data.String())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
+func (s *Server) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	slog.Debug("Saving settings")
+	timestampFormat := r.URL.Query().Get("timestampFormat")
+	showNicklist := r.URL.Query().Get("showNicklist") == "on"
+
+	s.conf.UISettings.TimestampFormat = timestampFormat
+	s.conf.UISettings.ShowNicklist = showNicklist
+	s.conf.Notifications.Triggers = s.settingsData.Notifications
+	s.conf.Servers = s.settingsData.Servers
+
+	err := s.conf.Save()
+	if err != nil {
+		slog.Error("Error saving config", "error", err)
+	}
+
 	sse := datastar.NewSSE(w, r)
 	var data bytes.Buffer
 	err = s.templates.ExecuteTemplate(&data, "EmptyDialog.gohtml", nil)
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
+	}
+	err = sse.ExecuteScript(`document.getElementById('dialog').close()`)
+	if err != nil {
+		slog.Debug("Error executing script", "error", err)
+		return
 	}
 	err = sse.MergeFragments(data.String())
 	if err != nil {
@@ -722,38 +898,6 @@ func (s *Server) handleUpdateNicklist(_ http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.conf.UISettings.ShowNicklist = sn.ShowNicklist
-}
-
-func (s *Server) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	timestampFormat := r.URL.Query().Get("timestampFormat")
-	showNicklist := r.URL.Query().Get("showNicklist") == "on"
-
-	s.conf.UISettings.TimestampFormat = timestampFormat
-	s.conf.UISettings.ShowNicklist = showNicklist
-
-	err := s.conf.Save()
-	if err != nil {
-		slog.Error("Error saving config", "error", err)
-	}
-
-	sse := datastar.NewSSE(w, r)
-	var data bytes.Buffer
-	err = s.templates.ExecuteTemplate(&data, "EmptyDialog.gohtml", nil)
-	if err != nil {
-		slog.Debug("Error generating template", "error", err)
-	}
-	err = sse.ExecuteScript(`document.getElementById('dialog').close()`)
-	if err != nil {
-		slog.Debug("Error executing script", "error", err)
-		return
-	}
-	err = sse.MergeFragments(data.String())
-	if err != nil {
-		slog.Debug("Error merging fragments", "error", err)
-		return
-	}
 }
 
 func (s *Server) handleHistoryUp(w http.ResponseWriter, r *http.Request) {

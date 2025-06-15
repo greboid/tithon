@@ -734,7 +734,7 @@ func TestMessage_parseIRCFormatting(t *testing.T) {
 		{
 			name:    "Text with background color",
 			message: "\x0304,02Red text on blue background\x03",
-			want:    "<span class=\"fg-4 bg-4\">Red text on blue background</span>",
+			want:    "<span class=\"fg-4 bg-2\">Red text on blue background</span>",
 		},
 		{
 			name:    "Text with bold formatting",

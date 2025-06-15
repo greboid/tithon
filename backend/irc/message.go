@@ -255,7 +255,7 @@ func (m *Message) parseIRCFormatting() {
 			classes = append(classes, fmt.Sprintf("fg-%d", split[i].ForegroundColor.Value))
 		}
 		if split[i].BackgroundColor.IsSet {
-			classes = append(classes, fmt.Sprintf("bg-%d", split[i].ForegroundColor.Value))
+			classes = append(classes, fmt.Sprintf("bg-%d", split[i].BackgroundColor.Value))
 		}
 		if split[i].Bold {
 			classes = append(classes, "bold")

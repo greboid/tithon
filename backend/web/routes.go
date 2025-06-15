@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
+	"github.com/greboid/tithon/config"
 	"github.com/greboid/tithon/irc"
 	"github.com/kirsle/configdir"
 	datastar "github.com/starfederation/datastar/sdk/go"
@@ -327,12 +328,16 @@ func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 		Version         string
 		TimestampFormat string
 		ShowNicklist    bool
+		Servers         []config.Server
+		Notifications   []config.NotificationTrigger
 	}
 
 	settingsData := SettingsData{
 		Version:         getVersion(),
 		TimestampFormat: s.conf.UISettings.TimestampFormat,
 		ShowNicklist:    s.conf.UISettings.ShowNicklist,
+		Servers:         s.conf.Servers,
+		Notifications:   s.conf.Notifications.Triggers,
 	}
 
 	err := s.templates.ExecuteTemplate(&data, "SettingsPage.gohtml", settingsData)

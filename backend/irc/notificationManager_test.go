@@ -206,8 +206,7 @@ func TestNotificationManager_sortTriggers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nm := &NotificationManager{}
-			got := nm.sortTriggers(tt.triggers)
+			got := SortNotificationTriggers(tt.triggers)
 			assert.Equal(t, tt.want, got, "sortTriggers() returned unexpected result")
 		})
 	}
@@ -249,7 +248,7 @@ func TestNotificationManager_compileRegex(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nm := &NotificationManager{}
 			require.NotNil(t, nm, "NotificationManager should not be nil")
-			got, err := nm.compileRegex(tt.regex)
+			got, err := CompileNotificationRegex(tt.regex)
 			if tt.wantErr {
 				assert.Error(t, err, "compileRegex() should return an error")
 			} else {
@@ -391,8 +390,7 @@ func TestNotificationManager_AddNotification(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nm := &NotificationManager{}
-			got, err := nm.AddNotification(tt.network, tt.source, tt.nick, tt.message, tt.sound, tt.popup)
+			got, err := CreateNotification(tt.network, tt.source, tt.nick, tt.message, tt.sound, tt.popup)
 
 			if tt.wantErr {
 				assert.Error(t, err, "AddNotification() should return an error")
@@ -553,8 +551,7 @@ func TestNotificationManager_convertFromConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nm := &NotificationManager{}
-			got := nm.convertFromConfig(tt.triggers)
+			got := ConvertNotificationsFromConfig(tt.triggers)
 
 			assert.Equal(t, len(tt.want), len(got), "convertFromConfig() returned unexpected number of triggers")
 

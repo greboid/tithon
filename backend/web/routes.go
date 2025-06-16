@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	uniqueid "github.com/albinj12/unique-id"
 	"github.com/fsnotify/fsnotify"
 	"github.com/greboid/tithon/config"
+	"github.com/greboid/tithon/irc"
 	"github.com/kirsle/configdir"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"html/template"
@@ -100,6 +102,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /addServer", s.handleAddServer)
 	mux.HandleFunc("GET /showEditServer", s.handleShowEditServer)
 	mux.HandleFunc("GET /editServer", s.handleEditServer)
+	mux.HandleFunc("GET /connectServer", s.handleConnectServer)
 	mux.HandleFunc("GET /cancelEditServer", s.handleDefaultSettings)
 	mux.HandleFunc("GET /changeWindow/{server}", s.handleChangeServer)
 	mux.HandleFunc("GET /changeWindow/{server}/{channel}", s.handleChangeChannel)
@@ -331,8 +334,21 @@ func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 		Version:         getVersion(),
 		TimestampFormat: s.conf.UISettings.TimestampFormat,
 		ShowNicklist:    s.conf.UISettings.ShowNicklist,
-		Servers:         s.conf.Servers,
 		Notifications:   s.conf.Notifications.Triggers,
+	}
+	for i := range s.conf.Servers {
+		s.settingsData.Servers = append(s.settingsData.Servers, config.Server{
+			Hostname:     s.conf.Servers[i].Hostname,
+			Port:         s.conf.Servers[i].Port,
+			TLS:          s.conf.Servers[i].TLS,
+			Password:     s.conf.Servers[i].Password,
+			SASLLogin:    s.conf.Servers[i].SASLLogin,
+			SASLPassword: s.conf.Servers[i].SASLPassword,
+			Profile: config.Profile{
+				Nickname: s.conf.Servers[i].Profile.Nickname,
+			},
+			AutoConnect: s.conf.Servers[i].AutoConnect,
+		})
 	}
 
 	err := s.templates.ExecuteTemplate(&data, "SettingsPage.gohtml", nil)
@@ -394,6 +410,47 @@ func (s *Server) handleDeleteServer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) handleConnectServer(w http.ResponseWriter, r *http.Request) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	sse := datastar.NewSSE(w, r)
+	slog.Debug("Connecting to server")
+
+	serverID := r.URL.Query().Get("id")
+
+	index := slices.IndexFunc(s.settingsData.Servers, func(server config.Server) bool {
+		return server.ID == serverID
+	})
+
+	if index == -1 {
+		slog.Debug("Unknown server specified", "Server ID", serverID)
+		return
+	}
+
+	s.connectionManager.AddConnection(
+		s.settingsData.Servers[index].ID,
+		s.settingsData.Servers[index].Hostname,
+		s.settingsData.Servers[index].Port,
+		s.settingsData.Servers[index].TLS,
+		s.settingsData.Servers[index].Password,
+		s.settingsData.Servers[index].SASLLogin,
+		s.settingsData.Servers[index].SASLPassword,
+		irc.NewProfile(s.settingsData.Servers[index].Profile.Nickname),
+		true,
+	)
+
+	var data bytes.Buffer
+	err := s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsData)
+	if err != nil {
+		slog.Debug("Error generating template", "error", err)
+	}
+	err = sse.MergeFragments(data.String())
+	if err != nil {
+		slog.Debug("Error merging fragments", "error", err)
+		return
+	}
+}
+
 func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -427,7 +484,12 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	sasllogin := r.URL.Query().Get("sasllogin")
 	saslpassword := r.URL.Query().Get("saslpassword")
 	password := r.URL.Query().Get("password")
-
+	autoConnectBool := true
+	autoConnect := r.URL.Query().Get("connect")
+	if autoConnect == "" {
+		autoConnectBool = false
+	}
+	id, _ := uniqueid.Generateid("a", 5, "s")
 	s.settingsData.Servers = append(s.settingsData.Servers, config.Server{
 		Hostname:     hostname,
 		Port:         portInt,
@@ -438,6 +500,8 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 		Profile: config.Profile{
 			Nickname: nickname,
 		},
+		AutoConnect: autoConnectBool,
+		ID:          id,
 	})
 
 	s.lock.Lock()
@@ -482,7 +546,8 @@ func (s *Server) handleShowEditServer(w http.ResponseWriter, r *http.Request) {
 		Profile: config.Profile{
 			Nickname: con.Profile.Nickname,
 		},
-		ID: con.ID,
+		ID:          con.ID,
+		AutoConnect: con.AutoConnect,
 	}
 
 	var data bytes.Buffer
@@ -514,6 +579,11 @@ func (s *Server) handleEditServer(w http.ResponseWriter, r *http.Request) {
 	sasllogin := r.URL.Query().Get("sasllogin")
 	saslpassword := r.URL.Query().Get("saslpassword")
 	password := r.URL.Query().Get("password")
+	autoConnectBool := true
+	autoConnect := r.URL.Query().Get("connect")
+	if autoConnect == "" {
+		autoConnectBool = false
+	}
 
 	for i := range s.settingsData.Servers {
 		if s.settingsData.Servers[i].ID == id {
@@ -524,6 +594,7 @@ func (s *Server) handleEditServer(w http.ResponseWriter, r *http.Request) {
 			s.settingsData.Servers[i].SASLLogin = sasllogin
 			s.settingsData.Servers[i].SASLPassword = saslpassword
 			s.settingsData.Servers[i].Profile.Nickname = nickname
+			s.settingsData.Servers[i].AutoConnect = autoConnectBool
 		}
 	}
 
@@ -553,7 +624,22 @@ func (s *Server) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
 	s.conf.UISettings.TimestampFormat = timestampFormat
 	s.conf.UISettings.ShowNicklist = showNicklist
 	s.conf.Notifications.Triggers = s.settingsData.Notifications
-	s.conf.Servers = s.settingsData.Servers
+	s.conf.Servers = []config.Server{}
+	for i := range s.settingsData.Servers {
+		s.conf.Servers = append(s.conf.Servers, config.Server{
+			Hostname:     s.settingsData.Servers[i].Hostname,
+			Port:         s.settingsData.Servers[i].Port,
+			TLS:          s.settingsData.Servers[i].TLS,
+			Password:     s.settingsData.Servers[i].Password,
+			SASLLogin:    s.settingsData.Servers[i].SASLLogin,
+			SASLPassword: s.settingsData.Servers[i].SASLPassword,
+			Profile: config.Profile{
+				Nickname: s.settingsData.Servers[i].Profile.Nickname,
+			},
+			ID:          s.settingsData.Servers[i].ID,
+			AutoConnect: s.settingsData.Servers[i].AutoConnect,
+		})
+	}
 
 	err := s.conf.Save()
 	if err != nil {

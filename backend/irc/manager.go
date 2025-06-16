@@ -2,7 +2,6 @@ package irc
 
 import (
 	"github.com/greboid/tithon/config"
-	"log/slog"
 	"maps"
 	"slices"
 	"strings"
@@ -78,7 +77,6 @@ func (cm *ConnectionManager) Start() {
 }
 
 func (cm *ConnectionManager) Stop() {
-	cm.Save()
 	for _, connection := range cm.connections {
 		connection.Disconnect()
 	}
@@ -86,29 +84,10 @@ func (cm *ConnectionManager) Stop() {
 
 func (cm *ConnectionManager) Load() {
 	for _, server := range cm.config.Servers {
-		cm.AddConnection(server.ID, server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
+		if server.AutoConnect {
+			cm.AddConnection(server.ID, server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
+		}
 	}
-}
-
-func (cm *ConnectionManager) Save() {
-	slog.Debug("Saving connections to config")
-	servers := make([]config.Server, 0)
-	for _, server := range cm.connections {
-		servers = append(servers, config.Server{
-			ID:           server.id,
-			Hostname:     server.hostname,
-			Port:         server.port,
-			TLS:          server.tls,
-			Password:     server.password,
-			SASLLogin:    server.saslLogin,
-			SASLPassword: server.saslPassword,
-			Profile: config.Profile{
-				Nickname: server.preferredNickname,
-			},
-		})
-	}
-	cm.config.Servers = servers
-	slog.Debug("Saved connections to config")
 }
 
 func (cm *ConnectionManager) SetUpdateTrigger(ut UpdateTrigger) {

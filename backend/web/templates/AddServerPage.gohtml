@@ -17,6 +17,8 @@
                 <input type="text" name="sasllogin"/>
                 <label for="saslpassword">SASL Password</label>
                 <input type="password" name="saslpassword"/>
+                <label for="connect">Auto connect</label>
+                <input type="checkbox" name="connect" {{if .AutoConnect}}checked{{end}}/>
             </div>
         </form>
         <div class="buttons">

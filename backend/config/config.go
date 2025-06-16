@@ -27,6 +27,7 @@ type Server struct {
 	SASLPassword string  `yaml:"sasl_password"`
 	Profile      Profile `yaml:"profile"`
 	ID           string  `yaml:"id"`
+	AutoConnect  bool    `yaml:"auto_connect"`
 }
 
 type UISettings struct {

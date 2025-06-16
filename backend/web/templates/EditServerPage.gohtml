@@ -18,6 +18,8 @@
                 <input type="text" name="sasllogin" value="{{.SASLLogin}}"/>
                 <label for="saslpassword">SASL Password</label>
                 <input type="password" name="saslpassword" value="{{.SASLPassword}}"/>
+                <label for="connect">Auto connect</label>
+                <input type="checkbox" name="connect" {{if .AutoConnect}}checked{{end}}/>
             </div>
             <div class="buttons">
                 <button data-on-click="@get('/editServer', {contentType: 'form'})">

@@ -13,7 +13,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: './backend/go.mod'
+          cache-dependency-path: './backend/go.sum'
           go-version: 'stable'
 
       - name: Build

@@ -1,6 +1,7 @@
 <div id="input" data-signals="{files: [], filesMimes: [], filesNames: [], location: ''}">
     <form
             data-ref="inputForm"
+            data-signals-wrapped__ifmissing="false"
             data-signals-char__ifmissing="0"
             data-signals-bs__ifmissing="0"
             data-signals-tab__ifmissing="1"
@@ -17,10 +18,13 @@
                 data-on-selectionChange="$char = evt.target.selectionStart"
                 data-on-signal-change-bs="$inputField.selectionStart = $bs; $inputField.selectionEnd = $bs; $bs = -1"
                 data-on-keydown="
+                    $wrapped = $inputField.clientHeight != $inputField.scrollHeight;
+                    if (!$wrapped || ($wrapped && $char == 0)) {
+                        evt.key == 'ArrowUp' && @get('/historyUp') && evt.preventDefault();
+                        evt.key == 'ArrowDown' && @get('/historyDown') && evt.preventDefault();
+                    }
                     evt.key == 'Tab' && $tab++ && evt.preventDefault();
                     evt.key == 'Enter' && !evt.shiftKey && @get('/input') && evt.preventDefault();
-                    evt.key == 'ArrowUp' && @get('/historyUp') && evt.preventDefault();
-                    evt.key == 'ArrowDown' && @get('/historyDown') && evt.preventDefault();
                 "
                 autocomplete="off"
         ></textarea>

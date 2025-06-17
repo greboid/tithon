@@ -201,6 +201,11 @@ h1 {
     width: unset;
     border: none;
     color: var(--headings);
+    background-color: var(--background);
+
+    &:hover {
+      background-color: var(--background2);
+    }
   }
 }
 

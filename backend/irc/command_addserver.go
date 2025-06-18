@@ -16,7 +16,7 @@ func (c AddServer) GetHelp() string {
 	return "Adds a new server and connects to it. Usage: /addserver hostname[:port] [nickname] [--notls] [--password=serverpassword] [--sasl=username:password]"
 }
 
-func (c AddServer) Execute(cm *ConnectionManager, _ *Window, input string) error {
+func (c AddServer) Execute(cm *ServerManager, _ *Window, input string) error {
 	if input == "" {
 		return errors.New("no hostname specified")
 	}

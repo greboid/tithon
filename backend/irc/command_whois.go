@@ -14,7 +14,7 @@ func (c Whois) GetHelp() string {
 	return "Looks up information about a user"
 }
 
-func (c Whois) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c Whois) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}

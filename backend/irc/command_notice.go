@@ -10,7 +10,7 @@ func (c SendNotice) GetHelp() string {
 	return "Sends a notice"
 }
 
-func (c SendNotice) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c SendNotice) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}

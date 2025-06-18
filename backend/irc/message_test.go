@@ -189,7 +189,7 @@ func TestNewError(t *testing.T) {
 			name:       "Basic error",
 			timeFormat: "15:04:05",
 			me:         false,
-			message:    "Connection error",
+			message:    "Server error",
 			wantType:   Error,
 		},
 	}

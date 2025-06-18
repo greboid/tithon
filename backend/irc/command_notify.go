@@ -12,7 +12,7 @@ func (c Notify) GetHelp() string {
 	return "Shows a notification"
 }
 
-func (c Notify) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c Notify) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}

@@ -10,7 +10,7 @@ func (c Quit) GetHelp() string {
 	return "Quits a server, removing it from the list"
 }
 
-func (c Quit) Execute(cm *ConnectionManager, window *Window, _ string) error {
+func (c Quit) Execute(cm *ServerManager, window *Window, _ string) error {
 	if window == nil {
 		return NoServerError
 	}

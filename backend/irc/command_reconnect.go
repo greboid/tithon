@@ -14,7 +14,7 @@ func (c Reconnect) GetHelp() string {
 	return "Reconnects to the current server. Usage: /reconnect"
 }
 
-func (c Reconnect) Execute(_ *ConnectionManager, window *Window, _ string) error {
+func (c Reconnect) Execute(_ *ServerManager, window *Window, _ string) error {
 	if window == nil {
 		return errors.New("no window specified")
 	}

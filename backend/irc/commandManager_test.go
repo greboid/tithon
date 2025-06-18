@@ -22,7 +22,7 @@ func (m *MockCommand) GetHelp() string {
 	return args.String(0)
 }
 
-func (m *MockCommand) Execute(cm *ConnectionManager, w *Window, input string) error {
+func (m *MockCommand) Execute(cm *ServerManager, w *Window, input string) error {
 	args := m.Called(cm, w, input)
 	return args.Error(0)
 }
@@ -54,7 +54,7 @@ func TestCommandManager_Execute(t *testing.T) {
 	cm.commands = []Command{mockCmd}
 
 	window := &Window{}
-	connections := &ConnectionManager{}
+	connections := &ServerManager{}
 
 	cm.Execute(connections, window, "/test test input")
 
@@ -70,7 +70,7 @@ func TestCommandManager_Execute_NoArguments(t *testing.T) {
 	cm.commands = []Command{mockCmd}
 
 	window := &Window{}
-	connections := &ConnectionManager{}
+	connections := &ServerManager{}
 
 	cm.Execute(connections, window, "/test")
 
@@ -119,7 +119,7 @@ func TestCommandManager_Execute_InputNoSlash(t *testing.T) {
 	cm.commands = []Command{mockCmd, msgCmd}
 
 	window := &Window{}
-	connections := &ConnectionManager{}
+	connections := &ServerManager{}
 
 	cm.Execute(connections, window, "Hello world")
 

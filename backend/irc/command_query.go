@@ -15,7 +15,7 @@ func (c QueryCommand) GetHelp() string {
 	return "Opens a query window with the specified user"
 }
 
-func (c QueryCommand) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c QueryCommand) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}

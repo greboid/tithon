@@ -14,7 +14,7 @@ func (c ChangeTopic) GetHelp() string {
 	return "Changes the topic"
 }
 
-func (c ChangeTopic) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c ChangeTopic) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}

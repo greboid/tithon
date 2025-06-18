@@ -11,23 +11,23 @@ type UpdateTrigger interface {
 	SetPendingUpdate()
 }
 
-type ConnectionManager struct {
-	connections         map[string]*Connection
+type ServerManager struct {
+	connections         map[string]*Server
 	commandManager      *CommandManager
 	updateTrigger       UpdateTrigger
 	notificationManager *NotificationManager
 	config              *config.Config
 }
 
-func NewConnectionManager(conf *config.Config, commandManager *CommandManager) *ConnectionManager {
-	return &ConnectionManager{
-		connections:    map[string]*Connection{},
+func NewServerManager(conf *config.Config, commandManager *CommandManager) *ServerManager {
+	return &ServerManager{
+		connections:    map[string]*Server{},
 		commandManager: commandManager,
 		config:         conf,
 	}
 }
 
-func (cm *ConnectionManager) AddConnection(
+func (cm *ServerManager) AddConnection(
 	id string,
 	hostname string,
 	port int,
@@ -38,7 +38,7 @@ func (cm *ConnectionManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewConnection(cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
+	connection := NewServer(cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
 	cm.connections[connection.id] = connection
 	if connect {
 		go func() {
@@ -49,15 +49,15 @@ func (cm *ConnectionManager) AddConnection(
 	return connection.id
 }
 
-func (cm *ConnectionManager) RemoveConnection(id string) {
+func (cm *ServerManager) RemoveConnection(id string) {
 	cm.connections[id].Disconnect()
 	delete(cm.connections, id)
 	cm.updateTrigger.SetPendingUpdate()
 }
 
-func (cm *ConnectionManager) GetConnections() []*Connection {
+func (cm *ServerManager) GetConnections() []*Server {
 	connections := slices.Collect(maps.Values(cm.connections))
-	slices.SortStableFunc(connections, func(a, b *Connection) int {
+	slices.SortStableFunc(connections, func(a, b *Server) int {
 		if a.GetName() == b.GetName() {
 			return strings.Compare(a.GetID(), b.GetID())
 		}
@@ -66,23 +66,23 @@ func (cm *ConnectionManager) GetConnections() []*Connection {
 	return connections
 }
 
-func (cm *ConnectionManager) GetConnection(id string) *Connection {
+func (cm *ServerManager) GetConnection(id string) *Server {
 	return cm.connections[id]
 }
 
-func (cm *ConnectionManager) Start() {
+func (cm *ServerManager) Start() {
 	for _, connection := range cm.connections {
 		connection.Connect()
 	}
 }
 
-func (cm *ConnectionManager) Stop() {
+func (cm *ServerManager) Stop() {
 	for _, connection := range cm.connections {
 		connection.Disconnect()
 	}
 }
 
-func (cm *ConnectionManager) Load() {
+func (cm *ServerManager) Load() {
 	for _, server := range cm.config.Servers {
 		if server.AutoConnect {
 			cm.AddConnection(server.ID, server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
@@ -90,11 +90,11 @@ func (cm *ConnectionManager) Load() {
 	}
 }
 
-func (cm *ConnectionManager) SetUpdateTrigger(ut UpdateTrigger) {
+func (cm *ServerManager) SetUpdateTrigger(ut UpdateTrigger) {
 	cm.updateTrigger = ut
 }
 
-func (cm *ConnectionManager) SetNotificationManager(nm *NotificationManager) {
+func (cm *ServerManager) SetNotificationManager(nm *NotificationManager) {
 	cm.notificationManager = nm
 	cm.commandManager.SetNotificationManager(nm)
 }

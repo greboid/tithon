@@ -10,7 +10,7 @@ func (c Part) GetHelp() string {
 	return "Parts a channel"
 }
 
-func (c Part) Execute(_ *ConnectionManager, window *Window, _ string) error {
+func (c Part) Execute(_ *ServerManager, window *Window, _ string) error {
 	if window == nil {
 		return NoServerError
 	}

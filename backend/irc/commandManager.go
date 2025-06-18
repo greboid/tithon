@@ -16,7 +16,7 @@ var (
 type Command interface {
 	GetName() string
 	GetHelp() string
-	Execute(*ConnectionManager, *Window, string) error
+	Execute(*ServerManager, *Window, string) error
 }
 
 type Notifier interface {
@@ -54,7 +54,7 @@ func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandMana
 	return cm
 }
 
-func (cm *CommandManager) Execute(connections *ConnectionManager, window *Window, input string) {
+func (cm *CommandManager) Execute(connections *ServerManager, window *Window, input string) {
 	if !strings.HasPrefix(input, "/") {
 		input = "/msg " + input
 	}

@@ -12,7 +12,7 @@ func (c Settings) GetHelp() string {
 	return "Shows the settings dialog"
 }
 
-func (c Settings) Execute(_ *ConnectionManager, _ *Window, _ string) error {
+func (c Settings) Execute(_ *ServerManager, _ *Window, _ string) error {
 	c.showSettings <- true
 	return nil
 }

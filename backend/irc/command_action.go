@@ -14,7 +14,7 @@ func (c SendAction) GetHelp() string {
 	return "Performs an action in a channel or query"
 }
 
-func (c SendAction) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c SendAction) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}

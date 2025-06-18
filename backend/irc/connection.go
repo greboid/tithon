@@ -20,7 +20,7 @@ const (
 	LevelTrace = slog.Level(-8)
 )
 
-type Connection struct {
+type Server struct {
 	*Window
 	connection        *ircevent.Connection
 	hostname          string
@@ -46,13 +46,13 @@ type Connection struct {
 	manualDisconnect  bool
 }
 
-func NewConnection(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) *Connection {
+func NewServer(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) *Server {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}
 	useSasl := len(sasllogin) > 0 && len(saslpassword) > 0
 
-	connection := &Connection{
+	server := &Server{
 		hostname:          hostname,
 		port:              port,
 		tls:               tls,
@@ -83,7 +83,7 @@ func NewConnection(conf *config.Config, id string, hostname string, port int, tl
 				"batch",
 			},
 			Debug: true,
-			Log:   slog.NewLogLogger(slog.Default().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Connection", id)}), LevelTrace),
+			Log:   slog.NewLogLogger(slog.Default().Handler().WithAttrs([]slog.Attr{slog.Bool("rawirc", true), slog.String("Server", id)}), LevelTrace),
 		},
 		ut:                ut,
 		nm:                nm,
@@ -93,31 +93,31 @@ func NewConnection(conf *config.Config, id string, hostname string, port int, tl
 		reconnectTimer:    nil,
 		manualDisconnect:  false,
 	}
-	connection.Window = &Window{
+	server.Window = &Window{
 		id:           id,
 		name:         hostname,
 		title:        hostname,
 		messages:     make([]*Message, 0),
-		connection:   connection,
+		connection:   server,
 		isServer:     true,
-		tabCompleter: NewConnectionTabCompleter(connection),
+		tabCompleter: NewServerTabCompleter(server),
 	}
 
-	return connection
+	return server
 }
 
-func (c *Connection) GetID() string {
+func (c *Server) GetID() string {
 	return c.id
 }
 
-func (c *Connection) GetFileHost() string {
+func (c *Server) GetFileHost() string {
 	if c.connection == nil {
 		return ""
 	}
 	return c.connection.ISupport()["soju.im/FILEHOST"]
 }
 
-func (c *Connection) Connect() {
+func (c *Server) Connect() {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -155,13 +155,13 @@ func (c *Connection) Connect() {
 		c.resetReconnectValues()
 		err := c.connection.Connect()
 		if err != nil {
-			c.AddMessage(NewError(c.conf.UISettings.TimestampFormat, false, "Connection error: "+err.Error()))
+			c.AddMessage(NewError(c.conf.UISettings.TimestampFormat, false, "Server error: "+err.Error()))
 			go c.scheduleReconnect()
 		}
 	}
 }
 
-func (c *Connection) resetReconnectValues() {
+func (c *Server) resetReconnectValues() {
 	c.reconnecting = false
 	c.reconnectAttempts = 0
 	if c.reconnectTimer != nil {
@@ -170,7 +170,7 @@ func (c *Connection) resetReconnectValues() {
 	}
 }
 
-func (c *Connection) scheduleReconnect() {
+func (c *Server) scheduleReconnect() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	defer c.ut.SetPendingUpdate()
@@ -212,27 +212,27 @@ func (c *Connection) scheduleReconnect() {
 	})
 }
 
-func (c *Connection) AddConnectCallback(callback func(message ircmsg.Message)) {
+func (c *Server) AddConnectCallback(callback func(message ircmsg.Message)) {
 	c.connection.AddConnectCallback(callback)
 }
 
-func (c *Connection) AddCallback(command string, callback func(ircmsg.Message)) {
+func (c *Server) AddCallback(command string, callback func(ircmsg.Message)) {
 	c.connection.AddCallback(command, callback)
 }
 
-func (c *Connection) AddBatchCallback(callback func(batch *ircevent.Batch) bool) {
+func (c *Server) AddBatchCallback(callback func(batch *ircevent.Batch) bool) {
 	c.connection.AddBatchCallback(callback)
 }
 
-func (c *Connection) AddDisconnectCallback(callback func(message ircmsg.Message)) {
+func (c *Server) AddDisconnectCallback(callback func(message ircmsg.Message)) {
 	c.connection.AddDisconnectCallback(callback)
 }
 
-func (c *Connection) GetCredentials() (string, string) {
+func (c *Server) GetCredentials() (string, string) {
 	return c.saslLogin, c.saslPassword
 }
 
-func (c *Connection) Disconnect() {
+func (c *Server) Disconnect() {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -241,7 +241,7 @@ func (c *Connection) Disconnect() {
 	c.connection.Quit()
 }
 
-func (c *Connection) IsChannel(target string) bool {
+func (c *Server) IsChannel(target string) bool {
 	chanTypes := c.connection.ISupport()["CHANTYPES"]
 	if chanTypes == "" {
 		chanTypes = "#"
@@ -254,7 +254,7 @@ func (c *Connection) IsChannel(target string) bool {
 	return false
 }
 
-func (c *Connection) GetChannels() []*Channel {
+func (c *Server) GetChannels() []*Channel {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	channels := slices.Collect(maps.Values(c.channels))
@@ -264,11 +264,11 @@ func (c *Connection) GetChannels() []*Channel {
 	return channels
 }
 
-func (c *Connection) GetChannel(id string) *Channel {
+func (c *Server) GetChannel(id string) *Channel {
 	return c.channels[id]
 }
 
-func (c *Connection) GetChannelByName(name string) (*Channel, error) {
+func (c *Server) GetChannelByName(name string) (*Channel, error) {
 	for _, channel := range c.GetChannels() {
 		if strings.ToLower(channel.name) == strings.ToLower(name) {
 			return channel, nil
@@ -277,7 +277,7 @@ func (c *Connection) GetChannelByName(name string) (*Channel, error) {
 	return nil, errors.New("channel not found")
 }
 
-func (c *Connection) AddChannel(name string) *Channel {
+func (c *Server) AddChannel(name string) *Channel {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -286,7 +286,7 @@ func (c *Connection) AddChannel(name string) *Channel {
 	return channel
 }
 
-func (c *Connection) RemoveChannel(s string) {
+func (c *Server) RemoveChannel(s string) {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -294,7 +294,7 @@ func (c *Connection) RemoveChannel(s string) {
 	delete(c.channels, s)
 }
 
-func (c *Connection) GetQueries() []*Query {
+func (c *Server) GetQueries() []*Query {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	pms := slices.Collect(maps.Values(c.pms))
@@ -304,11 +304,11 @@ func (c *Connection) GetQueries() []*Query {
 	return pms
 }
 
-func (c *Connection) GetQuery(id string) *Query {
+func (c *Server) GetQuery(id string) *Query {
 	return c.pms[id]
 }
 
-func (c *Connection) GetQueryByName(name string) (*Query, error) {
+func (c *Server) GetQueryByName(name string) (*Query, error) {
 	for _, pm := range c.GetQueries() {
 		if strings.ToLower(pm.name) == strings.ToLower(name) {
 			return pm, nil
@@ -317,7 +317,7 @@ func (c *Connection) GetQueryByName(name string) (*Query, error) {
 	return nil, errors.New("query not found")
 }
 
-func (c *Connection) AddQuery(name string) *Query {
+func (c *Server) AddQuery(name string) *Query {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -326,19 +326,19 @@ func (c *Connection) AddQuery(name string) *Query {
 	return pm
 }
 
-func (c *Connection) RemoveQuery(id string) {
+func (c *Server) RemoveQuery(id string) {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	delete(c.pms, id)
 }
 
-func (c *Connection) HasCapability(name string) bool {
+func (c *Server) HasCapability(name string) bool {
 	_, exists := c.connection.AcknowledgedCaps()[name]
 	return exists
 }
 
-func (c *Connection) GetMaxLineLen() int {
+func (c *Server) GetMaxLineLen() int {
 	maxLineLen := 512 // Default IRC line length
 	linelen := c.ISupport("LINELEN")
 	if linelen != "" {
@@ -349,7 +349,7 @@ func (c *Connection) GetMaxLineLen() int {
 	return maxLineLen
 }
 
-func (c *Connection) SplitMessage(prefixLength int, message string) []string {
+func (c *Server) SplitMessage(prefixLength int, message string) []string {
 	maxMsgLen := c.GetMaxLineLen() - prefixLength
 	if len(message) <= maxMsgLen && !strings.Contains(message, "\n") {
 		return []string{message}
@@ -389,7 +389,7 @@ func (c *Connection) SplitMessage(prefixLength int, message string) []string {
 	return parts
 }
 
-func (c *Connection) SendMessage(window string, message string) error {
+func (c *Server) SendMessage(window string, message string) error {
 	defer c.ut.SetPendingUpdate()
 	channel := c.GetChannel(window)
 	if channel == nil {
@@ -416,7 +416,7 @@ func (c *Connection) SendMessage(window string, message string) error {
 	return nil
 }
 
-func (c *Connection) SendQuery(target string, message string) error {
+func (c *Server) SendQuery(target string, message string) error {
 	defer c.ut.SetPendingUpdate()
 	pm, err := c.GetQueryByName(target)
 	if err != nil {
@@ -439,7 +439,7 @@ func (c *Connection) SendQuery(target string, message string) error {
 	return nil
 }
 
-func (c *Connection) SendNotice(window string, message string) error {
+func (c *Server) SendNotice(window string, message string) error {
 	channel := c.GetChannel(window)
 	if channel == nil {
 		pm := c.GetQuery(window)
@@ -465,7 +465,7 @@ func (c *Connection) SendNotice(window string, message string) error {
 	return nil
 }
 
-func (c *Connection) SendQueryNotice(target string, message string) error {
+func (c *Server) SendQueryNotice(target string, message string) error {
 	defer c.ut.SetPendingUpdate()
 	pm, err := c.GetQueryByName(target)
 	if err != nil {
@@ -488,15 +488,15 @@ func (c *Connection) SendQueryNotice(target string, message string) error {
 	return nil
 }
 
-func (c *Connection) CurrentNick() string {
+func (c *Server) CurrentNick() string {
 	return c.connection.CurrentNick()
 }
 
-func (c *Connection) JoinChannel(channel string, password string) error {
+func (c *Server) JoinChannel(channel string, password string) error {
 	return c.connection.Join(channel)
 }
 
-func (c *Connection) PartChannel(channel string) error {
+func (c *Server) PartChannel(channel string) error {
 	channelInstance := c.GetChannel(channel)
 	if channelInstance != nil {
 		return c.connection.Part(channelInstance.GetName())
@@ -504,7 +504,7 @@ func (c *Connection) PartChannel(channel string) error {
 	return fmt.Errorf("channel %s not found", channel)
 }
 
-func (c *Connection) GetModePrefixes() []string {
+func (c *Server) GetModePrefixes() []string {
 	value, exists := c.connection.ISupport()["PREFIX"]
 	if !exists {
 		slog.Error("No mode prefixes specified, using default")
@@ -519,7 +519,7 @@ func (c *Connection) GetModePrefixes() []string {
 	return splits
 }
 
-func (c *Connection) GetModeNameForMode(mode string) string {
+func (c *Server) GetModeNameForMode(mode string) string {
 	modes := c.GetModePrefixes()
 	index := strings.Index(modes[0], mode)
 	if index == -1 {
@@ -528,23 +528,23 @@ func (c *Connection) GetModeNameForMode(mode string) string {
 	return modes[1][index : index+1]
 }
 
-func (c *Connection) SendRaw(message string) {
+func (c *Server) SendRaw(message string) {
 	c.connection.SendRaw(message)
 }
 
-func (c *Connection) ISupport(value string) string {
+func (c *Server) ISupport(value string) string {
 	return c.connection.ISupport()[value]
 }
 
-func (c *Connection) GetHostname() string {
+func (c *Server) GetHostname() string {
 	return c.connection.Server
 }
 
-func (c *Connection) GetCurrentModes() string {
+func (c *Server) GetCurrentModes() string {
 	return c.currentModes
 }
 
-func (c *Connection) SetCurrentModes(modes string) {
+func (c *Server) SetCurrentModes(modes string) {
 	c.currentModes = modes
 }
 
@@ -553,7 +553,7 @@ func (c *Connection) SetCurrentModes(modes string) {
 // B = modes that change settings with parameters
 // C = modes that change settings only when set
 // D = modes that change simple boolean settings
-func (c *Connection) GetChannelModeType(mode string) rune {
+func (c *Server) GetChannelModeType(mode string) rune {
 	prefixes := c.GetModePrefixes()
 	if strings.Contains(prefixes[0], mode) {
 		return 'P'

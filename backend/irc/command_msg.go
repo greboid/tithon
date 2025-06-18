@@ -10,7 +10,7 @@ func (c Msg) GetHelp() string {
 	return "Sends a message to a channel"
 }
 
-func (c Msg) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c Msg) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}

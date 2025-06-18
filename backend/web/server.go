@@ -40,7 +40,7 @@ var (
 type WebClient struct {
 	lock                 sync.Mutex
 	httpServer           *http.Server
-	connectionManager    *irc.ConnectionManager
+	connectionManager    *irc.ServerManager
 	commands             *irc.CommandManager
 	activeWindow         *irc.Window
 	activeQuery          *irc.Query
@@ -95,7 +95,7 @@ func getVersion() string {
 	return versionString
 }
 
-func NewWebClient(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification, conf *config.Config, showSettings chan bool) *WebClient {
+func NewWebClient(cm *irc.ServerManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification, conf *config.Config, showSettings chan bool) *WebClient {
 	mux := http.NewServeMux()
 	client := &WebClient{
 		fixedPort: fixedPort,

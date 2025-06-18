@@ -10,7 +10,7 @@ func (c Join) GetHelp() string {
 	return "Joins a channel"
 }
 
-func (c Join) Execute(_ *ConnectionManager, window *Window, input string) error {
+func (c Join) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}

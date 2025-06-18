@@ -74,7 +74,7 @@ type Handler struct {
 	batchMap            map[string]string
 }
 
-func NewHandler(connection *Connection) *Handler {
+func NewHandler(connection *Server) *Handler {
 	return &Handler{
 		channelHandler:      connection,
 		queryHandler:        connection,

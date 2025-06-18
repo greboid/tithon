@@ -8,7 +8,7 @@ type Query struct {
 	*Window
 }
 
-func NewQuery(connection *Connection, name string) *Query {
+func NewQuery(connection *Server, name string) *Query {
 	s, _ := uniqueid.Generateid("a", 5, "p")
 	query := &Query{
 		Window: &Window{

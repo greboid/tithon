@@ -49,7 +49,7 @@ func main() {
 	commandManager := irc.NewCommandManager(conf, showSettings)
 	connectionManager := irc.NewConnectionManager(conf, commandManager)
 	defer connectionManager.Stop()
-	server := web.NewServer(connectionManager, commandManager, *FixedPort, pendingNotifications, conf, showSettings)
+	server := web.NewWebClient(connectionManager, commandManager, *FixedPort, pendingNotifications, conf, showSettings)
 	defer server.Stop()
 	connectionManager.SetUpdateTrigger(server)
 	connectionManager.SetNotificationManager(notificationManager)

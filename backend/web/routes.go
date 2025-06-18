@@ -53,7 +53,7 @@ func getTemplateFuncs() template.FuncMap {
 	}
 }
 
-func (s *Server) noCacheMiddleware(h http.Handler) http.Handler {
+func (s *WebClient) noCacheMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
 		w.Header().Set("Pragma", "no-cache")
@@ -62,7 +62,7 @@ func (s *Server) noCacheMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-func (s *Server) addRoutes(mux *http.ServeMux) {
+func (s *WebClient) addRoutes(mux *http.ServeMux) {
 	var static fs.FS
 	if stat, err := os.Stat("./web/static"); err == nil && stat.IsDir() {
 		slog.Debug("Using on disk static resources")
@@ -120,7 +120,7 @@ func (s *Server) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /historyDown", s.handleHistoryDown)
 }
 
-func (s *Server) createTemplateWatcher(templates fs.FS) {
+func (s *WebClient) createTemplateWatcher(templates fs.FS) {
 	templateWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		slog.Error("Unable to create watcher", "error", err)
@@ -132,7 +132,7 @@ func (s *Server) createTemplateWatcher(templates fs.FS) {
 	}
 }
 
-func (s *Server) createStaticWatcher() {
+func (s *WebClient) createStaticWatcher() {
 	staticWatches, err := fsnotify.NewWatcher()
 	if err != nil {
 		slog.Error("Unable to create watcher", "error", err)
@@ -144,7 +144,7 @@ func (s *Server) createStaticWatcher() {
 	}
 }
 
-func (s *Server) createUserCSSWatcher(usercss string) {
+func (s *WebClient) createUserCSSWatcher(usercss string) {
 	staticWatches, err := fsnotify.NewWatcher()
 	if err != nil {
 		slog.Error("Unable to create watcher", "error", err)
@@ -158,7 +158,7 @@ func (s *Server) createUserCSSWatcher(usercss string) {
 	}
 }
 
-func (s *Server) staticLoop(watcher *fsnotify.Watcher) {
+func (s *WebClient) staticLoop(watcher *fsnotify.Watcher) {
 	defer func() {
 		_ = watcher.Close()
 	}()
@@ -181,7 +181,7 @@ func (s *Server) staticLoop(watcher *fsnotify.Watcher) {
 	}
 }
 
-func (s *Server) templateLoop(watcher *fsnotify.Watcher, templates fs.FS) {
+func (s *WebClient) templateLoop(watcher *fsnotify.Watcher, templates fs.FS) {
 	defer func() {
 		_ = watcher.Close()
 	}()
@@ -204,7 +204,7 @@ func (s *Server) templateLoop(watcher *fsnotify.Watcher, templates fs.FS) {
 	}
 }
 
-func (s *Server) updateTemplates(allTemplates fs.FS) {
+func (s *WebClient) updateTemplates(allTemplates fs.FS) {
 	allParsedTemplates, err := template.New("").Funcs(getTemplateFuncs()).ParseFS(allTemplates, "*.gohtml")
 	if err != nil {
 		slog.Error("Error parsing templates", "error", err)
@@ -216,7 +216,7 @@ func (s *Server) updateTemplates(allTemplates fs.FS) {
 	s.SetPendingUpdate()
 }
 
-func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
+func (s *WebClient) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.pendingUpdate.Store(true)
@@ -227,7 +227,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func (s *Server) updateMainUI(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) updateMainUI(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -238,7 +238,7 @@ func (s *Server) updateMainUI(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -285,7 +285,7 @@ func (s *Server) UpdateUI(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) outputTemplate(wr io.Writer, name string, data any) {
+func (s *WebClient) outputTemplate(wr io.Writer, name string, data any) {
 	s.templateLock.Lock()
 	defer s.templateLock.Unlock()
 	err := s.templates.ExecuteTemplate(wr, name, data)
@@ -295,7 +295,7 @@ func (s *Server) outputTemplate(wr io.Writer, name string, data any) {
 	}
 }
 
-func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -323,7 +323,7 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -367,7 +367,7 @@ func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleDefaultSettings(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleDefaultSettings(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -385,7 +385,7 @@ func (s *Server) handleDefaultSettings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleDeleteServer(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleDeleteServer(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -411,7 +411,7 @@ func (s *Server) handleDeleteServer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleConnectServer(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleConnectServer(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -424,7 +424,7 @@ func (s *Server) handleConnectServer(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if index == -1 {
-		slog.Debug("Unknown server specified", "Server ID", serverID)
+		slog.Debug("Unknown server specified", "WebClient ID", serverID)
 		return
 	}
 
@@ -452,7 +452,7 @@ func (s *Server) handleConnectServer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -469,7 +469,7 @@ func (s *Server) handleShowAddServer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	hostname := r.URL.Query().Get("hostname")
 	port := r.URL.Query().Get("port")
 	var err error
@@ -520,7 +520,7 @@ func (s *Server) handleAddServer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleShowEditServer(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleShowEditServer(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	sse := datastar.NewSSE(w, r)
@@ -533,7 +533,7 @@ func (s *Server) handleShowEditServer(w http.ResponseWriter, r *http.Request) {
 	})
 	con := s.settingsData.Servers[index]
 	if index == -1 {
-		slog.Debug("Unknown server specified", "Server ID", serverID)
+		slog.Debug("Unknown server specified", "WebClient ID", serverID)
 		return
 	}
 
@@ -563,7 +563,7 @@ func (s *Server) handleShowEditServer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleEditServer(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleEditServer(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	hostname := r.URL.Query().Get("hostname")
 	port := r.URL.Query().Get("port")
@@ -615,7 +615,7 @@ func (s *Server) handleEditServer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	slog.Debug("Saving settings")
@@ -670,7 +670,7 @@ func (s *Server) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleChannel(w http.ResponseWriter, r *http.Request) {
 	serverID := r.PathValue("server")
 	channelName := r.PathValue("channel")
 	connection := s.connectionManager.GetConnection(serverID)
@@ -692,7 +692,7 @@ func (s *Server) handleChannel(w http.ResponseWriter, r *http.Request) {
 	s.handleIndex(w, r)
 }
 
-func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	serverID := r.PathValue("server")
 	channelID := r.PathValue("channel")
 	connection := s.connectionManager.GetConnection(serverID)
@@ -717,7 +717,7 @@ func (s *Server) handleChangeChannel(w http.ResponseWriter, r *http.Request) {
 	s.UpdateUI(w, r)
 }
 
-func (s *Server) handleServer(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleServer(w http.ResponseWriter, r *http.Request) {
 	serverID := r.PathValue("server")
 	connection := s.connectionManager.GetConnection(serverID)
 	if connection == nil {
@@ -731,7 +731,7 @@ func (s *Server) handleServer(w http.ResponseWriter, r *http.Request) {
 	s.handleIndex(w, r)
 }
 
-func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 	serverID := r.PathValue("server")
 	connection := s.connectionManager.GetConnection(serverID)
 	if connection == nil {
@@ -744,7 +744,7 @@ func (s *Server) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 	s.UpdateUI(w, r)
 }
 
-func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleInput(w http.ResponseWriter, r *http.Request) {
 	type inputValues struct {
 		Input string `json:"input"`
 	}
@@ -790,7 +790,7 @@ func (s *Server) handleInput(w http.ResponseWriter, r *http.Request) {
 	s.UpdateUI(w, r)
 }
 
-func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if s.getActiveWindow() == nil {
 		return
 	}
@@ -865,7 +865,7 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 	s.lock.Unlock()
 }
 
-func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleJoin(w http.ResponseWriter, r *http.Request) {
 	if s.getActiveWindow() == nil {
 		return
 	}
@@ -889,7 +889,7 @@ func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handlePart(w http.ResponseWriter, r *http.Request) {
 	if s.getActiveWindow() == nil {
 		return
 	}
@@ -901,18 +901,18 @@ func (s *Server) handlePart(w http.ResponseWriter, r *http.Request) {
 	s.UpdateUI(w, r)
 }
 
-func (s *Server) handleNextWindowUp(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleNextWindowUp(w http.ResponseWriter, r *http.Request) {
 	s.changeWindow(-1)
 	s.updateURL(w, r)
 	s.UpdateUI(w, r)
 }
-func (s *Server) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleNextWindowDown(w http.ResponseWriter, r *http.Request) {
 	s.changeWindow(+1)
 	s.updateURL(w, r)
 	s.UpdateUI(w, r)
 }
 
-func (s *Server) updateURL(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) updateURL(w http.ResponseWriter, r *http.Request) {
 	if s.activeWindow == nil {
 		return
 	}
@@ -924,7 +924,7 @@ func (s *Server) updateURL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) changeWindow(change int) {
+func (s *WebClient) changeWindow(change int) {
 	s.listlock.Lock()
 	defer s.listlock.Unlock()
 	index := slices.IndexFunc(s.serverList.OrderedList, func(item *ServerListItem) bool {
@@ -941,7 +941,7 @@ func (s *Server) changeWindow(change int) {
 	}
 }
 
-func (s *Server) handleTab(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleTab(w http.ResponseWriter, r *http.Request) {
 	aw := s.getActiveWindow()
 	if aw == nil {
 		return
@@ -979,7 +979,7 @@ func (s *Server) handleTab(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleUpdateNicklist(_ http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleUpdateNicklist(_ http.ResponseWriter, r *http.Request) {
 	type showNicklist struct {
 		ShowNicklist bool `json:"nicklistshow"`
 	}
@@ -992,7 +992,7 @@ func (s *Server) handleUpdateNicklist(_ http.ResponseWriter, r *http.Request) {
 	s.conf.UISettings.ShowNicklist = sn.ShowNicklist
 }
 
-func (s *Server) handleHistoryUp(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleHistoryUp(w http.ResponseWriter, r *http.Request) {
 	s.historyLock.Lock()
 	defer s.historyLock.Unlock()
 
@@ -1031,7 +1031,7 @@ func (s *Server) handleHistoryUp(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleHistoryDown(w http.ResponseWriter, r *http.Request) {
+func (s *WebClient) handleHistoryDown(w http.ResponseWriter, r *http.Request) {
 	s.historyLock.Lock()
 	defer s.historyLock.Unlock()
 

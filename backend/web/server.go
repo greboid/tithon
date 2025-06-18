@@ -37,7 +37,7 @@ var (
 	templateFS embed.FS
 )
 
-type Server struct {
+type WebClient struct {
 	lock                 sync.Mutex
 	httpServer           *http.Server
 	connectionManager    *irc.ConnectionManager
@@ -95,9 +95,9 @@ func getVersion() string {
 	return versionString
 }
 
-func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification, conf *config.Config, showSettings chan bool) *Server {
+func NewWebClient(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification, conf *config.Config, showSettings chan bool) *WebClient {
 	mux := http.NewServeMux()
-	server := &Server{
+	client := &WebClient{
 		fixedPort: fixedPort,
 		lock:      sync.Mutex{},
 		httpServer: &http.Server{
@@ -120,11 +120,11 @@ func NewServer(cm *irc.ConnectionManager, commands *irc.CommandManager, fixedPor
 			Notifications:   conf.Notifications.Triggers,
 		},
 	}
-	server.addRoutes(mux)
-	return server
+	client.addRoutes(mux)
+	return client
 }
 
-func (s *Server) GetListenAddress() (string, int) {
+func (s *WebClient) GetListenAddress() (string, int) {
 	if s.httpServer.Addr != "" {
 		split := strings.Split(s.httpServer.Addr, ":")
 		port, _ := strconv.Atoi(split[1])
@@ -139,22 +139,22 @@ func (s *Server) GetListenAddress() (string, int) {
 	return ip.String(), port
 }
 
-func (s *Server) Start() {
+func (s *WebClient) Start() {
 	if err := s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("Error starting server:", slog.String("error", err.Error()))
 	}
-	slog.Debug("Server stopped")
+	slog.Debug("WebClient stopped")
 }
 
-func (s *Server) Stop() {
+func (s *WebClient) Stop() {
 	shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 2*time.Second)
 	defer shutdownRelease()
 	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-		slog.Error("Error shutting down server:", slog.String("error", err.Error()))
+		slog.Error("Error shutting down web server:", slog.String("error", err.Error()))
 	}
 }
 
-func (s *Server) getPort() (net.IP, int, error) {
+func (s *WebClient) getPort() (net.IP, int, error) {
 	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("[::1]:%d", s.fixedPort))
 	if err != nil {
 		return nil, -1, err
@@ -168,7 +168,7 @@ func (s *Server) getPort() (net.IP, int, error) {
 	return lp.IP, lp.Port, nil
 }
 
-func (s *Server) getServerList() *ServerList {
+func (s *WebClient) getServerList() *ServerList {
 	s.listlock.Lock()
 	defer s.listlock.Unlock()
 	s.serverList = &ServerList{}
@@ -227,7 +227,7 @@ func (s *Server) getServerList() *ServerList {
 	return s.serverList
 }
 
-func (s *Server) setActiveWindow(window *irc.Window) {
+func (s *WebClient) setActiveWindow(window *irc.Window) {
 	s.activeLock.Lock()
 	defer s.activeLock.Unlock()
 	if s.activeWindow != nil {
@@ -240,16 +240,16 @@ func (s *Server) setActiveWindow(window *irc.Window) {
 	s.SetPendingUpdate()
 }
 
-func (s *Server) getActiveWindow() *irc.Window {
+func (s *WebClient) getActiveWindow() *irc.Window {
 	s.activeLock.Lock()
 	defer s.activeLock.Unlock()
 	return s.activeWindow
 }
 
-func (s *Server) SetPendingUpdate() {
+func (s *WebClient) SetPendingUpdate() {
 	s.pendingUpdate.Store(true)
 }
 
-func (s *Server) SetUIUpdate() {
+func (s *WebClient) SetUIUpdate() {
 	s.uiUpdate.Store(true)
 }

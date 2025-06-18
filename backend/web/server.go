@@ -27,6 +27,7 @@ type SettingsData struct {
 	ShowNicklist    bool
 	Servers         []config.Server
 	Notifications   []config.NotificationTrigger
+	Theme           string
 }
 
 var (

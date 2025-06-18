@@ -333,6 +333,7 @@ func (s *Server) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 	s.settingsData = SettingsData{
 		Version:         getVersion(),
 		TimestampFormat: s.conf.UISettings.TimestampFormat,
+		Theme:           s.conf.UISettings.Theme,
 		ShowNicklist:    s.conf.UISettings.ShowNicklist,
 		Notifications:   s.conf.Notifications.Triggers,
 	}
@@ -620,9 +621,14 @@ func (s *Server) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("Saving settings")
 	timestampFormat := r.URL.Query().Get("timestampFormat")
 	showNicklist := r.URL.Query().Get("showNicklist") == "on"
+	theme := r.URL.Query().Get("theme")
+	if theme == "" {
+		theme = "auto"
+	}
 
 	s.conf.UISettings.TimestampFormat = timestampFormat
 	s.conf.UISettings.ShowNicklist = showNicklist
+	s.conf.UISettings.Theme = theme
 	s.conf.Notifications.Triggers = s.settingsData.Notifications
 	s.conf.Servers = []config.Server{}
 	for i := range s.settingsData.Servers {

@@ -23,6 +23,12 @@
                 <input type="text" id="timestampFormat" name="timestampFormat" value="{{.TimestampFormat}}"/>
                 <label for="showNicklist">Show Nicklist</label>
                 <input type="checkbox" id="showNicklist" name="showNicklist" {{if .ShowNicklist}}checked{{end}} />
+                <legend for="theme" id="theme">Theme</legend>
+                <fieldset>
+                    <label><input type="radio" name="theme" value="auto"{{if or (eq "auto" .Theme) (eq "" .Theme)}} checked{{end}}/><p>Automatic</p></label>
+                    <label><input type="radio" name="theme" value="light"{{if eq "light" .Theme}} checked{{end}}/><p>Light</p></label>
+                    <label><input type="radio" name="theme" value="dark"{{if eq "dark" .Theme}} checked{{end}}/><p>Dark</p></label>
+                </fieldset>
             </div>
 
             <div class="editList" data-show="$settings.tab=='servers'" style="display: none;">

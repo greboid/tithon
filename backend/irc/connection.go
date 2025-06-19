@@ -540,6 +540,14 @@ func (c *Server) GetHostname() string {
 	return c.connection.Server
 }
 
+func (c *Server) SetNick(nick string) {
+	c.connection.SetNick(nick)
+}
+
+func (c *Server) SendTopic(channel string, topic string) error {
+	return c.connection.Send("TOPIC", channel, topic)
+}
+
 func (c *Server) GetCurrentModes() string {
 	return c.currentModes
 }

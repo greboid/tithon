@@ -141,3 +141,7 @@ func (cm *NotificationManager) CheckAndNotify(network, source, nick, message str
 	}
 	return false
 }
+
+func (cm *NotificationManager) SendNotification(notification Notification) {
+	cm.pendingNotifications <- notification
+}

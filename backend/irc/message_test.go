@@ -39,7 +39,7 @@ func TestNewMessage(t *testing.T) {
 			tags:       nil,
 			highlights: nil,
 			wantType:   Action,
-			wantMsg:    " waves",
+			wantMsg:    "waves",
 		},
 		{
 			name:       "Message with highlight",
@@ -61,7 +61,7 @@ func TestNewMessage(t *testing.T) {
 			tags:       nil,
 			highlights: []string{"targetuser"},
 			wantType:   HighlightAction,
-			wantMsg:    " waves at targetuser",
+			wantMsg:    "waves at targetuser",
 		},
 		{
 			name:       "Message with tags",
@@ -264,7 +264,7 @@ func TestMessage_parseAction(t *testing.T) {
 			message:     "\001ACTION waves\001",
 			messageType: Normal,
 			wantType:    Action,
-			wantMessage: " waves",
+			wantMessage: "waves",
 		},
 		{
 			name:        "Non-action message",

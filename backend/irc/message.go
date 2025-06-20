@@ -114,6 +114,7 @@ func (m *Message) parseAction() {
 	if strings.HasPrefix(m.message, "\001ACTION") && strings.HasSuffix(m.message, "\001") {
 		m.message = strings.TrimPrefix(m.message, "\001ACTION")
 		m.message = strings.TrimSuffix(m.message, "\001")
+		m.message = strings.TrimSpace(m.message)
 		m.messageType = Action
 	}
 }

@@ -268,6 +268,11 @@ func (s *WebClient) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error merging fragments", "error", err)
 		return
 	}
+	err = sse.ExecuteScript(`document.getElementById("messages").scrollTo(0, document.getElementById("messages").scrollHeight)`, datastar.WithExecuteScriptAutoRemove(true))
+	if err != nil {
+		slog.Debug("Error scrolling to bottom", "error", err)
+		return
+	}
 	var fileHost string
 	if s.getActiveWindow() == nil || s.getActiveWindow().GetServer() == nil {
 		fileHost = ""

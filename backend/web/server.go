@@ -49,6 +49,7 @@ type WebClient struct {
 	activeLock           sync.Mutex
 	serverList           *ServerList
 	pendingUpdate        atomic.Bool
+	windowChanged        atomic.Bool
 	listlock             sync.Mutex
 	uiUpdate             atomic.Bool
 	pendingNotifications chan irc.Notification
@@ -238,6 +239,7 @@ func (s *WebClient) setActiveWindow(window *irc.Window) {
 	}
 	s.activeWindow = window
 	s.SetPendingUpdate()
+	s.SetWindowChanged()
 }
 
 func (s *WebClient) getActiveWindow() *irc.Window {
@@ -248,6 +250,10 @@ func (s *WebClient) getActiveWindow() *irc.Window {
 
 func (s *WebClient) SetPendingUpdate() {
 	s.pendingUpdate.Store(true)
+}
+
+func (s *WebClient) SetWindowChanged() {
+	s.windowChanged.Store(true)
 }
 
 func (s *WebClient) SetUIUpdate() {

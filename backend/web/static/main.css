@@ -276,10 +276,15 @@ h1 {
 #messages {
   grid-area: messages;
   overflow-y: scroll;
-  display: grid;
-  grid-template-columns: auto auto 1fr;
+  display: flex;
   align-content: safe end;
   white-space: pre-wrap;
+  flex-direction: column;
+  scroll-snap-type: y proximity;
+
+  & > p:last-child {
+    scroll-snap-align: end;
+  }
 
   .bold {
     font-weight: bold;
@@ -562,7 +567,8 @@ h1 {
   }
 
   & p {
-    display: contents;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
 
     &.normal, &.highlight {
       & span.nickname {

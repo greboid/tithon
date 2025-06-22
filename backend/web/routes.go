@@ -339,6 +339,7 @@ func (s *WebClient) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := range s.conf.Servers {
 		s.settingsData.Servers = append(s.settingsData.Servers, config.Server{
+			ID:           s.conf.Servers[i].ID,
 			Hostname:     s.conf.Servers[i].Hostname,
 			Port:         s.conf.Servers[i].Port,
 			TLS:          s.conf.Servers[i].TLS,

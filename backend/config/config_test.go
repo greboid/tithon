@@ -45,6 +45,22 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, provider, config.instance, "NewConfig did not set the provider correctly")
 }
 
+func TestConfig_Load_BlankID(t *testing.T) {
+	c := NewConfig(&MockProvider{
+		loadData: &Config{
+			Servers: []Server{
+				{
+					ID: "",
+				},
+			},
+		},
+	})
+	err := c.Load()
+	assert.NoError(t, err, "Unexpected error")
+	assert.NotNil(t, c, "Config is nil")
+	assert.NotEmptyf(t, c.Servers[0].ID, "Server ID is blank")
+}
+
 func TestConfig_Load(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -59,6 +75,7 @@ func TestConfig_Load(t *testing.T) {
 				loadData: &Config{
 					Servers: []Server{
 						{
+							ID:       "test-id",
 							Hostname: "irc.example.com",
 							Port:     6667,
 							TLS:      true,
@@ -73,6 +90,7 @@ func TestConfig_Load(t *testing.T) {
 			expectedConfig: &Config{
 				Servers: []Server{
 					{
+						ID:       "test-id",
 						Hostname: "irc.example.com",
 						Port:     6667,
 						TLS:      true,

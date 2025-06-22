@@ -46,6 +46,7 @@ func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandMana
 		&AddServer{},
 		&Disconnect{},
 		&Reconnect{},
+		&CloseCommand{},
 		&Settings{
 			showSettings: showSettings,
 		},

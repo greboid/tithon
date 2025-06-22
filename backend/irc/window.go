@@ -27,6 +27,8 @@ type Window struct {
 	hasUsers     bool
 	users        []*User
 	isServer     bool
+	isChannel    bool
+	isQuery      bool
 	tabCompleter TabCompleter
 }
 
@@ -144,6 +146,12 @@ func (c *Window) GetTitle() string {
 
 func (c *Window) IsServer() bool {
 	return c.isServer
+}
+func (c *Window) IsChannel() bool {
+	return c.isChannel
+}
+func (c *Window) IsQuery() bool {
+	return c.isQuery
 }
 
 func (c *Window) GetTabCompleter() TabCompleter {

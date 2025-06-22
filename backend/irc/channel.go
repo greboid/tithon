@@ -21,6 +21,7 @@ func NewChannel(connection *Server, name string) *Channel {
 			messages:   make([]*Message, 0),
 			connection: connection,
 			hasUsers:   true,
+			isChannel:  true,
 		},
 		topic:        NewTopic("No topic Set"),
 		users:        nil,

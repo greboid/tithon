@@ -1,6 +1,7 @@
 package config
 
 import (
+	uniqueid "github.com/albinj12/unique-id"
 	"log/slog"
 	"time"
 )
@@ -60,6 +61,12 @@ func (c *Config) Load() error {
 	}
 	if c.UISettings.TimestampFormat == "" {
 		c.UISettings.TimestampFormat = time.TimeOnly
+	}
+	for i := range c.Servers {
+		if c.Servers[i].ID == "" {
+			id, _ := uniqueid.Generateid("a", 5, "s")
+			c.Servers[i].ID = id
+		}
 	}
 	return nil
 }

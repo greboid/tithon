@@ -75,7 +75,7 @@ jobs:
           newsums=$(makepkg -g)
           
           awk 'BEGIN { del=0 } /sha256sums/ { del=2 } del<=0 { print } /)/ { del -= 1 }' "$buildfile" > "$newbuildfile"
-          echo $newsums >> ""$newbuildfile"
+          echo $newsums >> "$newbuildfile"
           mv "$newbuildfile" "$buildfile"
           makepkg --printsrcinfo > .SRCINFO
 

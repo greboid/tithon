@@ -394,12 +394,9 @@ func (s *WebClient) handleDeleteServer(w http.ResponseWriter, r *http.Request) {
 	var data bytes.Buffer
 	serverID := r.URL.Query().Get("id")
 
-	fmt.Println(s.settingsData.Servers)
-
 	s.settingsData.Servers = slices.DeleteFunc(s.settingsData.Servers, func(server config.Server) bool {
 		return server.ID == serverID
 	})
-	fmt.Println(s.settingsData.Servers)
 
 	err := s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsData)
 	if err != nil {

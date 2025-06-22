@@ -239,11 +239,11 @@ func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 	channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 	if err != nil {
 		channel = h.channelHandler.AddChannel(message.Params[0])
+		if h.infoHandler.HasCapability("draft/chathistory") {
+			h.messageHandler.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
+		}
 	}
 	channel.AddMessage(NewEvent(EventJoin, h.conf.UISettings.TimestampFormat, false, "You have joined "+channel.GetName()))
-	if h.infoHandler.HasCapability("draft/chathistory") {
-		h.messageHandler.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
-	}
 }
 
 func (h *Handler) handlePart(message ircmsg.Message) {

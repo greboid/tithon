@@ -74,7 +74,7 @@ type Handler struct {
 	batchMap            map[string]string
 }
 
-func NewHandler(connection *Server, ut UpdateTrigger, nm *NotificationManager, conf *config.Config) *Handler {
+func NewHandler(connection ServerInterface, ut UpdateTrigger, nm *NotificationManager, conf *config.Config) *Handler {
 	return &Handler{
 		channelHandler:      connection,
 		queryHandler:        connection,

@@ -11,7 +11,7 @@ type Channel struct {
 	channelModes []*ChannelMode // Store channel modes
 }
 
-func NewChannel(connection *Server, name string) *Channel {
+func NewChannel(connection ServerInterface, name string) *Channel {
 	s, _ := uniqueid.Generateid("a", 5, "c")
 	channel := &Channel{
 		Window: &Window{

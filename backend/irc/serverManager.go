@@ -12,7 +12,7 @@ type UpdateTrigger interface {
 }
 
 type ServerManager struct {
-	connections         map[string]*Server
+	connections         map[string]ServerInterface
 	commandManager      *CommandManager
 	updateTrigger       UpdateTrigger
 	notificationManager *NotificationManager
@@ -21,7 +21,7 @@ type ServerManager struct {
 
 func NewServerManager(conf *config.Config, commandManager *CommandManager) *ServerManager {
 	return &ServerManager{
-		connections:    map[string]*Server{},
+		connections:    map[string]ServerInterface{},
 		commandManager: commandManager,
 		config:         conf,
 	}
@@ -55,9 +55,9 @@ func (cm *ServerManager) RemoveConnection(id string) {
 	cm.updateTrigger.SetPendingUpdate()
 }
 
-func (cm *ServerManager) GetConnections() []*Server {
+func (cm *ServerManager) GetConnections() []ServerInterface {
 	connections := slices.Collect(maps.Values(cm.connections))
-	slices.SortStableFunc(connections, func(a, b *Server) int {
+	slices.SortStableFunc(connections, func(a, b ServerInterface) int {
 		if a.GetName() == b.GetName() {
 			return strings.Compare(a.GetID(), b.GetID())
 		}
@@ -66,7 +66,7 @@ func (cm *ServerManager) GetConnections() []*Server {
 	return connections
 }
 
-func (cm *ServerManager) GetConnection(id string) *Server {
+func (cm *ServerManager) GetConnection(id string) ServerInterface {
 	return cm.connections[id]
 }
 

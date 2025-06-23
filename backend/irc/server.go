@@ -262,7 +262,6 @@ func (c *Server) IsValidChannel(target string) bool {
 	return c.IsTargetChannel(target)
 }
 
-// IsChannel implements the Window's IsChannel method for the ServerInterface
 func (c *Server) IsChannel() bool {
 	return c.Window.IsChannel()
 }

@@ -729,7 +729,7 @@ func (s *WebClient) handleServer(w http.ResponseWriter, r *http.Request) {
 		s.handleIndex(w, r)
 		return
 	}
-	s.setActiveWindow(connection.Window)
+	s.setActiveWindow(connection.GetWindow())
 	slog.Debug("Changing Window", "window", s.getActiveWindow().GetID())
 	s.handleIndex(w, r)
 }
@@ -741,8 +741,8 @@ func (s *WebClient) handleChangeServer(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Invalid change server call, unknown server", "server", serverID)
 		return
 	}
-	s.setActiveWindow(connection.Window)
-	slog.Debug("Changing Window", "window", connection.Window.GetID())
+	s.setActiveWindow(connection.GetWindow())
+	slog.Debug("Changing Window", "window", connection.GetID())
 	s.updateURL(w, r)
 	s.UpdateUI(w, r)
 }

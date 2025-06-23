@@ -22,5 +22,5 @@ func (c ChangeTopic) Execute(_ *ServerManager, window *Window, input string) err
 	if len(split) != 2 {
 		return NoChannelError
 	}
-	return window.connection.connection.Send("TOPIC", split[0], split[1])
+	return window.GetServer().SendTopic(split[0], split[1])
 }

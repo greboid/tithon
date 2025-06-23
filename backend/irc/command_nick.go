@@ -14,6 +14,6 @@ func (c Nick) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	window.connection.connection.SetNick(input)
+	window.GetServer().SetNick(input)
 	return nil
 }

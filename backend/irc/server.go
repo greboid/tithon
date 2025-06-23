@@ -46,7 +46,11 @@ type Server struct {
 	manualDisconnect  bool
 }
 
-func NewServer(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) *Server {
+func (c *Server) GetWindow() *Window {
+	return c.Window
+}
+
+func NewServer(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) ServerInterface {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}

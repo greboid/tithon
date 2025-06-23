@@ -176,12 +176,12 @@ func (s *WebClient) getServerList() *ServerList {
 	connections := s.connectionManager.GetConnections()
 	for i := range connections {
 		serverIndex := slices.IndexFunc(s.serverList.Parents, func(item *ServerListItem) bool {
-			return item.Window == connections[i].Window
+			return item.Window == connections[i].GetWindow()
 		})
 		var server *ServerListItem
 		if serverIndex == -1 {
 			server = &ServerListItem{
-				Window:   connections[i].Window,
+				Window:   connections[i].GetWindow(),
 				Link:     connections[i].GetID(),
 				Name:     connections[i].GetName(),
 				Children: nil,

@@ -39,14 +39,14 @@ func (cm *ServerManager) AddConnection(
 	connect bool,
 ) string {
 	connection := NewServer(cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
-	cm.connections[connection.id] = connection
+	cm.connections[connection.GetID()] = connection
 	if connect {
 		go func() {
 			connection.Connect()
 		}()
 	}
 	cm.updateTrigger.SetPendingUpdate()
-	return connection.id
+	return connection.GetID()
 }
 
 func (cm *ServerManager) RemoveConnection(id string) {

@@ -11,7 +11,7 @@ import (
 )
 
 type channelHandler interface {
-	IsChannel(target string) bool
+	IsValidChannel(target string) bool
 	GetChannelByName(string) (*Channel, error)
 	GetChannels() []*Channel
 	AddChannel(name string) *Channel
@@ -74,7 +74,7 @@ type Handler struct {
 	batchMap            map[string]string
 }
 
-func NewHandler(connection *Server) *Handler {
+func NewHandler(connection *Server, ut UpdateTrigger, nm *NotificationManager, conf *config.Config) *Handler {
 	return &Handler{
 		channelHandler:      connection,
 		queryHandler:        connection,
@@ -82,9 +82,9 @@ func NewHandler(connection *Server) *Handler {
 		infoHandler:         connection,
 		modeHandler:         connection,
 		messageHandler:      connection,
-		updateTrigger:       connection.ut,
-		notificationManager: connection.nm,
-		conf:                connection.conf,
+		updateTrigger:       ut,
+		notificationManager: nm,
+		conf:                conf,
 		batchMap:            make(map[string]string),
 	}
 }
@@ -191,7 +191,7 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 
 func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	if h.channelHandler.IsChannel(message.Params[0]) {
+	if h.channelHandler.IsValidChannel(message.Params[0]) {
 		channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 		if err != nil {
 			slog.Warn("Message for unknown channel", "message", message)
@@ -371,7 +371,7 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 	mess := NewNotice(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), nil, h.infoHandler.CurrentNick())
 	if message.Source == "" || (strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@")) {
 		h.messageHandler.AddMessage(mess)
-	} else if h.channelHandler.IsChannel(message.Params[0]) {
+	} else if h.channelHandler.IsValidChannel(message.Params[0]) {
 		channel, err := h.channelHandler.GetChannelByName(message.Params[0])
 		if err != nil {
 			slog.Warn("Notice for unknown channel", "notice", message)
@@ -440,7 +440,7 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 func (h *Handler) handleMode(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
 
-	if h.channelHandler.IsChannel(message.Params[0]) {
+	if h.channelHandler.IsValidChannel(message.Params[0]) {
 		h.handleChannelModes(message)
 	} else {
 		h.handleUserMode(message)

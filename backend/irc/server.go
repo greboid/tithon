@@ -122,7 +122,7 @@ func (c *Server) Connect() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if c.callbackHandler == nil {
-		c.callbackHandler = NewHandler(c)
+		c.callbackHandler = NewHandler(c, c.ut, c.nm, c.conf)
 		c.callbackHandler.addCallbacks()
 	}
 	c.manualDisconnect = false
@@ -241,7 +241,7 @@ func (c *Server) Disconnect() {
 	c.connection.Quit()
 }
 
-func (c *Server) IsChannel(target string) bool {
+func (c *Server) IsTargetChannel(target string) bool {
 	chanTypes := c.connection.ISupport()["CHANTYPES"]
 	if chanTypes == "" {
 		chanTypes = "#"
@@ -252,6 +252,15 @@ func (c *Server) IsChannel(target string) bool {
 		}
 	}
 	return false
+}
+
+func (c *Server) IsValidChannel(target string) bool {
+	return c.IsTargetChannel(target)
+}
+
+// IsChannel implements the Window's IsChannel method for the ServerInterface
+func (c *Server) IsChannel() bool {
+	return c.Window.IsChannel()
 }
 
 func (c *Server) GetChannels() []*Channel {

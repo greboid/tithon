@@ -12,6 +12,7 @@ import (
 	"github.com/greboid/tithon/irc"
 	"github.com/kirsle/configdir"
 	datastar "github.com/starfederation/datastar/sdk/go"
+	"html"
 	"html/template"
 	"io"
 	"io/fs"
@@ -320,7 +321,13 @@ func (s *WebClient) handleUpdate(w http.ResponseWriter, r *http.Request) {
 			s.handleShowSettings(w, r)
 		case notification := <-s.pendingNotifications:
 			slog.Debug("Sending notification", "notification", notification)
-			err := datastar.NewSSE(w, r).ExecuteScript(fmt.Sprintf(`notify("%s", "%s", %t, %t, "")`, notification.Title, notification.Text, notification.Popup, notification.Sound), datastar.WithExecuteScriptAutoRemove(true))
+			err := datastar.NewSSE(w, r).ExecuteScript(
+				fmt.Sprintf(`notify("%s", "%s", %t, %t, "")`,
+					html.EscapeString(notification.Title),
+					html.EscapeString(notification.Text),
+					notification.Popup,
+					notification.Sound,
+				), datastar.WithExecuteScriptAutoRemove(true))
 			if err != nil {
 				slog.Error("Unable to send notification", "error", err)
 			}

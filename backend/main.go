@@ -44,7 +44,7 @@ func main() {
 		}
 	}()
 	showSettings := make(chan bool)
-	pendingNotifications := make(chan irc.Notification)
+	pendingNotifications := make(chan irc.Notification, 10000)
 	notificationManager := irc.NewNotificationManager(pendingNotifications, conf.Notifications.Triggers)
 	commandManager := irc.NewCommandManager(conf, showSettings)
 	connectionManager := irc.NewServerManager(conf, commandManager)

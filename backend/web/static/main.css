@@ -276,7 +276,8 @@ h1 {
 #messages {
   grid-area: messages;
   overflow-y: scroll;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
   align-content: safe end;
   white-space: pre-wrap;
   flex-direction: column;
@@ -567,7 +568,7 @@ h1 {
   }
 
   & p {
-    display: grid;
+    display: contents;
     grid-template-columns: auto auto 1fr;
 
     &.normal, &.highlight {

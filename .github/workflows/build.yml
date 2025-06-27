@@ -10,6 +10,12 @@ jobs:
     container:
       image: archlinux
     steps:
+      - name: Add user
+        run: |
+          useradd runner
+          mkdir /home/runner
+          chown runner:runner /home/runner
+          su - runner
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -18,8 +24,6 @@ jobs:
         with:
           cache-dependency-path: './backend/go.sum'
           go-version: 'stable'
-      - name: Install
-        run: whoami && pwd
 
       - name: Build
         working-directory: ./backend

@@ -18,8 +18,8 @@ jobs:
         with:
           cache-dependency-path: './backend/go.sum'
           go-version: 'stable'
-      - name: Check
-        run: cat /etc/*release
+      - name: Install
+        run: whoami && pwd
 
       - name: Build
         working-directory: ./backend

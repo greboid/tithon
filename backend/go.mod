@@ -14,6 +14,7 @@ require (
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/starfederation/datastar v1.0.0-beta.11
 	github.com/stretchr/testify v1.10.0
+	gitlab.com/golang-commonmark/linkify v0.0.0-20200225224916-64bca66f6ad3
 	golang.org/x/net v0.41.0
 )
 
@@ -28,6 +29,7 @@ require (
 	github.com/igrmk/treemap/v2 v2.0.1 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/rogpeppe/go-internal v1.13.2-0.20241226121412-a5dc8ff20d0a // indirect
 	github.com/samber/lo v1.50.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

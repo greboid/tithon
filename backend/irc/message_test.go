@@ -676,12 +676,16 @@ func TestMessage_parseFormatting(t *testing.T) {
 			message: "Check out https://example.com",
 			want:    "Check out <a target='_blank' href='https://example.com'>https://example.com</a>",
 		},
-		// TODO: This needs resolving, but I'm not sure how to resolve it at the minute.
-		//{
-		//	name:    "Text with URL in a tag",
-		//	message: "Check out <a href=\"https://example.com\">https://example.com</a>",
-		//	want:    "Check out <a target='_blank' href='<a target='_blank' href='https://example.com'>https://example.com</a>'>https://example.com</a>",
-		//},
+		{
+			name:    "Text with URL with subdomain",
+			message: "Check out https://test.example.com",
+			want:    "Check out <a target='_blank' href='https://test.example.com'>https://test.example.com</a>",
+		},
+		{
+			name:    "Text with URL in a tag",
+			message: "Check out <a href=\"https://example.com\">https://example.com</a>",
+			want:    "Check out &lt;a href=&#34;<a target='_blank' href='https://example.com'>https://example.com</a>&#34;&gt;<a target='_blank' href='https://example.com'>https://example.com</a>&lt;/a&gt;",
+		},
 		{
 			name:    "Text with multiple URLs",
 			message: "Visit https://example.com and http://test.org",
@@ -701,6 +705,11 @@ func TestMessage_parseFormatting(t *testing.T) {
 			name:    "Text with IRC formatting and URL",
 			message: "\x02Bold\x02 text with https://example.com link",
 			want:    "<span class=\"bold\">Bold</span> text with <a target='_blank' href='https://example.com'>https://example.com</a> link",
+		},
+		{
+			name:    "No protocol in link",
+			message: "text with example.com link",
+			want:    "text with <a target='_blank' href='example.com'>example.com</a> link",
 		},
 	}
 

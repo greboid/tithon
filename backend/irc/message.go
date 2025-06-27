@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/ergochat/irc-go/ircfmt"
+	"gitlab.com/golang-commonmark/linkify"
 	"golang.org/x/net/html"
 	"log/slog"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +16,12 @@ const v3TimestampFormat = "2006-01-02T15:04:05.000Z"
 
 type MessageType int
 type EventType int
+
+type Link struct {
+	Start int
+	End   int
+	Text  string
+}
 
 const (
 	Normal = iota
@@ -241,8 +247,12 @@ func (m *Message) isHighlight() bool {
 
 func (m *Message) parseFormatting() {
 	output := html.EscapeString(m.message)
-	urlRegex := regexp.MustCompile(`(?P<url>https?://[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+)`)
-	output = urlRegex.ReplaceAllString(output, "<a target='_blank' href='${url}'>${url}</a>")
+	offset := 0
+	for _, link := range m.GetLinks(output) {
+		replacement := fmt.Sprintf(`<a target='_blank' href='%s'>%s</a>`, link.Text, link.Text)
+		output = fmt.Sprintf(`%s%s%s`, output[:link.Start+offset], replacement, output[link.End+offset:])
+		offset += len(replacement) - len(link.Text)
+	}
 	m.message = output
 	m.parseIRCFormatting()
 }
@@ -287,4 +297,16 @@ func (m *Message) parseIRCFormatting() {
 		}
 	}
 	m.message = out.String()
+}
+
+func (m *Message) GetLinks(input string) []Link {
+	var result []Link
+	for _, link := range linkify.Links(input) {
+		result = append(result, Link{
+			Start: link.Start,
+			End:   link.End,
+			Text:  input[link.Start:link.End],
+		})
+	}
+	return result
 }

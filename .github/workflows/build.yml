@@ -24,7 +24,8 @@ jobs:
         with:
           cache-dependency-path: './backend/go.sum'
           go-version: 'stable'
-
+      - name: Whoami
+        run: whoami
       - name: Build
         working-directory: ./backend
         run: go build -v ./...

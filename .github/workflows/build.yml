@@ -5,17 +5,43 @@ on:
     branches:
       - master
 jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build image
+        run: |
+          cat <<EOF>> Dockerfile
+          FROM archlinux
+          RUN pacman -Syu --noconfirm git pacman-contrib openssh
+          RUN useradd runner && mkdir /home/runner && chown runner:runner /home/runner
+          USER runner
+          EOF
+          docker build -t archlinux:nonroot -f Dockerfile .
+          docker save -o /tmp/archlinux.tar archlinux:nonroot
+      - name: Upload Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: archlinux-nonroot
+          path: /tmp/archlinux
+          retention-days: 1
+          overwrite: true
+  load-image:
+    runs-on: ubuntu-latest
+    needs: build-image
+    steps:
+      - name: Download image
+        uses: actions/download-artifact@v4
+        with:
+          name: archlinux-nonroot
+          path: /tmp
+      - name: Load Image
+        run: docker load < /tmp/archlinux.tar
   test:
     runs-on: ubuntu-latest
+    needs: load-image
     container:
-      image: archlinux
+      image: archlinux:nonroot
     steps:
-      - name: Add user
-        run: |
-          useradd runner
-          mkdir /home/runner
-          chown runner:runner /home/runner
-          su - runner
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -25,7 +51,7 @@ jobs:
           cache-dependency-path: './backend/go.sum'
           go-version: 'stable'
       - name: Whoami
-        run: whoami
+        run: whoami && pwd && ls
       - name: Build
         working-directory: ./backend
         run: go build -v ./...

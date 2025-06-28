@@ -1,8 +1,11 @@
 const handlePaste = async (e) => {
   for (const clipboardItem of e.clipboardData.files) {
-    if (clipboardItem.type.startsWith('image/')) {
-      console.log(clipboardItem)
-    }
+      const list = new DataTransfer()
+      list.items.add(new File(await clipboardItem.bytes(), clipboardItem.name, {
+        type: clipboardItem.type,
+      }))
+      document.getElementById('fileUpload').files = list.files
+      console.log(document.getElementById('fileUpload').files)
   }
 }
 

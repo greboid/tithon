@@ -1,4 +1,4 @@
-<div id="input" data-signals="{files: [], filesMimes: [], filesNames: [], location: ''}">
+<div id="input">
     <form
             data-ref="inputForm"
             data-signals-wrapped__ifmissing="false"
@@ -29,9 +29,13 @@
                 autocomplete="off"
         ></textarea>
     </form>
-    <label data-signals-filehost__ifmissing="" data-attr-hidden="$filehost.length == 0"
-           data-on-signals-change-files__debounce.500ms="$files.length > 0 && @post('/upload')">
-        <input hidden type="file" data-bind="files" multiple/>
+    <label data-signals-filehost__ifmissing=""
+           data-signals-files__ifmissing="[]"
+           data-signals-filesMimes__ifmissing="[]"
+           data-signals-filesNames__ifmissing="[]"
+           data-attr-hidden="$filehost.length == 0"
+           data-on-signal-change-files__debounce.500ms="$files.length > 0 && @post('/upload')">
+        <input hidden type="file" data-bind="files" multiple />
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
              class="icon icon-tabler icons-tabler-outline icon-tabler-paperclip">

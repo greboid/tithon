@@ -801,6 +801,7 @@ func (s *WebClient) handleInput(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *WebClient) handleUpload(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("Uploading file")
 	if s.getActiveWindow() == nil {
 		return
 	}
@@ -809,15 +810,16 @@ func (s *WebClient) handleUpload(w http.ResponseWriter, r *http.Request) {
 		Mimes    []string `json:"filesMimes"`
 		Names    []string `json:"filesNames"`
 		FileHost string   `json:"filehost"`
+		Location string   `json:"location"`
+		Input    string   `json:"input"`
+		Position int      `json:"position"`
 	}
 	uploaded := &uploadBody{}
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(uploaded)
+	err := json.NewDecoder(r.Body).Decode(uploaded)
 	if err != nil {
 		slog.Debug("Error uploading file", "error", err)
 		return
 	}
-	fmt.Println(uploaded.FileHost)
 	if len(uploaded.Files) != 1 && len(uploaded.Mimes) != 1 && len(uploaded.Names) != 1 {
 		slog.Debug("Error wrong number of files uploaded")
 		return
@@ -841,8 +843,12 @@ func (s *WebClient) handleUpload(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Error creating request file", "error", err)
 		return
 	}
-	req.Header.Set("Content-Type", uploaded.Mimes[0])
-	req.Header.Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, uploaded.Names[0]))
+	if len(uploaded.Names) > 0 {
+		req.Header.Set("Content-Type", uploaded.Mimes[0])
+	}
+	if len(uploaded.Names) > 0 {
+		req.Header.Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, uploaded.Names[0]))
+	}
 	req.SetBasicAuth(username, password)
 	resp, err := client.Do(req)
 	if err != nil {
@@ -863,11 +869,15 @@ func (s *WebClient) handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	location := resp.Header.Get("location")
 	location = strings.TrimPrefix(location, "/uploads")
-	slog.Info("File uploaded to bouncer", "file", uploaded.FileHost+location)
-
+	uploaded.Files = []string{}
+	uploaded.Mimes = []string{}
+	uploaded.Names = []string{}
+	uploaded.Location = uploaded.FileHost + location
+	uploaded.Input = uploaded.Input[:uploaded.Position] + uploaded.Location + uploaded.Input[uploaded.Position:]
+	slog.Debug("File uploaded", "location", uploaded.Location)
 	s.lock.Lock()
 	sse := datastar.NewSSE(w, r)
-	err = sse.MergeSignals([]byte("{files: [], filesMimes: [], filesNames: [], location: \"" + uploaded.FileHost + location + "\"}"))
+	err = sse.MarshalAndMergeSignals(uploaded)
 	if err != nil {
 		slog.Debug("Error removing signals", "error", err)
 		return

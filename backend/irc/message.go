@@ -21,6 +21,7 @@ type Link struct {
 	Start int
 	End   int
 	Text  string
+	Link  string
 }
 
 const (
@@ -249,7 +250,7 @@ func (m *Message) parseFormatting() {
 	output := html.EscapeString(m.message)
 	offset := 0
 	for _, link := range m.GetLinks(output) {
-		replacement := fmt.Sprintf(`<a target='_blank' href='%s'>%s</a>`, link.Text, link.Text)
+		replacement := fmt.Sprintf(`<a target='_blank' href='%s'>%s</a>`, link.Link, link.Text)
 		output = fmt.Sprintf(`%s%s%s`, output[:link.Start+offset], replacement, output[link.End+offset:])
 		offset += len(replacement) - len(link.Text)
 	}
@@ -302,11 +303,21 @@ func (m *Message) parseIRCFormatting() {
 func (m *Message) GetLinks(input string) []Link {
 	var result []Link
 	for _, link := range linkify.Links(input) {
-		result = append(result, Link{
-			Start: link.Start,
-			End:   link.End,
-			Text:  input[link.Start:link.End],
-		})
+		if link.Scheme == "" {
+			result = append(result, Link{
+				Start: link.Start,
+				End:   link.End,
+				Text:  input[link.Start:link.End],
+				Link:  "https://" + input[link.Start:link.End],
+			})
+		} else {
+			result = append(result, Link{
+				Start: link.Start,
+				End:   link.End,
+				Text:  input[link.Start:link.End],
+				Link:  input[link.Start:link.End],
+			})
+		}
 	}
 	return result
 }

@@ -709,7 +709,17 @@ func TestMessage_parseFormatting(t *testing.T) {
 		{
 			name:    "No protocol in link",
 			message: "text with example.com link",
-			want:    "text with <a target='_blank' href='example.com'>example.com</a> link",
+			want:    "text with <a target='_blank' href='https://example.com'>example.com</a> link",
+		},
+		{
+			name:    "URL with punctuation at start and end",
+			message: "text with (example.com) link",
+			want:    "text with (<a target='_blank' href='https://example.com'>example.com</a>) link",
+		},
+		{
+			name:    "URL with punctuation at the end",
+			message: "text with example.com. link",
+			want:    "text with <a target='_blank' href='https://example.com'>example.com</a>. link",
 		},
 	}
 

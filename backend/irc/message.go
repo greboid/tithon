@@ -4,15 +4,18 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/ergochat/irc-go/ircfmt"
-	"gitlab.com/golang-commonmark/linkify"
 	"golang.org/x/net/html"
 	"log/slog"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const v3TimestampFormat = "2006-01-02T15:04:05.000Z"
+const (
+	v3TimestampFormat = "2006-01-02T15:04:05.000Z"
+	HyperlinkCode     = "\x05"
+)
 
 type MessageType int
 type EventType int
@@ -59,25 +62,26 @@ type Message struct {
 	timestampFormat string
 	tags            map[string]string
 	nowFunc         func() time.Time
+	linkregex       *regexp.Regexp
 }
 
-func NewNotice(timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
-	return newMessage(timeFormat, me, nickname, message, Notice, tags, highlights)
+func NewNotice(linkregex *regexp.Regexp, timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
+	return newMessage(linkregex, timeFormat, me, nickname, message, Notice, tags, highlights)
 }
 
-func NewEvent(eventType EventType, timeFormat string, me bool, message string) *Message {
-	return newMessage(timeFormat, me, "", message, Event, nil, nil)
+func NewEvent(linkregex *regexp.Regexp, eventType EventType, timeFormat string, me bool, message string) *Message {
+	return newMessage(linkregex, timeFormat, me, "", message, Event, nil, nil)
 }
 
-func NewError(timeFormat string, me bool, message string) *Message {
-	return newMessage(timeFormat, me, "", message, Error, nil, nil)
+func NewError(linkregex *regexp.Regexp, timeFormat string, me bool, message string) *Message {
+	return newMessage(linkregex, timeFormat, me, "", message, Error, nil, nil)
 }
 
-func NewMessage(timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
-	return newMessage(timeFormat, me, nickname, message, Normal, tags, highlights)
+func NewMessage(linkregex *regexp.Regexp, timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
+	return newMessage(linkregex, timeFormat, me, nickname, message, Normal, tags, highlights)
 }
 
-func newMessage(timeFormat string, me bool, nickname string, message string, messageType MessageType, tags map[string]string, highlights []string) *Message {
+func newMessage(linkregex *regexp.Regexp, timeFormat string, me bool, nickname string, message string, messageType MessageType, tags map[string]string, highlights []string) *Message {
 	if tags == nil {
 		tags = make(map[string]string)
 	}
@@ -89,6 +93,7 @@ func newMessage(timeFormat string, me bool, nickname string, message string, mes
 		me:              me,
 		timestampFormat: timeFormat,
 		tags:            tags,
+		linkregex:       linkregex,
 	}
 	return m.parse()
 }
@@ -247,14 +252,9 @@ func (m *Message) isHighlight() bool {
 }
 
 func (m *Message) parseFormatting() {
-	output := html.EscapeString(m.message)
-	offset := 0
-	for _, link := range m.GetLinks(output) {
-		replacement := fmt.Sprintf(`<a target='_blank' href='%s'>%s</a>`, link.Link, link.Text)
-		output = fmt.Sprintf(`%s%s%s`, output[:link.Start+offset], replacement, output[link.End+offset:])
-		offset += len(replacement) - len(link.Text)
-	}
-	m.message = output
+	m.message = m.GetLinks(m.message)
+	m.message = html.EscapeString(m.message)
+	m.message = m.ReplaceLinks(m.message)
 	m.parseIRCFormatting()
 }
 
@@ -300,24 +300,45 @@ func (m *Message) parseIRCFormatting() {
 	m.message = out.String()
 }
 
-func (m *Message) GetLinks(input string) []Link {
+func (m *Message) GetLinks(input string) string {
 	var result []Link
-	for _, link := range linkify.Links(input) {
-		if link.Scheme == "" {
-			result = append(result, Link{
-				Start: link.Start,
-				End:   link.End,
-				Text:  input[link.Start:link.End],
-				Link:  "https://" + input[link.Start:link.End],
-			})
-		} else {
-			result = append(result, Link{
-				Start: link.Start,
-				End:   link.End,
-				Text:  input[link.Start:link.End],
-				Link:  input[link.Start:link.End],
-			})
-		}
+	urls := m.linkregex.FindAllStringIndex(input, -1)
+	for _, u := range urls {
+		//url := input[u[0]:u[1]]
+		//if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		//	result = append(result, Link{
+		//		Start: u[0],
+		//		End:   u[1],
+		//		Text:  input[u[0]:u[1]],
+		//		Link:  "https://" + input[u[0]:u[1]],
+		//	})
+		//} else {
+		result = append(result, Link{
+			Start: u[0],
+			End:   u[1],
+			Text:  input[u[0]:u[1]],
+			Link:  input[u[0]:u[1]],
+		})
+		//}
 	}
-	return result
+	output := input
+	offset := 0
+	for _, link := range result {
+		replacement := fmt.Sprintf(`%s%s%s`, HyperlinkCode, link.Link, HyperlinkCode)
+		output = fmt.Sprintf(`%s%s%s`, output[:link.Start+offset], replacement, output[link.End+offset:])
+		offset += len(replacement) - len(link.Text)
+	}
+	return output
+}
+
+func (m *Message) ReplaceLinks(message string) string {
+	reg := regexp.MustCompile(`(?:\x05)(.*?)(?:\x05)`)
+	return reg.ReplaceAllStringFunc(message, func(i string) string {
+		i = strings.TrimPrefix(i, HyperlinkCode)
+		i = strings.TrimSuffix(i, HyperlinkCode)
+		if strings.HasPrefix(i, "http://") || strings.HasPrefix(i, "https://") {
+			return fmt.Sprintf(`<a target='_blank' href='%s'>%s</a>`, i, i)
+		}
+		return fmt.Sprintf(`<a target='_blank' href='https://%s'>%s</a>`, i, i)
+	})
 }

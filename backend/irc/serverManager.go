@@ -3,6 +3,7 @@ package irc
 import (
 	"github.com/greboid/tithon/config"
 	"maps"
+	"regexp"
 	"slices"
 	"strings"
 )
@@ -17,13 +18,15 @@ type ServerManager struct {
 	updateTrigger       UpdateTrigger
 	notificationManager *NotificationManager
 	config              *config.Config
+	linkRegex           *regexp.Regexp
 }
 
-func NewServerManager(conf *config.Config, commandManager *CommandManager) *ServerManager {
+func NewServerManager(linkRegex *regexp.Regexp, conf *config.Config, commandManager *CommandManager) *ServerManager {
 	return &ServerManager{
 		connections:    map[string]ServerInterface{},
 		commandManager: commandManager,
 		config:         conf,
+		linkRegex:      linkRegex,
 	}
 }
 
@@ -38,7 +41,7 @@ func (cm *ServerManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewServer(cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
+	connection := NewServer(cm.linkRegex, cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
 	cm.connections[connection.GetID()] = connection
 	if connect {
 		go func() {

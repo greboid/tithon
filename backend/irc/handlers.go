@@ -6,6 +6,7 @@ import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/greboid/tithon/config"
 	"log/slog"
+	"regexp"
 	"slices"
 	"strings"
 )
@@ -72,9 +73,10 @@ type Handler struct {
 	notificationManager *NotificationManager
 	conf                *config.Config
 	batchMap            map[string]string
+	linkRegex           *regexp.Regexp
 }
 
-func NewHandler(connection ServerInterface, ut UpdateTrigger, nm *NotificationManager, conf *config.Config) *Handler {
+func NewHandler(linkRegex *regexp.Regexp, connection ServerInterface, ut UpdateTrigger, nm *NotificationManager, conf *config.Config) *Handler {
 	return &Handler{
 		channelHandler:      connection,
 		queryHandler:        connection,
@@ -86,6 +88,7 @@ func NewHandler(connection ServerInterface, ut UpdateTrigger, nm *NotificationMa
 		notificationManager: nm,
 		conf:                conf,
 		batchMap:            make(map[string]string),
+		linkRegex:           linkRegex,
 	}
 }
 
@@ -103,12 +106,12 @@ func (h *Handler) addCallbacks() {
 	h.callbackHandler.AddCallback(ircevent.RPL_UMODEIS, h.handleUserModeSet)
 	h.callbackHandler.AddCallback("ERROR", h.handleError)
 	h.callbackHandler.AddCallback(ircevent.ERR_NICKNAMEINUSE, func(message ircmsg.Message) {
-		h.messageHandler.AddMessage(NewError(h.conf.UISettings.TimestampFormat, false, "Nickname in use: "+message.Params[1]))
+		h.messageHandler.AddMessage(NewError(h.linkRegex, h.conf.UISettings.TimestampFormat, false, "Nickname in use: "+message.Params[1]))
 	})
 	h.callbackHandler.AddCallback("NICK", h.handleNick)
 	h.callbackHandler.AddCallback("QUIT", h.handleQuit)
 	h.callbackHandler.AddCallback(ircevent.ERR_PASSWDMISMATCH, func(message ircmsg.Message) {
-		h.messageHandler.AddMessage(NewError(h.conf.UISettings.TimestampFormat, false, "Password Mismatch: "+strings.Join(message.Params, " ")))
+		h.messageHandler.AddMessage(NewError(h.linkRegex, h.conf.UISettings.TimestampFormat, false, "Password Mismatch: "+strings.Join(message.Params, " ")))
 	})
 	h.callbackHandler.AddCallback("MODE", h.handleMode)
 	h.callbackHandler.AddCallback(ircevent.RPL_WHOISUSER, func(message ircmsg.Message) {
@@ -170,9 +173,9 @@ func (h *Handler) handleTopic(message ircmsg.Message) {
 	channel.SetTopic(topic)
 	channel.SetTitle(topic.GetTopic())
 	if newTopic == "" {
-		channel.AddMessage(NewEvent(EventTopic, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick()+" unset the topic"))
+		channel.AddMessage(NewEvent(h.linkRegex, EventTopic, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick()+" unset the topic"))
 	} else {
-		channel.AddMessage(NewEvent(EventTopic, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick()+" changed the topic: "+topic.GetTopic()))
+		channel.AddMessage(NewEvent(h.linkRegex, EventTopic, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick()+" changed the topic: "+topic.GetTopic()))
 	}
 }
 
@@ -197,7 +200,7 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 			slog.Warn("Message for unknown channel", "message", message)
 			return
 		}
-		msg := NewMessage(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
+		msg := NewMessage(h.linkRegex, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
 		if msg.tags["chathistory"] != "true" && !msg.isMe() {
 			h.notificationManager.CheckAndNotify(h.infoHandler.GetName(), channel.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 		}
@@ -208,7 +211,7 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 			pm = h.queryHandler.AddQuery(message.Nick())
 		}
 
-		msg := NewMessage(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
+		msg := NewMessage(h.linkRegex, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
 		if msg.tags["chathistory"] != "true" && !msg.isMe() {
 			h.notificationManager.CheckAndNotify(h.infoHandler.GetName(), pm.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 		}
@@ -218,7 +221,7 @@ func (h *Handler) handlePrivMsg(message ircmsg.Message) {
 		if err != nil {
 			pm = h.queryHandler.AddQuery(message.Nick())
 		}
-		msg := NewMessage(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
+		msg := NewMessage(h.linkRegex, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), h.infoHandler.CurrentNick())
 		pm.AddMessage(msg)
 	} else {
 		slog.Warn("Unsupported message target", "message", message)
@@ -243,7 +246,7 @@ func (h *Handler) handleSelfJoin(message ircmsg.Message) {
 			h.messageHandler.SendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
 		}
 	}
-	channel.AddMessage(NewEvent(EventJoin, h.conf.UISettings.TimestampFormat, false, "You have joined "+channel.GetName()))
+	channel.AddMessage(NewEvent(h.linkRegex, EventJoin, h.conf.UISettings.TimestampFormat, false, "You have joined "+channel.GetName()))
 }
 
 func (h *Handler) handlePart(message ircmsg.Message) {
@@ -260,7 +263,7 @@ func (h *Handler) handlePart(message ircmsg.Message) {
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.AddMessage(NewEvent(EventJoin, h.conf.UISettings.TimestampFormat, false, message.Source+" has parted "+channel.GetName()))
+	channel.AddMessage(NewEvent(h.linkRegex, EventJoin, h.conf.UISettings.TimestampFormat, false, message.Source+" has parted "+channel.GetName()))
 }
 
 func (h *Handler) handleKick(message ircmsg.Message) {
@@ -278,7 +281,7 @@ func (h *Handler) handleKick(message ircmsg.Message) {
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 		return user.nickname == message.Nick()
 	})
-	channel.AddMessage(NewEvent(EventKick, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")"))
+	channel.AddMessage(NewEvent(h.linkRegex, EventKick, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")"))
 }
 
 func (h *Handler) handleOtherJoin(message ircmsg.Message) {
@@ -288,7 +291,7 @@ func (h *Handler) handleOtherJoin(message ircmsg.Message) {
 		return
 	}
 	channel.users = append(channel.users, NewUser(message.Nick(), ""))
-	channel.AddMessage(NewEvent(EventJoin, h.conf.UISettings.TimestampFormat, false, message.Source+" has joined "+channel.GetName()))
+	channel.AddMessage(NewEvent(h.linkRegex, EventJoin, h.conf.UISettings.TimestampFormat, false, message.Source+" has joined "+channel.GetName()))
 }
 
 func (h *Handler) handleDisconnected(message ircmsg.Message) {
@@ -297,10 +300,10 @@ func (h *Handler) handleDisconnected(message ircmsg.Message) {
 
 	h.addEvent(EventDisconnected, false, disconnectMessage)
 	for _, channel := range h.channelHandler.GetChannels() {
-		channel.AddMessage(NewEvent(EventDisconnected, h.conf.UISettings.TimestampFormat, false, disconnectMessage))
+		channel.AddMessage(NewEvent(h.linkRegex, EventDisconnected, h.conf.UISettings.TimestampFormat, false, disconnectMessage))
 	}
 	for _, query := range h.queryHandler.GetQueries() {
-		query.AddMessage(NewEvent(EventDisconnected, h.conf.UISettings.TimestampFormat, false, disconnectMessage))
+		query.AddMessage(NewEvent(h.linkRegex, EventDisconnected, h.conf.UISettings.TimestampFormat, false, disconnectMessage))
 	}
 }
 
@@ -314,10 +317,10 @@ func (h *Handler) handleConnected(message ircmsg.Message) {
 
 	h.addEvent(EventConnecting, false, connectMessage)
 	for _, channel := range h.channelHandler.GetChannels() {
-		channel.AddMessage(NewEvent(EventConnecting, h.conf.UISettings.TimestampFormat, false, connectMessage))
+		channel.AddMessage(NewEvent(h.linkRegex, EventConnecting, h.conf.UISettings.TimestampFormat, false, connectMessage))
 	}
 	for _, query := range h.queryHandler.GetQueries() {
-		query.AddMessage(NewEvent(EventConnecting, h.conf.UISettings.TimestampFormat, false, connectMessage))
+		query.AddMessage(NewEvent(h.linkRegex, EventConnecting, h.conf.UISettings.TimestampFormat, false, connectMessage))
 	}
 }
 
@@ -363,12 +366,12 @@ func (h *Handler) handleUserModeSet(message ircmsg.Message) {
 
 func (h *Handler) handleError(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	h.messageHandler.AddMessage(NewError(h.conf.UISettings.TimestampFormat, false, strings.Join(message.Params, " ")))
+	h.messageHandler.AddMessage(NewError(h.linkRegex, h.conf.UISettings.TimestampFormat, false, strings.Join(message.Params, " ")))
 }
 
 func (h *Handler) handleNotice(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
-	mess := NewNotice(h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), nil, h.infoHandler.CurrentNick())
+	mess := NewNotice(h.linkRegex, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick(), strings.Join(message.Params[1:], " "), nil, h.infoHandler.CurrentNick())
 	if message.Source == "" || (strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@")) {
 		h.messageHandler.AddMessage(mess)
 	} else if h.channelHandler.IsValidChannel(message.Params[0]) {
@@ -396,7 +399,7 @@ func (h *Handler) handleNotice(message ircmsg.Message) {
 }
 
 func (h *Handler) addEvent(eventType EventType, isMe bool, message string) {
-	h.messageHandler.AddMessage(NewEvent(eventType, h.conf.UISettings.TimestampFormat, isMe, message))
+	h.messageHandler.AddMessage(NewEvent(h.linkRegex, eventType, h.conf.UISettings.TimestampFormat, isMe, message))
 }
 
 func (h *Handler) handleNick(message ircmsg.Message) {
@@ -409,7 +412,7 @@ func (h *Handler) handleNick(message ircmsg.Message) {
 		users := channels[i].GetUsers()
 		for j := range users {
 			if users[j].nickname == message.Nick() {
-				channels[i].AddMessage(NewEvent(EventNick, h.conf.UISettings.TimestampFormat, false, message.Nick()+" is now known as "+message.Params[0]))
+				channels[i].AddMessage(NewEvent(h.linkRegex, EventNick, h.conf.UISettings.TimestampFormat, false, message.Nick()+" is now known as "+message.Params[0]))
 				users[j].nickname = message.Params[0]
 			}
 		}
@@ -432,7 +435,7 @@ func (h *Handler) handleQuit(message ircmsg.Message) {
 		if changed {
 			channels[i].SetUsers(users)
 			nuh, _ := message.NUH()
-			channels[i].AddMessage(NewEvent(EventNick, h.conf.UISettings.TimestampFormat, false, nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " ")))
+			channels[i].AddMessage(NewEvent(h.linkRegex, EventNick, h.conf.UISettings.TimestampFormat, false, nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " ")))
 		}
 	}
 }
@@ -532,7 +535,7 @@ func (h *Handler) applyChannelMode(change modeChange, message ircmsg.Message) {
 			paramStr = " " + change.parameter
 		}
 
-		channel.AddMessage(NewEvent(EventMode, h.conf.UISettings.TimestampFormat, false,
+		channel.AddMessage(NewEvent(h.linkRegex, EventMode, h.conf.UISettings.TimestampFormat, false,
 			fmt.Sprintf("%s sets mode %s%s", message.Nick(), modeStr, paramStr)))
 	default:
 		slog.Warn("Unknown mode type", "mode", change.mode, "type", change.modeType)
@@ -562,7 +565,7 @@ func (h *Handler) handleUserPrivilegeMode(change modeChange, channel *Channel, m
 		modeStr = "-" + change.mode
 	}
 
-	channel.AddMessage(NewEvent(EventMode, h.conf.UISettings.TimestampFormat, false,
+	channel.AddMessage(NewEvent(h.linkRegex, EventMode, h.conf.UISettings.TimestampFormat, false,
 		fmt.Sprintf("%s sets mode %s %s", message.Nick(), modeStr, change.nickname)))
 }
 

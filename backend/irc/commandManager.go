@@ -5,6 +5,7 @@ import (
 	"github.com/enescakir/emoji"
 	"github.com/greboid/tithon/config"
 	"log/slog"
+	"regexp"
 	"strings"
 )
 
@@ -24,12 +25,13 @@ type Notifier interface {
 }
 
 type CommandManager struct {
-	commands []Command
-	conf     *config.Config
-	nm       *NotificationManager
+	commands  []Command
+	conf      *config.Config
+	nm        *NotificationManager
+	LinkRegex *regexp.Regexp
 }
 
-func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandManager {
+func NewCommandManager(linkRegex *regexp.Regexp, conf *config.Config, showSettings chan bool) *CommandManager {
 	cm := &CommandManager{}
 	cm.commands = []Command{
 		&SendAction{},
@@ -51,6 +53,7 @@ func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandMana
 			showSettings: showSettings,
 		},
 	}
+	cm.LinkRegex = linkRegex
 	cm.conf = conf
 	return cm
 }
@@ -96,7 +99,7 @@ func (cm *CommandManager) showCommandError(window *Window, command Command, mess
 
 func (cm *CommandManager) showError(window *Window, message string) {
 	if window != nil {
-		window.AddMessage(NewError(cm.conf.UISettings.TimestampFormat, false, message))
+		window.AddMessage(NewError(cm.LinkRegex, cm.conf.UISettings.TimestampFormat, false, message))
 	} else {
 		slog.Error("Command error", "message", message)
 	}

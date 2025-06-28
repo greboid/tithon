@@ -9,6 +9,7 @@ import (
 	"github.com/greboid/tithon/config"
 	"log/slog"
 	"maps"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -44,13 +45,14 @@ type Server struct {
 	reconnectAttempts int
 	reconnectTimer    *time.Timer
 	manualDisconnect  bool
+	linkRegex         *regexp.Regexp
 }
 
 func (c *Server) GetWindow() *Window {
 	return c.Window
 }
 
-func NewServer(conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) ServerInterface {
+func NewServer(linkRegex *regexp.Regexp, conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) ServerInterface {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}
@@ -96,6 +98,7 @@ func NewServer(conf *config.Config, id string, hostname string, port int, tls bo
 		reconnectAttempts: 0,
 		reconnectTimer:    nil,
 		manualDisconnect:  false,
+		linkRegex:         linkRegex,
 	}
 	server.Window = &Window{
 		id:           id,
@@ -126,7 +129,7 @@ func (c *Server) Connect() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if c.callbackHandler == nil {
-		c.callbackHandler = NewHandler(c, c.ut, c.nm, c.conf)
+		c.callbackHandler = NewHandler(c.linkRegex, c, c.ut, c.nm, c.conf)
 		c.callbackHandler.addCallbacks()
 	}
 	c.manualDisconnect = false
@@ -159,7 +162,7 @@ func (c *Server) Connect() {
 		c.resetReconnectValues()
 		err := c.connection.Connect()
 		if err != nil {
-			c.AddMessage(NewError(c.conf.UISettings.TimestampFormat, false, "Server error: "+err.Error()))
+			c.AddMessage(NewError(c.linkRegex, c.conf.UISettings.TimestampFormat, false, "Server error: "+err.Error()))
 			go c.scheduleReconnect()
 		}
 	}
@@ -207,7 +210,7 @@ func (c *Server) scheduleReconnect() {
 		if !c.connection.Connected() {
 			err := c.connection.Connect()
 			if err != nil {
-				c.AddMessage(NewError(c.conf.UISettings.TimestampFormat, false,
+				c.AddMessage(NewError(c.linkRegex, c.conf.UISettings.TimestampFormat, false,
 					fmt.Sprintf("Reconnection attempt %d failed: %s", c.reconnectAttempts, err.Error())))
 				go c.scheduleReconnect()
 				return
@@ -417,7 +420,7 @@ func (c *Server) SendMessage(window string, message string) error {
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+			channel.AddMessage(NewMessage(c.linkRegex, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err := c.connection.Send("PRIVMSG", channel.name, part)
 		if err != nil {
@@ -440,7 +443,7 @@ func (c *Server) SendQuery(target string, message string) error {
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			pm.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+			pm.AddMessage(NewMessage(c.linkRegex, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err = c.connection.Send("PRIVMSG", target, part)
 		if err != nil {
@@ -466,7 +469,7 @@ func (c *Server) SendNotice(window string, message string) error {
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			channel.AddMessage(NewMessage(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+			channel.AddMessage(NewMessage(c.linkRegex, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err := c.connection.Send("NOTICE", channel.name, part)
 		if err != nil {
@@ -489,7 +492,7 @@ func (c *Server) SendQueryNotice(target string, message string) error {
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			pm.AddMessage(NewNotice(c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+			pm.AddMessage(NewNotice(c.linkRegex, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err = c.connection.Send("NOTICE", target, part)
 		if err != nil {

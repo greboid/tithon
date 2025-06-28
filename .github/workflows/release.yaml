@@ -6,10 +6,8 @@ on:
 permissions:
   contents: write
 jobs:
-  release:
+  release-github:
     runs-on: ubuntu-latest
-    env:
-      SSH_AUTH_SOCK: /tmp/ssh_agent.sock
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
@@ -30,15 +28,29 @@ jobs:
           cd frontend
           npm install
           npm run publish
-
+  release-aur:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux
+    env:
+      SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: './backend/go.sum'
+          go-version: 'stable'
       - name: Update AUR
         run: |
+          pacman -Syu --noconfirm pacman-contrib openssh git
+          useradd runner
+          mkdir /home/runner
+          chown runner:runner /home/runner
+
           #Get new version from REF, stripping v
           VERSION=${GITHUB_REF#refs/tags/v}
-          
-          #Install Arch package tools
-          sudo apt update
-          sudo apt install -y pacman-package-manager
 
           #Setup SSH Agent
           mkdir -p ~/.ssh
@@ -60,24 +72,18 @@ jobs:
           git config --global init.defaultBranch master
 
           #Clone the AUR package
-          git clone ssh://aur@aur.archlinux.org/tithon.git aur-repo
-          cd aur-repo
-          git pull --tags
+          git clone ssh://aur@aur.archlinux.org/tithon.git /home/runner/tithon
+          cd /home/runner/tithon
 
           #Update the PKGBUILD with the version
           sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD
           sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
 
-          #Update .SRCINFO
-          buildfile=PKGBUILD
-          newbuildfile=PKGBUILD2
-          sumtypes=SHA256
-          newsums=$(makepkg -g)
-          
-          awk 'BEGIN { del=0 } /sha256sums/ { del=2 } del<=0 { print } /)/ { del -= 1 }' "$buildfile" > "$newbuildfile"
-          echo $newsums >> "$newbuildfile"
-          mv "$newbuildfile" "$buildfile"
-          makepkg --printsrcinfo > .SRCINFO
+          #Update sums
+          chown -R runner:runner /home/runner/tithon
+          su - runner sh -c "updpkgsums /home/runner/tithon/PKGBUILD"
+          su - runner sh -c "makepkg --printsrcinfo > .SRCINFO"
+          chown -R root:root /home/runner/tithon
 
           #Stage file in git
           git add PKGBUILD .SRCINFO

@@ -82,7 +82,7 @@ jobs:
           #Update sums
           chown -R runner:runner /home/runner/tithon
           su - runner sh -c "updpkgsums /home/runner/tithon/PKGBUILD"
-          su - runner sh -c "makepkg --printsrcinfo > .SRCINFO"
+          su - runner sh -c "cd /home/runner/tithon; makepkg --printsrcinfo > .SRCINFO"
           chown -R root:root /home/runner/tithon
 
           #Stage file in git

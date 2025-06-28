@@ -72,7 +72,7 @@ jobs:
           git config --global init.defaultBranch master
 
           #Clone the AUR package
-          git clone ssh://aur@aur.archlinux.org/tithon.git /home/runner/tithon
+          GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new" git clone ssh://aur@aur.archlinux.org/tithon.git /home/runner/tithon
           cd /home/runner/tithon
 
           #Update the PKGBUILD with the version
@@ -96,4 +96,4 @@ jobs:
 
           #Push changes
           git commit -m "Update to version $VERSION"
-          git push
+          GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new" git push

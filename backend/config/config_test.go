@@ -50,9 +50,13 @@ func TestConfig_Load_BlankID(t *testing.T) {
 		loadData: &Config{
 			Servers: []Server{
 				{
-					ID: "",
+					ID:       "",
+					Hostname: "irc.example.com",
+					Port:     6667,
+					Profile:  Profile{Nickname: "testnick"},
 				},
 			},
+			UISettings: UISettings{},
 		},
 	})
 	err := c.Load()
@@ -79,10 +83,12 @@ func TestConfig_Load(t *testing.T) {
 							Hostname: "irc.example.com",
 							Port:     6667,
 							TLS:      true,
+							Profile:  Profile{Nickname: "testnick"},
 						},
 					},
 					UISettings: UISettings{
 						TimestampFormat: "15:04:05",
+						Theme:           "light",
 					},
 				},
 			},
@@ -94,10 +100,12 @@ func TestConfig_Load(t *testing.T) {
 						Hostname: "irc.example.com",
 						Port:     6667,
 						TLS:      true,
+						Profile:  Profile{Nickname: "testnick"},
 					},
 				},
 				UISettings: UISettings{
 					TimestampFormat: "15:04:05",
+					Theme:           "light",
 				},
 			},
 		},
@@ -122,6 +130,132 @@ func TestConfig_Load(t *testing.T) {
 			expectedConfig: &Config{
 				UISettings: UISettings{
 					TimestampFormat: time.TimeOnly,
+					Theme:           "auto",
+				},
+			},
+		},
+		{
+			name: "Empty Theme",
+			provider: &MockProvider{
+				loadData: &Config{
+					UISettings: UISettings{
+						Theme: "",
+					},
+				},
+			},
+			wantErr: false,
+			expectedConfig: &Config{
+				UISettings: UISettings{
+					TimestampFormat: time.TimeOnly,
+					Theme:           "auto",
+				},
+			},
+		},
+		{
+			name: "SASL Login with no password",
+			provider: &MockProvider{
+				loadData: &Config{
+					Servers: []Server{
+						{
+							ID:        "test-id",
+							Hostname:  "irc.example.com",
+							Port:      6667,
+							TLS:       false,
+							SASLLogin: "test",
+							Profile:   Profile{Nickname: "testnick"},
+						},
+					},
+					UISettings: UISettings{
+						TimestampFormat: "",
+					},
+				},
+			},
+			wantErr:     true,
+			expectedErr: errors.New("config validation failed: Key: 'Config.Servers[0].SASLPassword' Error:Field validation for 'SASLPassword' failed on the 'required_with' tag"),
+		},
+		{
+			name: "SASL Password with no Login",
+			provider: &MockProvider{
+				loadData: &Config{
+					Servers: []Server{
+						{
+							ID:           "test-id",
+							Hostname:     "irc.example.com",
+							Port:         6667,
+							TLS:          false,
+							SASLPassword: "test",
+							Profile:      Profile{Nickname: "testnick"},
+						},
+					},
+					UISettings: UISettings{
+						TimestampFormat: "",
+					},
+				},
+			},
+			wantErr:     true,
+			expectedErr: errors.New("config validation failed: Key: 'Config.Servers[0].SASLLogin' Error:Field validation for 'SASLLogin' failed on the 'required_with' tag"),
+		},
+		{
+			name: "Default Port without TLS",
+			provider: &MockProvider{
+				loadData: &Config{
+					Servers: []Server{
+						{
+							ID:       "test-id",
+							Hostname: "irc.example.com",
+							Port:     0,
+							TLS:      false,
+							Profile:  Profile{Nickname: "testnick"},
+						},
+					},
+				},
+			},
+			wantErr: false,
+			expectedConfig: &Config{
+				Servers: []Server{
+					{
+						ID:       "test-id",
+						Hostname: "irc.example.com",
+						Port:     6667,
+						TLS:      false,
+						Profile:  Profile{Nickname: "testnick"},
+					},
+				},
+				UISettings: UISettings{
+					TimestampFormat: time.TimeOnly,
+					Theme:           "auto",
+				},
+			},
+		},
+		{
+			name: "Default Port with TLS",
+			provider: &MockProvider{
+				loadData: &Config{
+					Servers: []Server{
+						{
+							ID:       "test-id",
+							Hostname: "irc.example.com",
+							Port:     0,
+							TLS:      true,
+							Profile:  Profile{Nickname: "testnick"},
+						},
+					},
+				},
+			},
+			wantErr: false,
+			expectedConfig: &Config{
+				Servers: []Server{
+					{
+						ID:       "test-id",
+						Hostname: "irc.example.com",
+						Port:     6697,
+						TLS:      true,
+						Profile:  Profile{Nickname: "testnick"},
+					},
+				},
+				UISettings: UISettings{
+					TimestampFormat: time.TimeOnly,
+					Theme:           "auto",
 				},
 			},
 		},

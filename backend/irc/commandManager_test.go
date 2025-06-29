@@ -129,7 +129,7 @@ func TestCommandManager_Execute_InputNoSlash(t *testing.T) {
 
 func TestCommandManager_SetNotificationManager(t *testing.T) {
 	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
-	nm := &NotificationManager{}
+	nm := DesktopNotificationManager{}
 
 	cm.SetNotificationManager(nm)
 
@@ -139,7 +139,7 @@ func TestCommandManager_SetNotificationManager(t *testing.T) {
 func TestCommandManager_showNotification(t *testing.T) {
 	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
 
-	nm := &NotificationManager{
+	nm := &DesktopNotificationManager{
 		pendingNotifications: make(chan Notification, 1),
 	}
 	cm.SetNotificationManager(nm)

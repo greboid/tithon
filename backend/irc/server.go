@@ -39,7 +39,7 @@ type Server struct {
 	currentModes      string
 	possibleUserModes []*UserMode
 	ut                UpdateTrigger
-	nm                *NotificationManager
+	nm                NotificationManager
 	conf              *config.Config
 	reconnecting      bool
 	reconnectAttempts int
@@ -52,7 +52,7 @@ func (c *Server) GetWindow() *Window {
 	return c.Window
 }
 
-func NewServer(linkRegex *regexp.Regexp, conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm *NotificationManager) ServerInterface {
+func NewServer(linkRegex *regexp.Regexp, conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager) ServerInterface {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}

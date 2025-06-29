@@ -8,6 +8,11 @@ import (
 	"sort"
 )
 
+type NotificationManager interface {
+	CheckAndNotify(network, source, nick, message string) bool
+	SendNotification(notification Notification)
+}
+
 type Notification struct {
 	Title string
 	Text  string
@@ -24,13 +29,13 @@ type Trigger struct {
 	Popup   bool
 }
 
-type NotificationManager struct {
+type DesktopNotificationManager struct {
 	notifications        []Trigger
 	pendingNotifications chan Notification
 }
 
-func NewNotificationManager(pendingNotifications chan Notification, triggers []config.NotificationTrigger) *NotificationManager {
-	nm := &NotificationManager{
+func NewNotificationManager(pendingNotifications chan Notification, triggers []config.NotificationTrigger) NotificationManager {
+	nm := &DesktopNotificationManager{
 		pendingNotifications: pendingNotifications,
 	}
 	triggers = SortNotificationTriggers(triggers)
@@ -124,7 +129,7 @@ func GetTriggerSpecificity(trigger config.NotificationTrigger) int {
 	return length
 }
 
-func (cm *NotificationManager) CheckAndNotify(network, source, nick, message string) bool {
+func (cm DesktopNotificationManager) CheckAndNotify(network, source, nick, message string) bool {
 	for i := range cm.notifications {
 		if cm.notifications[i].Network.MatchString(network) &&
 			cm.notifications[i].Source.MatchString(source) &&
@@ -142,6 +147,6 @@ func (cm *NotificationManager) CheckAndNotify(network, source, nick, message str
 	return false
 }
 
-func (cm *NotificationManager) SendNotification(notification Notification) {
+func (cm DesktopNotificationManager) SendNotification(notification Notification) {
 	cm.pendingNotifications <- notification
 }

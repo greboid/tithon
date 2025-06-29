@@ -70,13 +70,13 @@ type Handler struct {
 	modeHandler         modeHandler
 	messageHandler      messageHandler
 	updateTrigger       UpdateTrigger
-	notificationManager *NotificationManager
+	notificationManager NotificationManager
 	conf                *config.Config
 	batchMap            map[string]string
 	linkRegex           *regexp.Regexp
 }
 
-func NewHandler(linkRegex *regexp.Regexp, connection ServerInterface, ut UpdateTrigger, nm *NotificationManager, conf *config.Config) *Handler {
+func NewHandler(linkRegex *regexp.Regexp, connection ServerInterface, ut UpdateTrigger, nm NotificationManager, conf *config.Config) *Handler {
 	return &Handler{
 		channelHandler:      connection,
 		queryHandler:        connection,

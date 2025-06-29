@@ -246,7 +246,7 @@ func TestNotificationManager_compileRegex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nm := &NotificationManager{}
+			nm := &DesktopNotificationManager{}
 			require.NotNil(t, nm, "NotificationManager should not be nil")
 			got, err := CompileNotificationRegex(tt.regex)
 			if tt.wantErr {
@@ -781,7 +781,7 @@ func TestNotificationManager_CheckAndNotify(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			notificationChan := make(chan Notification, 1)
-			nm := &NotificationManager{
+			nm := &DesktopNotificationManager{
 				notifications:        tt.notifications,
 				pendingNotifications: notificationChan,
 			}

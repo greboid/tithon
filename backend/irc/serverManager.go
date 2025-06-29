@@ -16,7 +16,7 @@ type ServerManager struct {
 	connections         map[string]ServerInterface
 	commandManager      *CommandManager
 	updateTrigger       UpdateTrigger
-	notificationManager *NotificationManager
+	notificationManager NotificationManager
 	config              *config.Config
 	linkRegex           *regexp.Regexp
 }
@@ -97,7 +97,7 @@ func (cm *ServerManager) SetUpdateTrigger(ut UpdateTrigger) {
 	cm.updateTrigger = ut
 }
 
-func (cm *ServerManager) SetNotificationManager(nm *NotificationManager) {
+func (cm *ServerManager) SetNotificationManager(nm NotificationManager) {
 	cm.notificationManager = nm
 	cm.commandManager.SetNotificationManager(nm)
 }

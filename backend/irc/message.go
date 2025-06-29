@@ -252,9 +252,13 @@ func (m *Message) isHighlight() bool {
 }
 
 func (m *Message) parseFormatting() {
-	m.message = m.GetLinks(m.message)
-	m.message = html.EscapeString(m.message)
-	m.message = m.ReplaceLinks(m.message)
+	if m.messageType != Event && m.messageType != Error {
+		m.message = m.GetLinks(m.message)
+		m.message = html.EscapeString(m.message)
+		m.message = m.ReplaceLinks(m.message)
+	} else {
+		m.message = html.EscapeString(m.message)
+	}
 	m.parseIRCFormatting()
 }
 

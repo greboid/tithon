@@ -281,7 +281,7 @@ func (h *Handler) handleKick(message ircmsg.Message) {
 		return
 	}
 	channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
-		return user.nickname == message.Nick()
+		return user.nickname == message.Params[1]
 	})
 	channel.AddMessage(NewEvent(h.linkRegex, EventKick, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+"("+strings.Join(message.Params[2:], " ")+")"))
 }

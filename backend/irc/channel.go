@@ -7,7 +7,6 @@ import (
 type Channel struct {
 	*Window
 	topic        *Topic
-	users        []*User
 	channelModes []*ChannelMode // Store channel modes
 }
 
@@ -24,7 +23,6 @@ func NewChannel(connection ServerInterface, name string) *Channel {
 			isChannel:  true,
 		},
 		topic:        NewTopic("No topic Set"),
-		users:        nil,
 		channelModes: make([]*ChannelMode, 0),
 	}
 	channel.Window.tabCompleter = NewChannelTabCompleter(channel)

@@ -335,6 +335,9 @@ func (h *Handler) handleNameReply(message ircmsg.Message) {
 	}
 	names := strings.Split(message.Params[3], " ")
 	for i := range names {
+		if names[i] == "" {
+			continue
+		}
 		modes, nickname := h.stripChannelPrefixes(names[i])
 
 		existingUsers := channel.GetUsers()

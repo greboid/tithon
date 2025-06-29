@@ -150,14 +150,16 @@ func (h *Handler) addCallbacks() {
 	h.callbackHandler.AddCallback(ircevent.RPL_ENDOFWHOIS, func(message ircmsg.Message) {
 		h.addEvent(EventWhois, false, "WHOIS END "+message.Params[1])
 	})
-	h.callbackHandler.AddBatchCallback(func(batch *ircevent.Batch) bool {
-		if batch.Params[1] == "chathistory" {
-			for i := range batch.Items {
-				batch.Items[i].Message.SetTag("chathistory", "true")
-			}
+	h.callbackHandler.AddBatchCallback(h.handleBatch)
+}
+
+func (h *Handler) handleBatch(batch *ircevent.Batch) bool {
+	if batch.Params[1] == "chathistory" {
+		for i := range batch.Items {
+			batch.Items[i].Message.SetTag("chathistory", "true")
 		}
-		return false
-	})
+	}
+	return false
 }
 
 func (h *Handler) handleTopic(message ircmsg.Message) {

@@ -454,7 +454,7 @@ func (h *Handler) handleMode(message ircmsg.Message) {
 
 func (h *Handler) handleChannelModes(message ircmsg.Message) {
 	var ops []modeChange
-	var add bool
+	var add = true
 	param := 2
 
 	for i := 0; i < len(message.Params[1]); i++ {
@@ -474,32 +474,48 @@ func (h *Handler) handleChannelModes(message ircmsg.Message) {
 			}
 
 			needsParam := false
+			skipMode := false
 
 			switch modeType {
 			case 'P':
 				if param < len(message.Params) {
 					change.nickname = message.Params[param]
 					needsParam = true
+				} else {
+					// Skip privilege modes that don't have a parameter
+					skipMode = true
 				}
 			case 'A':
 				if param < len(message.Params) {
 					change.parameter = message.Params[param]
 					needsParam = true
+				} else {
+					// Skip type A modes that don't have a parameter
+					skipMode = true
 				}
 			case 'B':
 				if param < len(message.Params) {
 					change.parameter = message.Params[param]
 					needsParam = true
+				} else {
+					// Skip type B modes that don't have a parameter
+					skipMode = true
 				}
 			case 'C':
 				if add && param < len(message.Params) {
 					change.parameter = message.Params[param]
 					needsParam = true
+				} else if add {
+					// Skip type C modes when setting and no parameter available
+					skipMode = true
 				}
-			case 'D': // Boolean setting
+			case 'D': // Boolean setting - never needs parameter
 			}
 
-			ops = append(ops, change)
+			// Only add the mode change if we're not skipping it
+			if !skipMode {
+				ops = append(ops, change)
+			}
 
 			if needsParam {
 				param++

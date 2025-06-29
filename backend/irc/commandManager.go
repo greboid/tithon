@@ -27,7 +27,7 @@ type Notifier interface {
 type CommandManager struct {
 	commands  []Command
 	conf      *config.Config
-	nm        *NotificationManager
+	nm        NotificationManager
 	LinkRegex *regexp.Regexp
 }
 
@@ -85,12 +85,12 @@ func (cm *CommandManager) Execute(connections *ServerManager, window *Window, in
 	cm.showError(window, "Unknown command: "+input)
 }
 
-func (cm *CommandManager) SetNotificationManager(nm *NotificationManager) {
+func (cm *CommandManager) SetNotificationManager(nm NotificationManager) {
 	cm.nm = nm
 }
 
 func (cm *CommandManager) showNotification(notification Notification) {
-	cm.nm.pendingNotifications <- notification
+	cm.nm.SendNotification(notification)
 }
 
 func (cm *CommandManager) showCommandError(window *Window, command Command, message string) {

@@ -213,16 +213,20 @@ h1 {
 #input {
   grid-area: input;
   display: flex;
-  gap: 1rem;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   background-color: var(--background2);
   color: var(--highlight);
   border-radius: 0.5rem;
 
   & label {
     color: var(--headings);
-    padding-right: 1rem;
+    padding: 0 1rem 0 0;
+
+    & svg {
+      height: 1rem;
+    }
   }
 
   & form {
@@ -230,14 +234,24 @@ h1 {
     flex-grow: 1;
 
     & textarea {
+      display: inline-block;
+      line-height: 1.5em;
       flex-grow: 1;
       border: 0;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
+      padding: 0.25rem 0.5em;
+      border-radius: 0.5em;
       background-color: var(--background2);
       color: var(--foreground);
       resize: none;
-      height: calc(1.5rem + 1rem);
+      @supports not (field-sizing: content) {
+        height: calc(1lh + 0.5rem);
+      }
+      field-sizing: content;
+      min-height: calc(1lh + 0.5rem);
+      max-height: calc(3lh + 0.5rem);
+      writing-mode: horizontal-tb;
+      overflow-y: auto;
+      transition: height 0.1s ease;
 
       &:focus {
         outline: none;

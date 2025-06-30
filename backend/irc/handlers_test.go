@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Mock implementations for testing
@@ -756,13 +757,15 @@ func TestHandler_handleTopic(t *testing.T) {
 		Command: "TOPIC",
 		Params:  []string{"#test", "New channel topic"},
 	}
+	now := time.Now()
+	message.SetTag("timestamp", now.Format(v3TimestampFormat))
 
 	// Execute
 	handler.handleTopic(message)
 
 	// Verify topic was set
 	assert.Equal(t, "New channel topic", channel.GetTopic().GetTopic())
-	assert.Equal(t, "New channel topic", channel.GetTitle())
+	assert.Equal(t, channel.GetTitle(), "New channel topic (set by othernick on "+now.Format(topicTimeformat)+")")
 
 	// Verify topic change message was added
 	assert.Len(t, channel.messages, 1)

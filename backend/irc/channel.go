@@ -1,6 +1,7 @@
 package irc
 
 import (
+	"time"
 	uniqueid "github.com/albinj12/unique-id"
 )
 
@@ -22,7 +23,7 @@ func NewChannel(connection ServerInterface, name string) *Channel {
 			hasUsers:   true,
 			isChannel:  true,
 		},
-		topic:        NewTopic("No topic Set"),
+		topic:        NewTopic("No topic Set", "", time.Time{}),
 		channelModes: make([]*ChannelMode, 0),
 	}
 	channel.Window.tabCompleter = NewChannelTabCompleter(channel)
@@ -35,7 +36,7 @@ func (c *Channel) SetTopic(topic *Topic) {
 
 func (c *Channel) GetTopic() *Topic {
 	if c.topic == nil {
-		return NewTopic("")
+		return NewTopic("", "", time.Time{})
 	}
 	return c.topic
 }

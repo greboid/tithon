@@ -8,7 +8,9 @@ import (
 	"log/slog"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type channelHandler interface {
@@ -97,6 +99,7 @@ func (h *Handler) addCallbacks() {
 	h.callbackHandler.AddCallback("PRIVMSG", h.handlePrivMsg)
 	h.callbackHandler.AddCallback("NOTICE", h.handleNotice)
 	h.callbackHandler.AddCallback(ircevent.RPL_TOPIC, h.handleRPLTopic)
+	h.callbackHandler.AddCallback("333", h.handleRPLTopicWhoTime)
 	h.callbackHandler.AddCallback("TOPIC", h.handleTopic)
 	h.callbackHandler.AddConnectCallback(h.handleConnected)
 	h.callbackHandler.AddDisconnectCallback(h.handleDisconnected)
@@ -170,10 +173,10 @@ func (h *Handler) handleTopic(message ircmsg.Message) {
 		return
 	}
 	newTopic := strings.Join(message.Params[1:], " ")
-	topic := NewTopic(newTopic)
+	topic := NewTopic(newTopic, message.Nick(), time.Now())
 	slog.Debug("Setting topic", "server", h.infoHandler.GetName(), "channel", channel.GetName(), "topic", topic)
 	channel.SetTopic(topic)
-	channel.SetTitle(topic.GetTopic())
+	channel.SetTitle(topic.GetDisplayTopic())
 	if newTopic == "" {
 		channel.AddMessage(NewEvent(h.linkRegex, EventTopic, h.conf.UISettings.TimestampFormat, h.isMsgMe(message), message.Nick()+" unset the topic"))
 	} else {
@@ -185,10 +188,38 @@ func (h *Handler) handleRPLTopic(message ircmsg.Message) {
 	defer h.updateTrigger.SetPendingUpdate()
 	for _, channel := range h.channelHandler.GetChannels() {
 		if channel.name == message.Params[1] {
-			topic := NewTopic(strings.Join(message.Params[2:], " "))
+			topic := NewTopic(strings.Join(message.Params[2:], " "), "", time.Time{})
 			channel.SetTopic(topic)
-			channel.SetTitle(topic.GetTopic())
+			channel.SetTitle(topic.GetDisplayTopic())
 			slog.Debug("Setting topic", "server", h.infoHandler.GetName(), "channel", channel.GetName(), "topic", topic)
+			return
+		}
+	}
+}
+
+func (h *Handler) handleRPLTopicWhoTime(message ircmsg.Message) {
+	defer h.updateTrigger.SetPendingUpdate()
+	if len(message.Params) < 4 {
+		return
+	}
+	channelName := message.Params[1]
+	setBy := message.Params[2]
+	timestamp, err := strconv.ParseInt(message.Params[3], 10, 64)
+	if err != nil {
+		slog.Warn("Failed to parse topic timestamp", "timestamp", message.Params[3], "error", err)
+		return
+	}
+	setTime := time.Unix(timestamp, 0)
+
+	for _, channel := range h.channelHandler.GetChannels() {
+		if channel.name == channelName {
+			if channel.GetTopic() != nil {
+				existingTopic := channel.GetTopic().GetTopic()
+				updatedTopic := NewTopic(existingTopic, setBy, setTime)
+				channel.SetTopic(updatedTopic)
+				channel.SetTitle(updatedTopic.GetDisplayTopic())
+				slog.Debug("Updated topic who", "server", h.infoHandler.GetName(), "channel", channel.GetName(), "setBy", setBy, "setTime", setTime)
+			}
 			return
 		}
 	}

@@ -252,6 +252,7 @@ h1 {
       writing-mode: horizontal-tb;
       overflow-y: auto;
       transition: height 0.1s ease;
+      overflow-wrap: anywhere;
 
       &:focus {
         outline: none;

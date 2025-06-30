@@ -50,7 +50,7 @@ type WebClient struct {
 	serverList           *ServerList
 	pendingUpdate        atomic.Bool
 	windowChanged        atomic.Bool
-	listlock             sync.Mutex
+	listlock             sync.RWMutex
 	uiUpdate             atomic.Bool
 	pendingNotifications chan irc.Notification
 	templateLock         sync.Mutex
@@ -170,8 +170,8 @@ func (s *WebClient) getPort() (net.IP, int, error) {
 }
 
 func (s *WebClient) getServerList() *ServerList {
-	s.listlock.Lock()
-	defer s.listlock.Unlock()
+	s.listlock.RLock()
+	defer s.listlock.RUnlock()
 	s.serverList = &ServerList{}
 	connections := s.connectionManager.GetConnections()
 	for i := range connections {
@@ -258,4 +258,22 @@ func (s *WebClient) SetWindowChanged() {
 
 func (s *WebClient) SetUIUpdate() {
 	s.uiUpdate.Store(true)
+}
+
+func (s *WebClient) OnWindowRemoved(removedWindow *irc.Window) {
+	currentActive := s.getActiveWindow()
+	if currentActive == removedWindow {
+		serverList := s.serverList
+		var newActiveWindow *irc.Window
+		if serverList != nil && len(serverList.OrderedList) > 0 {
+			for _, item := range serverList.OrderedList {
+				if item.Window != removedWindow {
+					newActiveWindow = item.Window
+					break
+				}
+			}
+			
+		}
+		s.setActiveWindow(newActiveWindow)
+	}
 }

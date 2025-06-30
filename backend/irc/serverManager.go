@@ -12,6 +12,10 @@ type UpdateTrigger interface {
 	SetPendingUpdate()
 }
 
+type WindowRemovalCallback interface {
+	OnWindowRemoved(window *Window)
+}
+
 type ServerManager struct {
 	connections         map[string]ServerInterface
 	commandManager      *CommandManager
@@ -19,6 +23,7 @@ type ServerManager struct {
 	notificationManager NotificationManager
 	config              *config.Config
 	linkRegex           *regexp.Regexp
+	windowRemovalCallback WindowRemovalCallback
 }
 
 func NewServerManager(linkRegex *regexp.Regexp, conf *config.Config, commandManager *CommandManager) *ServerManager {
@@ -42,6 +47,9 @@ func (cm *ServerManager) AddConnection(
 	connect bool,
 ) string {
 	connection := NewServer(cm.linkRegex, cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
+	if cm.windowRemovalCallback != nil {
+		connection.SetWindowRemovalCallback(cm.windowRemovalCallback)
+	}
 	cm.connections[connection.GetID()] = connection
 	if connect {
 		go func() {
@@ -53,7 +61,11 @@ func (cm *ServerManager) AddConnection(
 }
 
 func (cm *ServerManager) RemoveConnection(id string) {
-	cm.connections[id].Disconnect()
+	connection := cm.connections[id]
+	if connection != nil && cm.windowRemovalCallback != nil {
+		cm.windowRemovalCallback.OnWindowRemoved(connection.GetWindow())
+	}
+	connection.Disconnect()
 	delete(cm.connections, id)
 	cm.updateTrigger.SetPendingUpdate()
 }
@@ -100,4 +112,8 @@ func (cm *ServerManager) SetUpdateTrigger(ut UpdateTrigger) {
 func (cm *ServerManager) SetNotificationManager(nm NotificationManager) {
 	cm.notificationManager = nm
 	cm.commandManager.SetNotificationManager(nm)
+}
+
+func (cm *ServerManager) SetWindowRemovalCallback(callback WindowRemovalCallback) {
+	cm.windowRemovalCallback = callback
 }

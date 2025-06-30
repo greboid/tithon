@@ -945,8 +945,8 @@ func (s *WebClient) updateURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *WebClient) changeWindow(change int) {
-	s.listlock.Lock()
-	defer s.listlock.Unlock()
+	s.listlock.RLock()
+	defer s.listlock.RUnlock()
 	index := slices.IndexFunc(s.serverList.OrderedList, func(item *ServerListItem) bool {
 		return item.Window == s.getActiveWindow()
 	})

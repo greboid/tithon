@@ -69,4 +69,5 @@ type ServerInterface interface {
 	SetTitle(title string)
 	GetTabCompleter() TabCompleter
 	GetWindow() *Window
+	SetWindowRemovalCallback(callback WindowRemovalCallback)
 }

@@ -55,6 +55,7 @@ func main() {
 	defer server.Stop()
 	connectionManager.SetUpdateTrigger(server)
 	connectionManager.SetNotificationManager(notificationManager)
+	connectionManager.SetWindowRemovalCallback(server)
 	connectionManager.Load()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)

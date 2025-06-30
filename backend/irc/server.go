@@ -46,6 +46,7 @@ type Server struct {
 	reconnectTimer    *time.Timer
 	manualDisconnect  bool
 	linkRegex         *regexp.Regexp
+	windowRemovalCallback WindowRemovalCallback
 }
 
 func (c *Server) GetWindow() *Window {
@@ -305,6 +306,10 @@ func (c *Server) RemoveChannel(s string) {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	channel := c.channels[s]
+	if channel != nil && c.windowRemovalCallback != nil {
+		c.windowRemovalCallback.OnWindowRemoved(channel.Window)
+	}
 	c.PartChannel(s)
 	delete(c.channels, s)
 }
@@ -345,6 +350,10 @@ func (c *Server) RemoveQuery(id string) {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	query := c.pms[id]
+	if query != nil && c.windowRemovalCallback != nil {
+		c.windowRemovalCallback.OnWindowRemoved(query.Window)
+	}
 	delete(c.pms, id)
 }
 
@@ -603,4 +612,8 @@ func (c *Server) GetChannelModeType(mode string) rune {
 		return 'D'
 	}
 	return '?'
+}
+
+func (c *Server) SetWindowRemovalCallback(callback WindowRemovalCallback) {
+	c.windowRemovalCallback = callback
 }

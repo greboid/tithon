@@ -15,7 +15,6 @@ import (
 )
 
 var (
-	OpenUI    = flag.Bool("openui", true, "Should the UI launch")
 	FixedPort = flag.Int("port", 0, "Fixed port to use, 0 will use a random port")
 )
 
@@ -67,9 +66,6 @@ func main() {
 	go func() {
 		server.Start()
 	}()
-	if *OpenUI {
-
-	}
 	<-quit
 	slog.Info("Quitting")
 }

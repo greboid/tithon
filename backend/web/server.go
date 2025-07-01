@@ -7,28 +7,17 @@ import (
 	"fmt"
 	"github.com/greboid/tithon/config"
 	"github.com/greboid/tithon/irc"
-	semver "github.com/hashicorp/go-version"
+	"github.com/greboid/tithon/services"
 	"html/template"
 	"log/slog"
 	"net"
 	"net/http"
-	"runtime/debug"
-	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 )
-
-type SettingsData struct {
-	Version         string
-	TimestampFormat string
-	ShowNicklist    bool
-	Servers         []config.Server
-	Notifications   []config.NotificationTrigger
-	Theme           string
-}
 
 var (
 	//go:embed static
@@ -38,65 +27,42 @@ var (
 )
 
 type WebClient struct {
-	lock                 sync.Mutex
-	httpServer           *http.Server
-	connectionManager    *irc.ServerManager
-	commands             *irc.CommandManager
-	activeWindow         *irc.Window
-	activeQuery          *irc.Query
-	fixedPort            int
-	templates            *template.Template
-	activeLock           sync.Mutex
-	serverList           *ServerList
-	pendingUpdate        atomic.Bool
-	windowChanged        atomic.Bool
-	listlock             sync.RWMutex
-	uiUpdate             atomic.Bool
-	pendingNotifications chan irc.Notification
-	templateLock         sync.Mutex
-	conf                 *config.Config
-	inputHistory         []string
-	historyPosition      int
-	historyLock          sync.Mutex
-	showSettings         chan bool
-	settingsData         SettingsData
-}
-
-type ServerList struct {
-	Parents     []*ServerListItem
-	OrderedList []*ServerListItem
-}
-
-type ServerListItem struct {
-	Window   *irc.Window
-	Link     string
-	Name     string
-	Children []*ServerListItem
+	lock                sync.Mutex
+	httpServer          *http.Server
+	connectionManager   *irc.ServerManager
+	commands            *irc.CommandManager
+	activeQuery         *irc.Query
+	fixedPort           int
+	templates           *template.Template
+	pendingUpdate       atomic.Bool
+	windowChanged       atomic.Bool
+	uiUpdate            atomic.Bool
+	templateLock        sync.Mutex
+	conf                *config.Config
+	showSettings        chan bool
+	windowService       *services.WindowService
+	serverListService   *services.ServerListService
+	notificationService *services.NotificationService
+	settingsService     *services.SettingsService
+	inputHistoryService *services.InputHistoryService
 }
 
 type inputValues struct {
 	Input string `json:"input"`
 }
 
-func getVersion() string {
-	var versionString string
-	if info, ok := debug.ReadBuildInfo(); ok {
-		versionString = info.Main.Version
-		if version, err := semver.NewVersion(versionString); err == nil {
-			versionString = strings.Trim(strings.Join(strings.Fields(fmt.Sprint(version.Segments()[0:3])), "."), "[]")
-			if version.Prerelease() != "" {
-				versionString = versionString + "-dev"
-			}
-		} else {
-			versionString = "err"
-		}
-	} else {
-		versionString = "unknown"
-	}
-	return versionString
-}
-
-func NewWebClient(cm *irc.ServerManager, commands *irc.CommandManager, fixedPort int, pendingNotifications chan irc.Notification, conf *config.Config, showSettings chan bool) *WebClient {
+func NewWebClient(
+	cm *irc.ServerManager,
+	commands *irc.CommandManager,
+	fixedPort int,
+	conf *config.Config,
+	showSettings chan bool,
+	windowService *services.WindowService,
+	serverListService *services.ServerListService,
+	notificationService *services.NotificationService,
+	settingsService *services.SettingsService,
+	inputHistoryService *services.InputHistoryService,
+) *WebClient {
 	mux := http.NewServeMux()
 	client := &WebClient{
 		fixedPort: fixedPort,
@@ -104,22 +70,15 @@ func NewWebClient(cm *irc.ServerManager, commands *irc.CommandManager, fixedPort
 		httpServer: &http.Server{
 			Handler: mux,
 		},
-		connectionManager:    cm,
-		commands:             commands,
-		activeWindow:         nil,
-		serverList:           &ServerList{},
-		pendingNotifications: pendingNotifications,
-		conf:                 conf,
-		inputHistory:         make([]string, 0),
-		historyPosition:      -1,
-		showSettings:         showSettings,
-		settingsData: SettingsData{
-			Version:         getVersion(),
-			TimestampFormat: conf.UISettings.TimestampFormat,
-			ShowNicklist:    conf.UISettings.ShowNicklist,
-			Servers:         conf.Servers,
-			Notifications:   conf.Notifications.Triggers,
-		},
+		connectionManager:   cm,
+		commands:            commands,
+		conf:                conf,
+		showSettings:        showSettings,
+		windowService:       windowService,
+		serverListService:   serverListService,
+		notificationService: notificationService,
+		settingsService:     settingsService,
+		inputHistoryService: inputHistoryService,
 	}
 	client.addRoutes(mux)
 	return client
@@ -169,83 +128,21 @@ func (s *WebClient) getPort() (net.IP, int, error) {
 	return lp.IP, lp.Port, nil
 }
 
-func (s *WebClient) getServerList() *ServerList {
-	s.listlock.RLock()
-	defer s.listlock.RUnlock()
-	s.serverList = &ServerList{}
-	connections := s.connectionManager.GetConnections()
-	for i := range connections {
-		serverIndex := slices.IndexFunc(s.serverList.Parents, func(item *ServerListItem) bool {
-			return item.Window == connections[i].GetWindow()
-		})
-		var server *ServerListItem
-		if serverIndex == -1 {
-			server = &ServerListItem{
-				Window:   connections[i].GetWindow(),
-				Link:     connections[i].GetID(),
-				Name:     connections[i].GetName(),
-				Children: nil,
-			}
-			s.serverList.Parents = append(s.serverList.Parents, server)
-			s.serverList.OrderedList = append(s.serverList.OrderedList, server)
-		} else {
-			server = s.serverList.Parents[serverIndex]
-		}
-		channels := connections[i].GetChannels()
-		for j := range channels {
-			windowIndex := slices.IndexFunc(server.Children, func(item *ServerListItem) bool {
-				return item.Window == channels[j].Window
-			})
-			if windowIndex == -1 {
-				child := &ServerListItem{
-					Window:   channels[j].Window,
-					Link:     connections[i].GetID() + "/" + channels[j].GetID(),
-					Name:     channels[j].GetName(),
-					Children: nil,
-				}
-				server.Children = append(server.Children, child)
-				s.serverList.OrderedList = append(s.serverList.OrderedList, child)
-			}
-		}
-
-		queries := connections[i].GetQueries()
-		for j := range queries {
-			windowIndex := slices.IndexFunc(server.Children, func(item *ServerListItem) bool {
-				return item.Window == queries[j].Window
-			})
-			if windowIndex == -1 {
-				child := &ServerListItem{
-					Window:   queries[j].Window,
-					Link:     connections[i].GetID() + "/" + queries[j].GetID(),
-					Name:     queries[j].GetName(),
-					Children: nil,
-				}
-				server.Children = append(server.Children, child)
-				s.serverList.OrderedList = append(s.serverList.OrderedList, child)
-			}
-		}
-	}
-	return s.serverList
+func (s *WebClient) getServerList() *services.ServerList {
+	return s.serverListService.GetServerList(s.connectionManager)
 }
 
 func (s *WebClient) setActiveWindow(window *irc.Window) {
-	s.activeLock.Lock()
-	defer s.activeLock.Unlock()
-	if s.activeWindow != nil {
-		s.activeWindow.SetActive(false)
+	if s.windowService != nil {
+		s.windowService.SetActiveWindow(window)
 	}
-	if window != nil {
-		window.SetActive(true)
-	}
-	s.activeWindow = window
-	s.SetPendingUpdate()
-	s.SetWindowChanged()
 }
 
 func (s *WebClient) getActiveWindow() *irc.Window {
-	s.activeLock.Lock()
-	defer s.activeLock.Unlock()
-	return s.activeWindow
+	if s.windowService != nil {
+		return s.windowService.GetActiveWindow()
+	}
+	return nil
 }
 
 func (s *WebClient) SetPendingUpdate() {
@@ -261,19 +158,12 @@ func (s *WebClient) SetUIUpdate() {
 }
 
 func (s *WebClient) OnWindowRemoved(removedWindow *irc.Window) {
-	currentActive := s.getActiveWindow()
-	if currentActive == removedWindow {
-		serverList := s.serverList
-		var newActiveWindow *irc.Window
-		if serverList != nil && len(serverList.OrderedList) > 0 {
-			for _, item := range serverList.OrderedList {
-				if item.Window != removedWindow {
-					newActiveWindow = item.Window
-					break
-				}
-			}
-			
-		}
-		s.setActiveWindow(newActiveWindow)
+	if s.windowService != nil {
+		serverList := s.getServerList()
+		s.windowService.OnWindowRemoved(removedWindow, serverList)
 	}
+}
+
+func (s *WebClient) SetWindowService(windowService *services.WindowService) {
+	s.windowService = windowService
 }

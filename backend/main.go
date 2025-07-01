@@ -6,6 +6,7 @@ import (
 	"github.com/csmith/slogflags"
 	"github.com/greboid/tithon/config"
 	"github.com/greboid/tithon/irc"
+	"github.com/greboid/tithon/services"
 	"github.com/greboid/tithon/web"
 	"github.com/hueristiq/hq-go-url/extractor"
 	"log/slog"
@@ -50,8 +51,28 @@ func main() {
 	commandManager := irc.NewCommandManager(linkRegex, conf, showSettings)
 	connectionManager := irc.NewServerManager(linkRegex, conf, commandManager)
 	defer connectionManager.Stop()
-	server := web.NewWebClient(connectionManager, commandManager, *FixedPort, pendingNotifications, conf, showSettings)
+
+	settingsService := services.NewSettingsService(conf)
+	inputHistoryService := services.NewInputHistoryService()
+	serverListService := services.NewServerListService()
+	notificationService := services.NewNotificationService(pendingNotifications)
+
+	server := web.NewWebClient(
+		connectionManager,
+		commandManager,
+		*FixedPort,
+		conf,
+		showSettings,
+		nil,
+		serverListService,
+		notificationService,
+		settingsService,
+		inputHistoryService,
+	)
 	defer server.Stop()
+
+	windowService := services.NewWindowService(server, server)
+	server.SetWindowService(windowService)
 	connectionManager.SetUpdateTrigger(server)
 	connectionManager.SetNotificationManager(notificationManager)
 	connectionManager.SetWindowRemovalCallback(server)

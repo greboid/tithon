@@ -55,11 +55,11 @@ func GetUserCacheDir() string {
 }
 
 func GetConfigDirName() string {
-	return "tithon"
+	return configDirName
 }
 
 func GetConfigFilename() string {
-	return "config.yaml"
+	return configFilename
 }
 
 type Server struct {

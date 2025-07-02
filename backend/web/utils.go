@@ -3,7 +3,7 @@ package web
 import (
 	"errors"
 	"github.com/fsnotify/fsnotify"
-	"github.com/kirsle/configdir"
+	"github.com/greboid/tithon/config"
 	"html/template"
 	"io/fs"
 	"log/slog"
@@ -154,7 +154,7 @@ func (s *WebClient) setupFsAndGetWatchers() (fs.FS, string) {
 		slog.Debug("Using on embedded static resources")
 		static, _ = fs.Sub(staticFS, "static")
 	}
-	usercss := filepath.Join(configdir.LocalConfig("tithon"), "user.css")
+	usercss := filepath.Join(config.GetUserConfigDir(), "user.css")
 	if _, err := os.Stat(usercss); err != nil {
 		if _, err = os.OpenFile(usercss, os.O_CREATE, 0600); err != nil {
 			slog.Debug("Unable to create empty user.css")

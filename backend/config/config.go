@@ -2,12 +2,28 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	uniqueid "github.com/albinj12/unique-id"
 	"github.com/go-playground/validator/v10"
 	"log/slog"
 	"time"
 )
+
+var (
+	configDirName  = "tithon"
+	configFilename = "config.yaml"
+)
+
+func SetConfigNames(dirName, filename string) {
+	if dirName != "" {
+		configDirName = dirName
+	}
+	if filename != "" {
+		configFilename = filename
+	}
+}
 
 type Config struct {
 	instance      Provider
@@ -20,6 +36,30 @@ func NewConfig(provider Provider) *Config {
 	return &Config{
 		instance: provider,
 	}
+}
+
+func GetUserConfigDir() string {
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		configDir = "."
+	}
+	return filepath.Join(configDir, GetConfigDirName())
+}
+
+func GetUserCacheDir() string {
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		cacheDir = "."
+	}
+	return filepath.Join(cacheDir, GetConfigDirName())
+}
+
+func GetConfigDirName() string {
+	return "tithon"
+}
+
+func GetConfigFilename() string {
+	return "config.yaml"
 }
 
 type Server struct {

@@ -16,7 +16,9 @@ import (
 )
 
 var (
-	FixedPort = flag.Int("port", 0, "Fixed port to use, 0 will use a random port")
+	FixedPort      = flag.Int("port", 0, "Fixed port to use, 0 will use a random port")
+	ConfigDirName  = flag.String("config-dir", "tithon", "Name of the config directory (relative to the OS user config/cache directory)")
+	ConfigFilename = flag.String("config-file", "config.yaml", "Name of the config file")
 )
 
 func main() {
@@ -25,6 +27,8 @@ func main() {
 		slogflags.WithCustomLevels(map[string]slog.Level{"trace": irc.LevelTrace}),
 		slogflags.WithSetDefault(true),
 	)
+
+	config.SetConfigNames(*ConfigDirName, *ConfigFilename)
 
 	provider, err := config.NewDefaultConfigProvider()
 	if err != nil {

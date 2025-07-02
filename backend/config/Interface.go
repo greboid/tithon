@@ -12,7 +12,7 @@ type DefaultConfigProvider struct {
 }
 
 func NewDefaultConfigProvider() (Provider, error) {
-	conf, err := config.New(config.DirectoryName("tithon"), config.FileName("config.yaml"))
+	conf, err := config.New(config.DirectoryName(GetConfigDirName()), config.FileName(GetConfigFilename()))
 	if err != nil {
 		return nil, err
 	}

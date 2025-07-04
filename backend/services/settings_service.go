@@ -38,13 +38,16 @@ func NewSettingsService(conf *config.Config) *SettingsService {
 }
 
 func (ss *SettingsService) GetFromConfig() *SettingsData {
-	ss.settingsData.TimestampFormat = ss.conf.UISettings.TimestampFormat
-	ss.settingsData.ShowNicklist = ss.conf.UISettings.ShowNicklist
-	ss.settingsData.Servers = make([]config.Server, len(ss.conf.Servers))
+	ss.settingsData = &SettingsData{
+		Version:         getVersion(),
+		TimestampFormat: ss.conf.UISettings.TimestampFormat,
+		ShowNicklist:    ss.conf.UISettings.ShowNicklist,
+		Servers:         make([]config.Server, len(ss.conf.Servers)),
+		Notifications:   make([]config.NotificationTrigger, len(ss.conf.Notifications.Triggers)),
+		Theme:           ss.conf.UISettings.Theme,
+	}
 	copy(ss.settingsData.Servers, ss.conf.Servers)
-	ss.settingsData.Notifications = make([]config.NotificationTrigger, len(ss.conf.Notifications.Triggers))
 	copy(ss.settingsData.Notifications, ss.conf.Notifications.Triggers)
-	ss.settingsData.Theme = ss.conf.UISettings.Theme
 	return ss.settingsData
 }
 

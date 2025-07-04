@@ -6,6 +6,7 @@ import (
 	"github.com/hueristiq/hq-go-url/extractor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"regexp"
 	"testing"
 )
 
@@ -28,6 +29,12 @@ func (m *MockCommand) Execute(cm *ServerManager, w *Window, input string) error 
 	return args.Error(0)
 }
 
+var regex *regexp.Regexp
+
+func init() {
+	regex = extractor.New(extractor.WithHost()).CompileRegex()
+}
+
 func createTestWindow() *Window {
 	return &Window{
 		id:       "test-id",
@@ -39,7 +46,7 @@ func createTestWindow() *Window {
 
 func TestNewCommandManager(t *testing.T) {
 	conf := getCommandManagerTestConfig()
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), conf, make(chan bool, 1))
+	cm := NewCommandManager(regex, conf, make(chan bool, 1))
 
 	assert.NotNil(t, cm, "CommandManager should not be nil")
 	assert.Equal(t, conf, cm.conf, "Config should be set correctly")
@@ -47,7 +54,7 @@ func TestNewCommandManager(t *testing.T) {
 }
 
 func TestCommandManager_Execute(t *testing.T) {
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
+	cm := NewCommandManager(regex, getCommandManagerTestConfig(), make(chan bool, 1))
 
 	mockCmd := new(MockCommand)
 	mockCmd.On("GetName").Return("test")
@@ -63,7 +70,7 @@ func TestCommandManager_Execute(t *testing.T) {
 }
 
 func TestCommandManager_Execute_NoArguments(t *testing.T) {
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
+	cm := NewCommandManager(regex, getCommandManagerTestConfig(), make(chan bool, 1))
 
 	mockCmd := new(MockCommand)
 	mockCmd.On("GetName").Return("test")
@@ -79,7 +86,7 @@ func TestCommandManager_Execute_NoArguments(t *testing.T) {
 }
 
 func TestCommandManager_Execute_NoMatch(t *testing.T) {
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
+	cm := NewCommandManager(regex, getCommandManagerTestConfig(), make(chan bool, 1))
 
 	window := createTestWindow()
 
@@ -91,7 +98,7 @@ func TestCommandManager_Execute_NoMatch(t *testing.T) {
 }
 
 func TestCommandManager_Execute_Error(t *testing.T) {
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
+	cm := NewCommandManager(regex, getCommandManagerTestConfig(), make(chan bool, 1))
 
 	mockCmd := new(MockCommand)
 	mockCmd.On("GetName").Return("test")
@@ -109,7 +116,7 @@ func TestCommandManager_Execute_Error(t *testing.T) {
 }
 
 func TestCommandManager_Execute_InputNoSlash(t *testing.T) {
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
+	cm := NewCommandManager(regex, getCommandManagerTestConfig(), make(chan bool, 1))
 
 	mockCmd := new(MockCommand)
 	mockCmd.On("GetName").Return("test")
@@ -128,7 +135,7 @@ func TestCommandManager_Execute_InputNoSlash(t *testing.T) {
 }
 
 func TestCommandManager_SetNotificationManager(t *testing.T) {
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
+	cm := NewCommandManager(regex, getCommandManagerTestConfig(), make(chan bool, 1))
 	nm := DesktopNotificationManager{}
 
 	cm.SetNotificationManager(nm)
@@ -137,7 +144,7 @@ func TestCommandManager_SetNotificationManager(t *testing.T) {
 }
 
 func TestCommandManager_showNotification(t *testing.T) {
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
+	cm := NewCommandManager(regex, getCommandManagerTestConfig(), make(chan bool, 1))
 
 	nm := &DesktopNotificationManager{
 		pendingNotifications: make(chan Notification, 1),
@@ -162,7 +169,7 @@ func TestCommandManager_showNotification(t *testing.T) {
 }
 
 func TestCommandManager_showError(t *testing.T) {
-	cm := NewCommandManager(extractor.New(extractor.WithHost()).CompileRegex(), getCommandManagerTestConfig(), make(chan bool, 1))
+	cm := NewCommandManager(regex, getCommandManagerTestConfig(), make(chan bool, 1))
 
 	window := createTestWindow()
 

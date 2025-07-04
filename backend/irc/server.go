@@ -34,7 +34,6 @@ type Server struct {
 	channels              map[string]*Channel
 	pms                   map[string]*Query
 	mutex                 sync.Mutex
-	callbackHandler       *Handler
 	supportsFileHost      bool
 	currentModes          string
 	possibleUserModes     []*UserMode
@@ -129,10 +128,7 @@ func (c *Server) Connect() {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	if c.callbackHandler == nil {
-		c.callbackHandler = NewHandler(c.linkRegex, c, c.ut, c.nm, c.conf)
-		c.callbackHandler.addCallbacks()
-	}
+	AddCallbacks(c.linkRegex, c, c.ut, c.nm, c.conf.UISettings.TimestampFormat)
 	c.manualDisconnect = false
 
 	c.AddDisconnectCallback(func(message ircmsg.Message) {
@@ -158,7 +154,7 @@ func (c *Server) Connect() {
 		go c.scheduleReconnect()
 	})
 
-	c.callbackHandler.addEvent(EventConnecting, false, fmt.Sprintf("Connecting to %s", c.connection.Server))
+	c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
 	if !c.connection.Connected() {
 		c.resetReconnectValues()
 		err := c.connection.Connect()
@@ -194,7 +190,7 @@ func (c *Server) scheduleReconnect() {
 		delay = 1 * time.Minute
 	}
 
-	c.callbackHandler.addEvent(EventConnecting, false, fmt.Sprintf("Reconnection attempt %d scheduled in %v", c.reconnectAttempts, delay))
+	c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Reconnection attempt %d scheduled in %v", c.reconnectAttempts, delay)))
 
 	if c.reconnectTimer != nil {
 		c.reconnectTimer.Stop()
@@ -206,7 +202,7 @@ func (c *Server) scheduleReconnect() {
 		defer c.ut.SetPendingUpdate()
 		c.reconnecting = false
 
-		c.callbackHandler.addEvent(EventConnecting, false, fmt.Sprintf("Attempting to reconnect (attempt %d)...", c.reconnectAttempts))
+		c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Attempting to reconnect (attempt %d)...", c.reconnectAttempts)))
 
 		if !c.connection.Connected() {
 			err := c.connection.Connect()

@@ -17,18 +17,18 @@ type WindowRemovalCallback interface {
 }
 
 type ServerManager struct {
-	connections         map[string]ServerInterface
-	commandManager      *CommandManager
-	updateTrigger       UpdateTrigger
-	notificationManager NotificationManager
-	config              *config.Config
-	linkRegex           *regexp.Regexp
+	connections           map[string]*Server
+	commandManager        *CommandManager
+	updateTrigger         UpdateTrigger
+	notificationManager   NotificationManager
+	config                *config.Config
+	linkRegex             *regexp.Regexp
 	windowRemovalCallback WindowRemovalCallback
 }
 
 func NewServerManager(linkRegex *regexp.Regexp, conf *config.Config, commandManager *CommandManager) *ServerManager {
 	return &ServerManager{
-		connections:    map[string]ServerInterface{},
+		connections:    map[string]*Server{},
 		commandManager: commandManager,
 		config:         conf,
 		linkRegex:      linkRegex,
@@ -70,9 +70,9 @@ func (cm *ServerManager) RemoveConnection(id string) {
 	cm.updateTrigger.SetPendingUpdate()
 }
 
-func (cm *ServerManager) GetConnections() []ServerInterface {
+func (cm *ServerManager) GetConnections() []*Server {
 	connections := slices.Collect(maps.Values(cm.connections))
-	slices.SortStableFunc(connections, func(a, b ServerInterface) int {
+	slices.SortStableFunc(connections, func(a, b *Server) int {
 		if a.GetName() == b.GetName() {
 			return strings.Compare(a.GetID(), b.GetID())
 		}
@@ -81,7 +81,7 @@ func (cm *ServerManager) GetConnections() []ServerInterface {
 	return connections
 }
 
-func (cm *ServerManager) GetConnection(id string) ServerInterface {
+func (cm *ServerManager) GetConnection(id string) *Server {
 	return cm.connections[id]
 }
 

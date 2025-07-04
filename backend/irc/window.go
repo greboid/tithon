@@ -21,7 +21,7 @@ type Window struct {
 	name         string
 	title        string
 	messages     []*Message
-	connection   ServerInterface
+	connection   *Server
 	stateSync    sync.Mutex
 	state        WindowState
 	hasUsers     bool
@@ -80,7 +80,7 @@ func (c *Window) GetMessages() []*Message {
 	return messages
 }
 
-func (c *Window) GetServer() ServerInterface {
+func (c *Window) GetServer() *Server {
 	return c.connection
 }
 

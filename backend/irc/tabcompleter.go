@@ -30,7 +30,7 @@ func NewQueryTabCompleter(query *Query) TabCompleter {
 	return &NoopTabCompleter{}
 }
 
-func NewServerTabCompleter(server ServerInterface) TabCompleter {
+func NewServerTabCompleter(server *Server) TabCompleter {
 	return &NoopTabCompleter{}
 }
 

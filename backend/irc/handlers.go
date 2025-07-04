@@ -78,7 +78,7 @@ type Handler struct {
 	linkRegex           *regexp.Regexp
 }
 
-func NewHandler(linkRegex *regexp.Regexp, connection ServerInterface, ut UpdateTrigger, nm NotificationManager, conf *config.Config) *Handler {
+func NewHandler(linkRegex *regexp.Regexp, connection *Server, ut UpdateTrigger, nm NotificationManager, conf *config.Config) *Handler {
 	return &Handler{
 		channelHandler:      connection,
 		queryHandler:        connection,

@@ -23,29 +23,29 @@ const (
 
 type Server struct {
 	*Window
-	connection        *ircevent.Connection
-	hostname          string
-	port              int
-	tls               bool
-	password          string
-	saslLogin         string
-	saslPassword      string
-	preferredNickname string
-	channels          map[string]*Channel
-	pms               map[string]*Query
-	mutex             sync.Mutex
-	callbackHandler   *Handler
-	supportsFileHost  bool
-	currentModes      string
-	possibleUserModes []*UserMode
-	ut                UpdateTrigger
-	nm                NotificationManager
-	conf              *config.Config
-	reconnecting      bool
-	reconnectAttempts int
-	reconnectTimer    *time.Timer
-	manualDisconnect  bool
-	linkRegex         *regexp.Regexp
+	connection            *ircevent.Connection
+	hostname              string
+	port                  int
+	tls                   bool
+	password              string
+	saslLogin             string
+	saslPassword          string
+	preferredNickname     string
+	channels              map[string]*Channel
+	pms                   map[string]*Query
+	mutex                 sync.Mutex
+	callbackHandler       *Handler
+	supportsFileHost      bool
+	currentModes          string
+	possibleUserModes     []*UserMode
+	ut                    UpdateTrigger
+	nm                    NotificationManager
+	conf                  *config.Config
+	reconnecting          bool
+	reconnectAttempts     int
+	reconnectTimer        *time.Timer
+	manualDisconnect      bool
+	linkRegex             *regexp.Regexp
 	windowRemovalCallback WindowRemovalCallback
 }
 
@@ -53,7 +53,7 @@ func (c *Server) GetWindow() *Window {
 	return c.Window
 }
 
-func NewServer(linkRegex *regexp.Regexp, conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager) ServerInterface {
+func NewServer(linkRegex *regexp.Regexp, conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager) *Server {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}

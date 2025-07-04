@@ -20,13 +20,13 @@ type SettingsData struct {
 // SettingsService manages UI settings and configuration
 type SettingsService struct {
 	conf         *config.Config
-	settingsData SettingsData
+	settingsData *SettingsData
 }
 
 func NewSettingsService(conf *config.Config) *SettingsService {
 	return &SettingsService{
 		conf: conf,
-		settingsData: SettingsData{
+		settingsData: &SettingsData{
 			Version:         getVersion(),
 			TimestampFormat: conf.UISettings.TimestampFormat,
 			ShowNicklist:    conf.UISettings.ShowNicklist,
@@ -37,20 +37,7 @@ func NewSettingsService(conf *config.Config) *SettingsService {
 	}
 }
 
-func (ss *SettingsService) GetSettingsData() SettingsData {
-	ss.settingsData.TimestampFormat = ss.conf.UISettings.TimestampFormat
-	ss.settingsData.ShowNicklist = ss.conf.UISettings.ShowNicklist
-	ss.settingsData.Servers = ss.conf.Servers
-	ss.settingsData.Notifications = ss.conf.Notifications.Triggers
-	ss.settingsData.Theme = ss.conf.UISettings.Theme
-	return ss.settingsData
-}
-
-func (ss *SettingsService) UpdateSettingsData(data SettingsData) {
-	ss.settingsData = data
-}
-
-func (ss *SettingsService) GetMutableSettingsData() *SettingsData {
+func (ss *SettingsService) GetFromConfig() *SettingsData {
 	ss.settingsData.TimestampFormat = ss.conf.UISettings.TimestampFormat
 	ss.settingsData.ShowNicklist = ss.conf.UISettings.ShowNicklist
 	ss.settingsData.Servers = make([]config.Server, len(ss.conf.Servers))
@@ -58,7 +45,11 @@ func (ss *SettingsService) GetMutableSettingsData() *SettingsData {
 	ss.settingsData.Notifications = make([]config.NotificationTrigger, len(ss.conf.Notifications.Triggers))
 	copy(ss.settingsData.Notifications, ss.conf.Notifications.Triggers)
 	ss.settingsData.Theme = ss.conf.UISettings.Theme
-	return &ss.settingsData
+	return ss.settingsData
+}
+
+func (ss *SettingsService) GetSettingsData() *SettingsData {
+	return ss.settingsData
 }
 
 func (ss *SettingsService) SaveSettingsToConfig() error {

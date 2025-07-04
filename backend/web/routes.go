@@ -132,7 +132,7 @@ func (s *WebClient) handleShowSettings(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
 	}
-	err = s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsService.GetSettingsData())
+	err = s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsService.GetFromConfig())
 	if err != nil {
 		slog.Debug("Error generating template", "error", err)
 	}
@@ -169,11 +169,10 @@ func (s *WebClient) handleDeleteServer(w http.ResponseWriter, r *http.Request) {
 	var data bytes.Buffer
 	serverID := r.URL.Query().Get("id")
 
-	settingsData := s.settingsService.GetMutableSettingsData()
+	settingsData := s.settingsService.GetSettingsData()
 	settingsData.Servers = slices.DeleteFunc(settingsData.Servers, func(server config.Server) bool {
 		return server.ID == serverID
 	})
-	s.settingsService.UpdateSettingsData(*settingsData)
 
 	err := s.templates.ExecuteTemplate(&data, "SettingsContent.gohtml", s.settingsService.GetSettingsData())
 	if err != nil {
@@ -267,7 +266,7 @@ func (s *WebClient) handleAddServer(w http.ResponseWriter, r *http.Request) {
 		autoConnectBool = false
 	}
 	id, _ := uniqueid.Generateid("a", 5, "s")
-	settingsData := s.settingsService.GetMutableSettingsData()
+	settingsData := s.settingsService.GetSettingsData()
 	settingsData.Servers = append(settingsData.Servers, config.Server{
 		Hostname:     hostname,
 		Port:         portInt,
@@ -281,7 +280,6 @@ func (s *WebClient) handleAddServer(w http.ResponseWriter, r *http.Request) {
 		AutoConnect: autoConnectBool,
 		ID:          id,
 	})
-	s.settingsService.UpdateSettingsData(*settingsData)
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -365,7 +363,7 @@ func (s *WebClient) handleEditServer(w http.ResponseWriter, r *http.Request) {
 		autoConnectBool = false
 	}
 
-	settingsData := s.settingsService.GetMutableSettingsData()
+	settingsData := s.settingsService.GetSettingsData()
 	for i := range settingsData.Servers {
 		if settingsData.Servers[i].ID == id {
 			settingsData.Servers[i].Hostname = hostname
@@ -378,7 +376,6 @@ func (s *WebClient) handleEditServer(w http.ResponseWriter, r *http.Request) {
 			settingsData.Servers[i].AutoConnect = autoConnectBool
 		}
 	}
-	s.settingsService.UpdateSettingsData(*settingsData)
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -407,9 +404,10 @@ func (s *WebClient) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
 		theme = "auto"
 	}
 
-	s.conf.UISettings.TimestampFormat = timestampFormat
-	s.conf.UISettings.ShowNicklist = showNicklist
-	s.conf.UISettings.Theme = theme
+	settingsData := s.settingsService.GetSettingsData()
+	settingsData.TimestampFormat = timestampFormat
+	settingsData.ShowNicklist = showNicklist
+	settingsData.Theme = theme
 
 	err := s.settingsService.SaveSettingsToConfig()
 	if err != nil {

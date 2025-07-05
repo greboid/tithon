@@ -419,7 +419,7 @@ func (c *Server) SendMessage(window string, message string) error {
 		return c.SendQuery(pm.name, message)
 	}
 
-	//PRIVMSG #channel :message == 10 + channel name
+	// PRIVMSG #channel :message == 10 + channel name
 	messageParts := c.SplitMessage(10+len(channel.name), message)
 
 	for _, part := range messageParts {
@@ -442,7 +442,7 @@ func (c *Server) SendQuery(target string, message string) error {
 		pm = c.AddQuery(target)
 	}
 
-	//PRIVMSG nickname :message == 10 + nickname
+	// PRIVMSG nickname :message == 10 + nickname
 	messageParts := c.SplitMessage(10+len(target), message)
 
 	for _, part := range messageParts {
@@ -468,12 +468,12 @@ func (c *Server) SendNotice(window string, message string) error {
 		return c.SendQueryNotice(pm.name, message)
 	}
 
-	//NOTICE #channel :message == 9 + channel name
+	// NOTICE #channel :message == 9 + channel name
 	messageParts := c.SplitMessage(9+len(channel.name), message)
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			channel.AddMessage(NewMessage(c.timestampFormat, true, c.connection.CurrentNick(), part, nil))
+			channel.AddMessage(NewNotice(c.timestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err := c.connection.Send("NOTICE", channel.name, part)
 		if err != nil {
@@ -491,7 +491,7 @@ func (c *Server) SendQueryNotice(target string, message string) error {
 		pm = c.AddQuery(target)
 	}
 
-	//NOTICE nickname :message == 9 + nickname
+	// NOTICE nickname :message == 9 + nickname
 	messageParts := c.SplitMessage(9+len(target), message)
 
 	for _, part := range messageParts {
@@ -586,7 +586,7 @@ func (c *Server) GetChannelModeType(mode string) rune {
 		return 'P'
 	}
 
-	//Get modes, use default
+	// Get modes, use default
 	chanModes := c.ISupport("CHANMODES")
 	if chanModes == "" {
 		chanModes = "beI,k,l,imnpst"

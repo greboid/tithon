@@ -1,7 +1,6 @@
 package irc
 
 import (
-	"fmt"
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
 	"strconv"

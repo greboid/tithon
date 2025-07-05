@@ -8,9 +8,9 @@ import (
 
 func TestHandleNamesReply(t *testing.T) {
 	type args struct {
-		setPendingUpdate setPendingUpdate
-		getChannelByName getChannelByName
-		getModePrefixes  getModePrefixes
+		setPendingUpdate func()
+		getChannelByName func(string) (*Channel, error)
+		getModePrefixes  func() []string
 	}
 	tests := []struct {
 		name             string
@@ -371,7 +371,7 @@ func TestHandleNamesReply(t *testing.T) {
 				Params:  []string{"testnick", "=", "#test", "   "},
 			},
 			wantChannelName: "#test",
-			wantUsers:       []struct {
+			wantUsers: []struct {
 				nickname string
 				modes    string
 			}{},
@@ -433,7 +433,7 @@ func TestHandleNamesReply(t *testing.T) {
 					return nil, assert.AnError
 				},
 				getModePrefixes: func() []string {
-					return []string{"ov", ""}  // Second element empty - no mode chars
+					return []string{"ov", ""} // Second element empty - no mode chars
 				},
 			},
 			message: ircmsg.Message{

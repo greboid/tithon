@@ -11,12 +11,12 @@ func TestHandleSelfJoin(t *testing.T) {
 	type args struct {
 		linkRegex        *regexp.Regexp
 		timestampFormat  string
-		setPendingUpdate setPendingUpdate
-		currentNick      currentNick
-		getChannelByName getChannelByName
-		addChannel       addChannel
-		hasCapability    hasCapability
-		sendRaw          sendRaw
+		setPendingUpdate func()
+		currentNick      func() string
+		getChannelByName func(string) (*Channel, error)
+		addChannel       func(string) *Channel
+		hasCapability    func(string) bool
+		sendRaw          func(string)
 	}
 	tests := []struct {
 		name                   string

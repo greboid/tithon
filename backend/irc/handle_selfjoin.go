@@ -10,12 +10,12 @@ import (
 func HandleSelfJoin(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	currentNick currentNick,
-	getChannelByName getChannelByName,
-	addChannel addChannel,
-	hasCapability hasCapability,
-	sendRaw sendRaw,
+	setPendingUpdate func(),
+	currentNick func() string,
+	getChannelByName func(string) (*Channel, error),
+	addChannel func(string) *Channel,
+	hasCapability func(string) bool,
+	sendRaw func(string),
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

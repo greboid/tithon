@@ -11,10 +11,10 @@ func TestHandleNick(t *testing.T) {
 	type args struct {
 		linkRegex        *regexp.Regexp
 		timestampFormat  string
-		setPendingUpdate setPendingUpdate
-		currentNick      currentNick
-		addMessage       addMessage
-		getChannels      getChannels
+		setPendingUpdate func()
+		currentNick      func() string
+		addMessage       func(*Message)
+		getChannels      func() []*Channel
 	}
 	tests := []struct {
 		name                    string

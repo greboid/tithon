@@ -9,9 +9,9 @@ import (
 )
 
 func HandleRPLTopicWhoTime(
-	setPendingUpdate setPendingUpdate,
-	getServerName getServerName,
-	getChannelByName getChannelByName,
+	setPendingUpdate func(),
+	getServerName func() string,
+	getChannelByName func(string) (*Channel, error),
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

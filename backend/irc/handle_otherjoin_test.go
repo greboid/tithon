@@ -11,9 +11,9 @@ func TestHandleOtherJoin(t *testing.T) {
 	type args struct {
 		linkRegex        *regexp.Regexp
 		timestampFormat  string
-		setPendingUpdate setPendingUpdate
-		currentNick      currentNick
-		getChannelByName getChannelByName
+		setPendingUpdate func()
+		currentNick      func() string
+		getChannelByName func(string) (*Channel, error)
 	}
 	tests := []struct {
 		name             string

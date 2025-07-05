@@ -11,11 +11,11 @@ func TestHandleChannelModes(t *testing.T) {
 	type args struct {
 		linkRegex          *regexp.Regexp
 		timestampFormat    string
-		isValidChannel     isValidChannel
-		setPendingUpdate   setPendingUpdate
-		getChannelByName   getChannelByName
-		getModeNameForMode getModeNameForMode
-		getChannelModeType getChannelModeType
+		isValidChannel     func(string) bool
+		setPendingUpdate   func()
+		getChannelByName   func(string) (*Channel, error)
+		getModeNameForMode func(string) string
+		getChannelModeType func(string) rune
 	}
 	tests := []struct {
 		name               string

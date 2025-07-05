@@ -10,14 +10,14 @@ import (
 func HandlePrivMsg(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	isValidChannel isValidChannel,
-	getChannelByName getChannelByName,
-	currentNick currentNick,
-	getServerName getServerName,
-	checkAndNotify checkAndNotify,
-	getQueryByName getQueryByName,
-	addQuery addQuery,
+	setPendingUpdate func(),
+	isValidChannel func(string) bool,
+	getChannelByName func(string) (*Channel, error),
+	currentNick func() string,
+	getServerName func() string,
+	checkAndNotify func(string, string, string, string) bool,
+	getQueryByName func(string) (*Query, error),
+	addQuery func(string) *Query,
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

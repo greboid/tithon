@@ -10,7 +10,7 @@ import (
 func HandleWhois(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	addMessage addMessage,
+	addMessage func(*Message),
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		switch message.Command {

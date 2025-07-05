@@ -7,9 +7,9 @@ import (
 )
 
 func HandleNamesReply(
-	setPendingUpdate setPendingUpdate,
-	getChannelByName getChannelByName,
-	getModePrefixes getModePrefixes,
+	setPendingUpdate func(),
+	getChannelByName func(string) (*Channel, error),
+	getModePrefixes func() []string,
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		stripChannelPrefixes := func(name string) (string, string) {

@@ -10,11 +10,11 @@ import (
 func HandleDisconnected(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	getQueries getQueries,
-	getServerHostname getServerHostname,
-	getChannels getChannels,
-	addMessage addMessage,
+	setPendingUpdate func(),
+	getQueries func() []*Query,
+	getServerHostname func() string,
+	getChannels func() []*Channel,
+	addMessage func(*Message),
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

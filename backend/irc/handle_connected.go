@@ -9,13 +9,13 @@ import (
 func HandleConnected(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	getQueries getQueries,
-	getServerHostname getServerHostname,
-	iSupport iSupport,
-	setServerName setServerName,
-	getChannels getChannels,
-	addMessage addMessage,
+	setPendingUpdate func(),
+	getQueries func() []*Query,
+	getServerHostname func() string,
+	iSupport func(string) string,
+	setServerName func(string),
+	getChannels func() []*Channel,
+	addMessage func(*Message),
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

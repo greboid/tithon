@@ -8,9 +8,9 @@ import (
 func HandleUserModeSet(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	setCurrentModes setCurrentModes,
-	addMessage addMessage,
+	setPendingUpdate func(),
+	setCurrentModes func(string),
+	addMessage func(*Message),
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

@@ -11,11 +11,11 @@ import (
 func HandleChannelModes(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	isValidChannel isValidChannel,
-	setPendingUpdate setPendingUpdate,
-	getChannelByName getChannelByName,
-	getModeNameForMode getModeNameForMode,
-	getChannelModeType getChannelModeType,
+	isValidChannel func(string) bool,
+	setPendingUpdate func(),
+	getChannelByName func(string) (*Channel, error),
+	getModeNameForMode func(string) string,
+	getChannelModeType func(string) rune,
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		type modeChange struct {
@@ -133,7 +133,7 @@ func HandleChannelModes(
 		}
 
 		for _, op := range ops {
-			
+
 			defer setPendingUpdate()
 			switch op.modeType {
 			case 'P':

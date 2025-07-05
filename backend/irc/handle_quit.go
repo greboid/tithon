@@ -10,8 +10,8 @@ import (
 func HandleQuit(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	getChannels getChannels,
+	setPendingUpdate func(),
+	getChannels func() []*Channel,
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

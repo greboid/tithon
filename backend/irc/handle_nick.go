@@ -8,10 +8,10 @@ import (
 func HandleNick(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	currentNick currentNick,
-	addMessage addMessage,
-	getChannels getChannels,
+	setPendingUpdate func(),
+	currentNick func() string,
+	addMessage func(*Message),
+	getChannels func() []*Channel,
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

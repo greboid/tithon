@@ -11,8 +11,8 @@ func TestHandleQuit(t *testing.T) {
 	type args struct {
 		linkRegex        *regexp.Regexp
 		timestampFormat  string
-		setPendingUpdate setPendingUpdate
-		getChannels      getChannels
+		setPendingUpdate func()
+		getChannels      func() []*Channel
 	}
 	tests := []struct {
 		name                    string

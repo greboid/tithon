@@ -11,11 +11,11 @@ import (
 func HandleKick(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	currentNick currentNick,
-	getChannelByName getChannelByName,
-	removeChannel removeChannel,
-	addMessage addMessage,
+	setPendingUpdate func(),
+	currentNick func() string,
+	getChannelByName func(string) (*Channel, error),
+	removeChannel func(string),
+	addMessage func(*Message),
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

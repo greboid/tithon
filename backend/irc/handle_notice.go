@@ -10,13 +10,13 @@ import (
 func HandleNotice(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	currentNick currentNick,
-	addMessage addMessage,
-	isValidChannel isValidChannel,
-	getChannelByName getChannelByName,
-	getQueryByName getQueryByName,
-	addQuery addQuery,
+	setPendingUpdate func(),
+	currentNick func() string,
+	addMessage func(*Message),
+	isValidChannel func(string) bool,
+	getChannelByName func(string) (*Channel, error),
+	getQueryByName func(string) (*Query, error),
+	addQuery func(string) *Query,
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

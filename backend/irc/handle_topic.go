@@ -11,10 +11,10 @@ import (
 func HandleTopic(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	getChannelByName getChannelByName,
-	getServerName getServerName,
-	currentNick currentNick,
+	setPendingUpdate func(),
+	getChannelByName func(string) (*Channel, error),
+	getServerName func() string,
+	currentNick func() string,
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

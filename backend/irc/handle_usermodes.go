@@ -11,11 +11,11 @@ import (
 func HandleUserModes(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	isValidChannel isValidChannel,
-	setPendingUpdate setPendingUpdate,
-	getCurrentModes getCurrentModes,
-	setCurrentModes setCurrentModes,
-	addMessage addMessage,
+	isValidChannel func(string) bool,
+	setPendingUpdate func(),
+	getCurrentModes func() string,
+	setCurrentModes func(string),
+	addMessage func(*Message),
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		if isValidChannel(message.Params[0]) {

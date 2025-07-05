@@ -9,8 +9,8 @@ import (
 func HandleError(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	addMessage addMessage,
+	setPendingUpdate func(),
+	addMessage func(*Message),
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()
@@ -21,8 +21,8 @@ func HandleError(
 func HandleNickInUse(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	addMessage addMessage,
+	setPendingUpdate func(),
+	addMessage func(*Message),
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()
@@ -33,8 +33,8 @@ func HandleNickInUse(
 func HandlePasswordMismatch(
 	linkRegex *regexp.Regexp,
 	timestampFormat string,
-	setPendingUpdate setPendingUpdate,
-	addMessage addMessage,
+	setPendingUpdate func(),
+	addMessage func(*Message),
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

@@ -5,30 +5,6 @@ import (
 	"regexp"
 )
 
-type setPendingUpdate func()
-type currentNick func() string
-type getChannelByName func(string) (*Channel, error)
-type addChannel func(string) *Channel
-type hasCapability func(string) bool
-type sendRaw func(string)
-type isValidChannel func(string) bool
-type getServerName func() string
-type checkAndNotify func(string, string, string, string) bool
-type getQueryByName func(string) (*Query, error)
-type addQuery func(string) *Query
-type addMessage func(*Message)
-type getChannels func() []*Channel
-type getQueries func() []*Query
-type getServerHostname func() string
-type iSupport func(string) string
-type setServerName func(string)
-type removeChannel func(string)
-type setCurrentModes func(string)
-type getCurrentModes func() string
-type getModeNameForMode func(string) string
-type getChannelModeType func(string) rune
-type getModePrefixes func() []string
-
 func AddCallbacks(linkRegex *regexp.Regexp, connection *Server, updateTrigger UpdateTrigger,
 	notificationManager NotificationManager, timestampFormat string) {
 	connection.AddCallback("JOIN", HandleSelfJoin(linkRegex, timestampFormat,

@@ -8,9 +8,9 @@ import (
 )
 
 func HandleRPLTopic(
-	setPendingUpdate setPendingUpdate,
-	getServerName getServerName,
-	getChannels getChannels,
+	setPendingUpdate func(),
+	getServerName func() string,
+	getChannels func() []*Channel,
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()

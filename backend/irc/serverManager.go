@@ -102,6 +102,7 @@ func (cm *ServerManager) Stop() {
 
 func (cm *ServerManager) Load(servers []config.Server) {
 	for _, server := range servers {
+		// Add any auto connect servers, but do not connect until start is called
 		if server.AutoConnect {
 			cm.AddConnection(server.ID, server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
 		}

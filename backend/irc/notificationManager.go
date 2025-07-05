@@ -92,6 +92,7 @@ func CreateNotification(network, source, nick, message string, sound bool, popup
 
 func CompileNotificationRegex(regex string) (*regexp.Regexp, error) {
 	if regex == "" {
+		// Treat an empty regex as a match everything
 		return regexp.Compile(".*")
 	}
 	return regexp.Compile(regex)

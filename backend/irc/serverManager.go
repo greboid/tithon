@@ -21,17 +21,17 @@ type ServerManager struct {
 	commandManager        *CommandManager
 	updateTrigger         UpdateTrigger
 	notificationManager   NotificationManager
-	config                *config.Config
+	timestampFormat       string
 	linkRegex             *regexp.Regexp
 	windowRemovalCallback WindowRemovalCallback
 }
 
-func NewServerManager(linkRegex *regexp.Regexp, conf *config.Config, commandManager *CommandManager) *ServerManager {
+func NewServerManager(linkRegex *regexp.Regexp, timestampFormat string, commandManager *CommandManager) *ServerManager {
 	return &ServerManager{
-		connections:    map[string]*Server{},
-		commandManager: commandManager,
-		config:         conf,
-		linkRegex:      linkRegex,
+		connections:     map[string]*Server{},
+		commandManager:  commandManager,
+		timestampFormat: timestampFormat,
+		linkRegex:       linkRegex,
 	}
 }
 
@@ -46,7 +46,7 @@ func (cm *ServerManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewServer(cm.linkRegex, cm.config, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
+	connection := NewServer(cm.linkRegex, cm.timestampFormat, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
 	if cm.windowRemovalCallback != nil {
 		connection.SetWindowRemovalCallback(cm.windowRemovalCallback)
 	}
@@ -97,8 +97,8 @@ func (cm *ServerManager) Stop() {
 	}
 }
 
-func (cm *ServerManager) Load() {
-	for _, server := range cm.config.Servers {
+func (cm *ServerManager) Load(servers []config.Server) {
+	for _, server := range servers {
 		if server.AutoConnect {
 			cm.AddConnection(server.ID, server.Hostname, server.Port, server.TLS, server.Password, server.SASLLogin, server.SASLPassword, NewProfile(server.Profile.Nickname), false)
 		}

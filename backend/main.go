@@ -53,7 +53,7 @@ func main() {
 	pendingNotifications := make(chan irc.Notification, 10000)
 	notificationManager := irc.NewNotificationManager(pendingNotifications, conf.Notifications.Triggers)
 	commandManager := irc.NewCommandManager(linkRegex, conf, showSettings)
-	connectionManager := irc.NewServerManager(linkRegex, conf, commandManager)
+	connectionManager := irc.NewServerManager(linkRegex, conf.UISettings.TimestampFormat, commandManager)
 	defer connectionManager.Stop()
 
 	settingsService := services.NewSettingsService(conf)
@@ -80,7 +80,7 @@ func main() {
 	connectionManager.SetUpdateTrigger(server)
 	connectionManager.SetNotificationManager(notificationManager)
 	connectionManager.SetWindowRemovalCallback(server)
-	connectionManager.Load()
+	connectionManager.Load(conf.Servers)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)
 	host, port := server.GetListenAddress()

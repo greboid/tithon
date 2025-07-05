@@ -6,7 +6,6 @@ import (
 	uniqueid "github.com/albinj12/unique-id"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
-	"github.com/greboid/tithon/config"
 	"log/slog"
 	"maps"
 	"regexp"
@@ -39,7 +38,7 @@ type Server struct {
 	possibleUserModes     []*UserMode
 	ut                    UpdateTrigger
 	nm                    NotificationManager
-	conf                  *config.Config
+	timestampFormat       string
 	reconnecting          bool
 	reconnectAttempts     int
 	reconnectTimer        *time.Timer
@@ -52,7 +51,7 @@ func (c *Server) GetWindow() *Window {
 	return c.Window
 }
 
-func NewServer(linkRegex *regexp.Regexp, conf *config.Config, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager) *Server {
+func NewServer(linkRegex *regexp.Regexp, timestampFormat string, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager) *Server {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}
@@ -93,7 +92,7 @@ func NewServer(linkRegex *regexp.Regexp, conf *config.Config, id string, hostnam
 		},
 		ut:                ut,
 		nm:                nm,
-		conf:              conf,
+		timestampFormat:   timestampFormat,
 		reconnecting:      false,
 		reconnectAttempts: 0,
 		reconnectTimer:    nil,
@@ -128,7 +127,7 @@ func (c *Server) Connect() {
 	defer c.ut.SetPendingUpdate()
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	AddCallbacks(c.linkRegex, c, c.ut, c.nm, c.conf.UISettings.TimestampFormat)
+	AddCallbacks(c.linkRegex, c, c.ut, c.nm, c.timestampFormat)
 	c.manualDisconnect = false
 
 	c.AddDisconnectCallback(func(message ircmsg.Message) {
@@ -154,12 +153,12 @@ func (c *Server) Connect() {
 		go c.scheduleReconnect()
 	})
 
-	c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
+	c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.timestampFormat, false, fmt.Sprintf("Connecting to %s", c.connection.Server)))
 	if !c.connection.Connected() {
 		c.resetReconnectValues()
 		err := c.connection.Connect()
 		if err != nil {
-			c.AddMessage(NewError(c.linkRegex, c.conf.UISettings.TimestampFormat, false, "Server error: "+err.Error()))
+			c.AddMessage(NewError(c.linkRegex, c.timestampFormat, false, "Server error: "+err.Error()))
 			go c.scheduleReconnect()
 		}
 	}
@@ -190,7 +189,7 @@ func (c *Server) scheduleReconnect() {
 		delay = 1 * time.Minute
 	}
 
-	c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Reconnection attempt %d scheduled in %v", c.reconnectAttempts, delay)))
+	c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.timestampFormat, false, fmt.Sprintf("Reconnection attempt %d scheduled in %v", c.reconnectAttempts, delay)))
 
 	if c.reconnectTimer != nil {
 		c.reconnectTimer.Stop()
@@ -202,12 +201,12 @@ func (c *Server) scheduleReconnect() {
 		defer c.ut.SetPendingUpdate()
 		c.reconnecting = false
 
-		c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.conf.UISettings.TimestampFormat, false, fmt.Sprintf("Attempting to reconnect (attempt %d)...", c.reconnectAttempts)))
+		c.AddMessage(NewEvent(c.linkRegex, EventConnecting, c.timestampFormat, false, fmt.Sprintf("Attempting to reconnect (attempt %d)...", c.reconnectAttempts)))
 
 		if !c.connection.Connected() {
 			err := c.connection.Connect()
 			if err != nil {
-				c.AddMessage(NewError(c.linkRegex, c.conf.UISettings.TimestampFormat, false,
+				c.AddMessage(NewError(c.linkRegex, c.timestampFormat, false,
 					fmt.Sprintf("Reconnection attempt %d failed: %s", c.reconnectAttempts, err.Error())))
 				go c.scheduleReconnect()
 				return
@@ -425,7 +424,7 @@ func (c *Server) SendMessage(window string, message string) error {
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			channel.AddMessage(NewMessage(c.linkRegex, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+			channel.AddMessage(NewMessage(c.linkRegex, c.timestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err := c.connection.Send("PRIVMSG", channel.name, part)
 		if err != nil {
@@ -448,7 +447,7 @@ func (c *Server) SendQuery(target string, message string) error {
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			pm.AddMessage(NewMessage(c.linkRegex, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+			pm.AddMessage(NewMessage(c.linkRegex, c.timestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err = c.connection.Send("PRIVMSG", target, part)
 		if err != nil {
@@ -474,7 +473,7 @@ func (c *Server) SendNotice(window string, message string) error {
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			channel.AddMessage(NewMessage(c.linkRegex, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+			channel.AddMessage(NewMessage(c.linkRegex, c.timestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err := c.connection.Send("NOTICE", channel.name, part)
 		if err != nil {
@@ -497,7 +496,7 @@ func (c *Server) SendQueryNotice(target string, message string) error {
 
 	for _, part := range messageParts {
 		if !c.HasCapability("echo-message") {
-			pm.AddMessage(NewNotice(c.linkRegex, c.conf.UISettings.TimestampFormat, true, c.connection.CurrentNick(), part, nil))
+			pm.AddMessage(NewNotice(c.linkRegex, c.timestampFormat, true, c.connection.CurrentNick(), part, nil))
 		}
 		err = c.connection.Send("NOTICE", target, part)
 		if err != nil {

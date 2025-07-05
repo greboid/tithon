@@ -182,7 +182,7 @@ func TestHandlePart(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pendingUpdateCalled := false
 			channelRemoved := ""
-			
+
 			setPendingUpdate := func() {
 				pendingUpdateCalled = true
 			}
@@ -224,7 +224,7 @@ func TestHandlePart(t *testing.T) {
 			if tt.channelToReturn != nil && tt.channelError == nil {
 				users := tt.channelToReturn.GetUsers()
 				assert.Len(t, users, tt.expectedUserCount, "User count should match expected")
-				
+
 				// Check that the right user was removed (only if channel wasn't removed)
 				if !tt.expectChannelRemoval {
 					for _, user := range users {

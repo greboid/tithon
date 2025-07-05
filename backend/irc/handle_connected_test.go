@@ -12,14 +12,14 @@ func TestHandleConnected(t *testing.T) {
 	timestampFormat := "15:04:05"
 
 	tests := []struct {
-		name               string
-		message            ircmsg.Message
-		networkSupport     string
-		serverHostname     string
-		channels           []*Channel
-		queries            []*Query
-		expectedMessage    string
-		expectedServerName string
+		name                string
+		message             ircmsg.Message
+		networkSupport      string
+		serverHostname      string
+		channels            []*Channel
+		queries             []*Query
+		expectedMessage     string
+		expectedServerName  string
 		expectPendingUpdate bool
 	}{
 		{
@@ -28,12 +28,12 @@ func TestHandleConnected(t *testing.T) {
 				Command: "001",
 				Params:  []string{"testnick", "Welcome to the Example Network"},
 			},
-			networkSupport:     "ExampleNet",
-			serverHostname:     "irc.example.com",
-			channels:           []*Channel{},
-			queries:            []*Query{},
-			expectedMessage:    "Connected to irc.example.com",
-			expectedServerName: "ExampleNet",
+			networkSupport:      "ExampleNet",
+			serverHostname:      "irc.example.com",
+			channels:            []*Channel{},
+			queries:             []*Query{},
+			expectedMessage:     "Connected to irc.example.com",
+			expectedServerName:  "ExampleNet",
 			expectPendingUpdate: true,
 		},
 		{
@@ -42,12 +42,12 @@ func TestHandleConnected(t *testing.T) {
 				Command: "001",
 				Params:  []string{"testnick", "Welcome to the IRC Network"},
 			},
-			networkSupport:     "",
-			serverHostname:     "irc.test.net",
-			channels:           []*Channel{},
-			queries:            []*Query{},
-			expectedMessage:    "Connected to irc.test.net",
-			expectedServerName: "",
+			networkSupport:      "",
+			serverHostname:      "irc.test.net",
+			channels:            []*Channel{},
+			queries:             []*Query{},
+			expectedMessage:     "Connected to irc.test.net",
+			expectedServerName:  "",
 			expectPendingUpdate: true,
 		},
 		{
@@ -56,12 +56,12 @@ func TestHandleConnected(t *testing.T) {
 				Command: "001",
 				Params:  []string{"user", "Welcome"},
 			},
-			networkSupport:     "TestNet",
-			serverHostname:     "",
-			channels:           []*Channel{},
-			queries:            []*Query{},
-			expectedMessage:    "Connected to ",
-			expectedServerName: "TestNet",
+			networkSupport:      "TestNet",
+			serverHostname:      "",
+			channels:            []*Channel{},
+			queries:             []*Query{},
+			expectedMessage:     "Connected to ",
+			expectedServerName:  "TestNet",
 			expectPendingUpdate: true,
 		},
 		{
@@ -81,8 +81,8 @@ func TestHandleConnected(t *testing.T) {
 				NewQuery(nil, "friend1"),
 				NewQuery(nil, "friend2"),
 			},
-			expectedMessage:    "Connected to irc.big.net",
-			expectedServerName: "BigNetwork",
+			expectedMessage:     "Connected to irc.big.net",
+			expectedServerName:  "BigNetwork",
 			expectPendingUpdate: true,
 		},
 	}

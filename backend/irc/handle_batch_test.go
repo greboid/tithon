@@ -177,21 +177,21 @@ func TestHandleBatch(t *testing.T) {
 			wantItemCount:      4,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create handler
 			handler := HandleBatch()
-			
+
 			// Execute handler
 			result := handler(tt.batch)
-			
+
 			// Verify return value
 			assert.Equal(t, tt.wantReturnValue, result, "Handler should return expected value")
-			
+
 			// Verify item count
 			assert.Equal(t, tt.wantItemCount, len(tt.batch.Items), "Batch should have expected number of items")
-			
+
 			// Verify chathistory tags
 			if tt.wantChathistoryTag {
 				for i, item := range tt.batch.Items {
@@ -205,7 +205,7 @@ func TestHandleBatch(t *testing.T) {
 					assert.False(t, exists, "Item %d should not have chathistory tag", i)
 				}
 			}
-			
+
 			// Verify that other tags are preserved
 			if tt.name == "Batch with existing tags" && len(tt.batch.Items) > 0 {
 				exists, existingTag := tt.batch.Items[0].Message.GetTag("existing")
@@ -279,14 +279,14 @@ func TestHandleBatch_EdgeCases(t *testing.T) {
 			wantReturnValue: false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			handler := HandleBatch()
-			
+
 			// This should not panic
 			result := handler(tt.batch)
-			
+
 			assert.Equal(t, tt.wantReturnValue, result, "Handler should return expected value")
 		})
 	}

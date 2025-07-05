@@ -40,10 +40,6 @@ func (t *Topic) GetDisplayTopic() string {
 		return "No Topic set"
 	}
 
-	if t.setBy == "" && t.setTime.IsZero() {
-		return t.topic
-	}
-
 	if t.setBy != "" && !t.setTime.IsZero() {
 		return t.topic + " (set by " + t.setBy + " on " + t.setTime.Format(topicTimeformat) + ")"
 	}

@@ -26,14 +26,12 @@ func HandleRPLTopicWhoTime(
 			return
 		}
 		setTime := time.Unix(timestamp, 0)
-		fmt.Println(timestamp)
 
 		channel, err := getChannelByName(channelName)
 		if err != nil {
 			slog.Debug("Received topic for unknown channel")
 			return
 		}
-		fmt.Println(channel.GetTopic())
 		existingTopic := channel.GetTopic().GetTopic()
 		updatedTopic := NewTopic(existingTopic, setBy, setTime)
 		channel.SetTopic(updatedTopic)

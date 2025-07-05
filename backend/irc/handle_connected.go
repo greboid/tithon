@@ -3,11 +3,9 @@ package irc
 import (
 	"fmt"
 	"github.com/ergochat/irc-go/ircmsg"
-	"regexp"
 )
 
 func HandleConnected(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	getQueries func() []*Query,
@@ -24,12 +22,12 @@ func HandleConnected(
 			setServerName(network)
 		}
 		connectMessage := fmt.Sprintf("Connected to %s", getServerHostname())
-		addMessage(NewEvent(linkRegex, EventConnecting, timestampFormat, false, connectMessage))
+		addMessage(NewEvent(EventConnecting, timestampFormat, false, connectMessage))
 		for _, channel := range getChannels() {
-			channel.AddMessage(NewEvent(linkRegex, EventConnecting, timestampFormat, false, connectMessage))
+			channel.AddMessage(NewEvent(EventConnecting, timestampFormat, false, connectMessage))
 		}
 		for _, query := range getQueries() {
-			query.AddMessage(NewEvent(linkRegex, EventConnecting, timestampFormat, false, connectMessage))
+			query.AddMessage(NewEvent(EventConnecting, timestampFormat, false, connectMessage))
 		}
 	}
 }

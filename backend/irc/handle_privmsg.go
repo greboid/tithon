@@ -3,12 +3,10 @@ package irc
 import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 	"strings"
 )
 
 func HandlePrivMsg(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	isValidChannel func(string) bool,
@@ -27,7 +25,7 @@ func HandlePrivMsg(
 				slog.Warn("Message for unknown channel", "message", message)
 				return
 			}
-			msg := NewMessage(linkRegex, timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
+			msg := NewMessage(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
 			if msg.tags["chathistory"] != "true" && !msg.isMe() {
 				checkAndNotify(getServerName(), channel.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 			}
@@ -38,7 +36,7 @@ func HandlePrivMsg(
 				pm = addQuery(message.Nick())
 			}
 
-			msg := NewMessage(linkRegex, timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
+			msg := NewMessage(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
 			if msg.tags["chathistory"] != "true" && !msg.isMe() {
 				checkAndNotify(getServerName(), pm.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 			}
@@ -48,7 +46,7 @@ func HandlePrivMsg(
 			if err != nil {
 				pm = addQuery(message.Nick())
 			}
-			msg := NewMessage(linkRegex, timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
+			msg := NewMessage(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
 			pm.AddMessage(msg)
 		} else {
 			slog.Warn("Unsupported message target", "message", message)

@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 	"strings"
 )
 
 func HandleUserModes(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	isValidChannel func(string) bool,
 	setPendingUpdate func(),
@@ -58,6 +56,6 @@ func HandleUserModes(
 			displayModeStr = "+" + modeStr
 		}
 
-		addMessage(NewEvent(linkRegex, EventMode, timestampFormat, true, fmt.Sprintf("Your modes changed: %s", displayModeStr)))
+		addMessage(NewEvent(EventMode, timestampFormat, true, fmt.Sprintf("Your modes changed: %s", displayModeStr)))
 	}
 }

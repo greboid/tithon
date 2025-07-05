@@ -3,12 +3,10 @@ package irc
 import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 	"strings"
 )
 
 func HandleNotice(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	currentNick func() string,
@@ -20,7 +18,7 @@ func HandleNotice(
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()
-		mess := NewNotice(linkRegex, timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), nil, currentNick())
+		mess := NewNotice(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), nil, currentNick())
 		if message.Source == "" || (strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@")) {
 			addMessage(mess)
 		} else if isValidChannel(message.Params[0]) {

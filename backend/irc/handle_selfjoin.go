@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 )
 
 func HandleSelfJoin(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	currentNick func() string,
@@ -34,6 +32,6 @@ func HandleSelfJoin(
 				sendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
 			}
 		}
-		channel.AddMessage(NewEvent(linkRegex, EventJoin, timestampFormat, false, "You have joined "+channel.GetName()))
+		channel.AddMessage(NewEvent(EventJoin, timestampFormat, false, "You have joined "+channel.GetName()))
 	}
 }

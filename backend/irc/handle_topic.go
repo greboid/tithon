@@ -3,13 +3,11 @@ package irc
 import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 	"strings"
 	"time"
 )
 
 func HandleTopic(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	getChannelByName func(string) (*Channel, error),
@@ -29,9 +27,9 @@ func HandleTopic(
 		channel.SetTopic(topic)
 		channel.SetTitle(topic.GetDisplayTopic())
 		if newTopic == "" {
-			channel.AddMessage(NewEvent(linkRegex, EventTopic, timestampFormat, message.Nick() == currentNick(), message.Nick()+" unset the topic"))
+			channel.AddMessage(NewEvent(EventTopic, timestampFormat, message.Nick() == currentNick(), message.Nick()+" unset the topic"))
 		} else {
-			channel.AddMessage(NewEvent(linkRegex, EventTopic, timestampFormat, message.Nick() == currentNick(), message.Nick()+" changed the topic: "+topic.GetTopic()))
+			channel.AddMessage(NewEvent(EventTopic, timestampFormat, message.Nick() == currentNick(), message.Nick()+" changed the topic: "+topic.GetTopic()))
 		}
 	}
 }

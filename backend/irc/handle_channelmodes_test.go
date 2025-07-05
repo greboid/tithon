@@ -922,7 +922,7 @@ func TestHandleChannelModes(t *testing.T) {
 				return result, err
 			}
 
-			handler := HandleChannelModes(tt.args.linkRegex, tt.args.timestampFormat, tt.args.isValidChannel, setPendingUpdate, getChannelByName, tt.args.getModeNameForMode, tt.args.getChannelModeType)
+			handler := HandleChannelModes(tt.args.tt.args.timestampFormat, tt.args.isValidChannel, setPendingUpdate, getChannelByName, tt.args.getModeNameForMode, tt.args.getChannelModeType)
 			handler(tt.message)
 
 			if tt.wantIsValidChannel {

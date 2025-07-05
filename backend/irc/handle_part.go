@@ -3,12 +3,10 @@ package irc
 import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 	"slices"
 )
 
 func HandlePart(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	currentNick func() string,
@@ -29,6 +27,6 @@ func HandlePart(
 		channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 			return user.nickname == message.Nick()
 		})
-		channel.AddMessage(NewEvent(linkRegex, EventJoin, timestampFormat, false, message.Source+" has parted "+channel.GetName()))
+		channel.AddMessage(NewEvent(EventJoin, timestampFormat, false, message.Source+" has parted "+channel.GetName()))
 	}
 }

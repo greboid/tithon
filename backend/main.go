@@ -8,7 +8,6 @@ import (
 	"github.com/greboid/tithon/irc"
 	"github.com/greboid/tithon/services"
 	"github.com/greboid/tithon/web"
-	"github.com/hueristiq/hq-go-url/extractor"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -48,12 +47,11 @@ func main() {
 			return
 		}
 	}()
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	showSettings := make(chan bool)
 	pendingNotifications := make(chan irc.Notification, 10000)
 	notificationManager := irc.NewNotificationManager(pendingNotifications, conf.Notifications.Triggers)
-	commandManager := irc.NewCommandManager(linkRegex, conf, showSettings)
-	connectionManager := irc.NewServerManager(linkRegex, conf.UISettings.TimestampFormat, commandManager)
+	commandManager := irc.NewCommandManager(conf, showSettings)
+	connectionManager := irc.NewServerManager(conf.UISettings.TimestampFormat, commandManager)
 	defer connectionManager.Stop()
 
 	settingsService := services.NewSettingsService(conf)

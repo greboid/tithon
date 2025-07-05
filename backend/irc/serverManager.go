@@ -2,11 +2,14 @@ package irc
 
 import (
 	"github.com/greboid/tithon/config"
+	"github.com/hueristiq/hq-go-url/extractor"
 	"maps"
 	"regexp"
 	"slices"
 	"strings"
 )
+
+var linkRegex = extractor.New(extractor.WithHost()).CompileRegex()
 
 type UpdateTrigger interface {
 	SetPendingUpdate()
@@ -26,7 +29,7 @@ type ServerManager struct {
 	windowRemovalCallback WindowRemovalCallback
 }
 
-func NewServerManager(linkRegex *regexp.Regexp, timestampFormat string, commandManager *CommandManager) *ServerManager {
+func NewServerManager(timestampFormat string, commandManager *CommandManager) *ServerManager {
 	return &ServerManager{
 		connections:     map[string]*Server{},
 		commandManager:  commandManager,
@@ -46,7 +49,7 @@ func (cm *ServerManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewServer(cm.linkRegex, cm.timestampFormat, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
+	connection := NewServer(cm.timestampFormat, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
 	if cm.windowRemovalCallback != nil {
 		connection.SetWindowRemovalCallback(cm.windowRemovalCallback)
 	}

@@ -155,7 +155,7 @@ func TestHandleWhois(t *testing.T) {
 				messagesAdded = append(messagesAdded, msg)
 			}
 
-			handler := HandleWhois(linkRegex, timestampFormat, addMessage)
+			handler := HandleWhois(timestampFormat, addMessage)
 			handler(tt.message)
 
 			if tt.expectedMessage == "" {

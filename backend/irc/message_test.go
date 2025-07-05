@@ -91,7 +91,7 @@ func TestNewMessage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := NewMessage(linkRegex, tt.timeFormat, tt.me, tt.nickname, tt.message, tt.tags, tt.highlights...)
+			msg := NewMessage(tt.timeFormat, tt.me, tt.nickname, tt.message, tt.tags, tt.highlights...)
 
 			assert.NotNil(t, msg, "NewMessage() should not return nil")
 			assert.Equal(t, tt.wantType, msg.GetType(), "NewMessage() type mismatch")
@@ -139,7 +139,7 @@ func TestNewNotice(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := NewNotice(linkRegex, tt.timeFormat, tt.me, tt.nickname, tt.message, tt.tags, tt.highlights...)
+			msg := NewNotice(tt.timeFormat, tt.me, tt.nickname, tt.message, tt.tags, tt.highlights...)
 
 			assert.NotNil(t, msg, "NewNotice() should not return nil")
 			assert.Equal(t, tt.wantType, msg.GetType(), "NewNotice() type mismatch")
@@ -170,7 +170,7 @@ func TestNewEvent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := NewEvent(linkRegex, EventJoin, tt.timeFormat, tt.me, tt.message)
+			msg := NewEvent(EventJoin, tt.timeFormat, tt.me, tt.message)
 
 			assert.NotNil(t, msg, "NewEvent() should not return nil")
 			assert.Equal(t, tt.wantType, msg.GetType(), "NewEvent() type mismatch")
@@ -201,7 +201,7 @@ func TestNewError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := NewError(linkRegex, tt.timeFormat, tt.me, tt.message)
+			msg := NewError(tt.timeFormat, tt.me, tt.message)
 
 			assert.NotNil(t, msg, "NewError() should not return nil")
 			assert.Equal(t, tt.wantType, msg.GetType(), "NewError() type mismatch")

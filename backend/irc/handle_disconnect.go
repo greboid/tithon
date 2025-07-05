@@ -3,12 +3,10 @@ package irc
 import (
 	"fmt"
 	"github.com/ergochat/irc-go/ircmsg"
-	"regexp"
 	"strings"
 )
 
 func HandleDisconnected(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	getQueries func() []*Query,
@@ -19,12 +17,12 @@ func HandleDisconnected(
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()
 		disconnectMessage := fmt.Sprintf("Disconnected from %s: %s", getServerHostname(), strings.Join(message.Params, " "))
-		addMessage(NewEvent(linkRegex, EventDisconnected, timestampFormat, false, disconnectMessage))
+		addMessage(NewEvent(EventDisconnected, timestampFormat, false, disconnectMessage))
 		for _, channel := range getChannels() {
-			channel.AddMessage(NewEvent(linkRegex, EventDisconnected, timestampFormat, false, disconnectMessage))
+			channel.AddMessage(NewEvent(EventDisconnected, timestampFormat, false, disconnectMessage))
 		}
 		for _, query := range getQueries() {
-			query.AddMessage(NewEvent(linkRegex, EventDisconnected, timestampFormat, false, disconnectMessage))
+			query.AddMessage(NewEvent(EventDisconnected, timestampFormat, false, disconnectMessage))
 		}
 	}
 }

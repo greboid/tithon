@@ -2,11 +2,9 @@ package irc
 
 import (
 	"github.com/ergochat/irc-go/ircmsg"
-	"regexp"
 )
 
 func HandleUserModeSet(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	setCurrentModes func(string),
@@ -15,6 +13,6 @@ func HandleUserModeSet(
 	return func(message ircmsg.Message) {
 		defer setPendingUpdate()
 		setCurrentModes(message.Params[1])
-		addMessage(NewEvent(linkRegex, EventMode, timestampFormat, false, "Your modes changed: "+message.Params[1]))
+		addMessage(NewEvent(EventMode, timestampFormat, false, "Your modes changed: "+message.Params[1]))
 	}
 }

@@ -3,13 +3,11 @@ package irc
 import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 	"slices"
 	"strings"
 )
 
 func HandleKick(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	currentNick func() string,
@@ -30,12 +28,12 @@ func HandleKick(
 		}
 		if message.Params[1] == currentNick() {
 			removeChannel(channel.id)
-			addMessage(NewEvent(linkRegex, EventKick, timestampFormat, true, message.Source+" has kicked you from "+channel.GetName()+kickMessage))
+			addMessage(NewEvent(EventKick, timestampFormat, true, message.Source+" has kicked you from "+channel.GetName()+kickMessage))
 			return
 		}
 		channel.users = slices.DeleteFunc(channel.users, func(user *User) bool {
 			return user.nickname == message.Params[1]
 		})
-		channel.AddMessage(NewEvent(linkRegex, EventKick, timestampFormat, message.Nick() == currentNick(), message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+kickMessage))
+		channel.AddMessage(NewEvent(EventKick, timestampFormat, message.Nick() == currentNick(), message.Source+" has kicked "+message.Params[1]+" from "+channel.GetName()+kickMessage))
 	}
 }

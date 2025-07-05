@@ -3,11 +3,9 @@ package irc
 import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 )
 
 func HandleOtherJoin(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	currentNick func() string,
@@ -28,6 +26,6 @@ func HandleOtherJoin(
 			return
 		}
 		channel.AddUser(NewUser(message.Nick(), ""))
-		channel.AddMessage(NewEvent(linkRegex, EventJoin, timestampFormat, false, message.Source+" has joined "+channel.GetName()))
+		channel.AddMessage(NewEvent(EventJoin, timestampFormat, false, message.Source+" has joined "+channel.GetName()))
 	}
 }

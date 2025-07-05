@@ -31,7 +31,7 @@ type CommandManager struct {
 	LinkRegex *regexp.Regexp
 }
 
-func NewCommandManager(linkRegex *regexp.Regexp, conf *config.Config, showSettings chan bool) *CommandManager {
+func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandManager {
 	cm := &CommandManager{}
 	cm.commands = []Command{
 		&SendAction{},
@@ -99,7 +99,7 @@ func (cm *CommandManager) showCommandError(window *Window, command Command, mess
 
 func (cm *CommandManager) showError(window *Window, message string) {
 	if window != nil {
-		window.AddMessage(NewError(cm.LinkRegex, cm.conf.UISettings.TimestampFormat, false, message))
+		window.AddMessage(NewError(cm.conf.UISettings.TimestampFormat, false, message))
 	} else {
 		slog.Error("Command error", "message", message)
 	}

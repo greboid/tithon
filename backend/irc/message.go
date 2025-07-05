@@ -62,26 +62,25 @@ type Message struct {
 	timestampFormat string
 	tags            map[string]string
 	nowFunc         func() time.Time
-	linkregex       *regexp.Regexp
 }
 
-func NewNotice(linkregex *regexp.Regexp, timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
-	return newMessage(linkregex, timeFormat, me, nickname, message, Notice, tags, highlights)
+func NewNotice(timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
+	return newMessage(timeFormat, me, nickname, message, Notice, tags, highlights)
 }
 
-func NewEvent(linkregex *regexp.Regexp, eventType EventType, timeFormat string, me bool, message string) *Message {
-	return newMessage(linkregex, timeFormat, me, "", message, Event, nil, nil)
+func NewEvent(eventType EventType, timeFormat string, me bool, message string) *Message {
+	return newMessage(timeFormat, me, "", message, Event, nil, nil)
 }
 
-func NewError(linkregex *regexp.Regexp, timeFormat string, me bool, message string) *Message {
-	return newMessage(linkregex, timeFormat, me, "", message, Error, nil, nil)
+func NewError(timeFormat string, me bool, message string) *Message {
+	return newMessage(timeFormat, me, "", message, Error, nil, nil)
 }
 
-func NewMessage(linkregex *regexp.Regexp, timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
-	return newMessage(linkregex, timeFormat, me, nickname, message, Normal, tags, highlights)
+func NewMessage(timeFormat string, me bool, nickname string, message string, tags map[string]string, highlights ...string) *Message {
+	return newMessage(timeFormat, me, nickname, message, Normal, tags, highlights)
 }
 
-func newMessage(linkregex *regexp.Regexp, timeFormat string, me bool, nickname string, message string, messageType MessageType, tags map[string]string, highlights []string) *Message {
+func newMessage(timeFormat string, me bool, nickname string, message string, messageType MessageType, tags map[string]string, highlights []string) *Message {
 	if tags == nil {
 		tags = make(map[string]string)
 	}
@@ -93,7 +92,6 @@ func newMessage(linkregex *regexp.Regexp, timeFormat string, me bool, nickname s
 		me:              me,
 		timestampFormat: timeFormat,
 		tags:            tags,
-		linkregex:       linkregex,
 	}
 	return m.parse()
 }
@@ -306,24 +304,14 @@ func (m *Message) parseIRCFormatting() {
 
 func (m *Message) GetLinks(input string) string {
 	var result []Link
-	urls := m.linkregex.FindAllStringIndex(input, -1)
+	urls := linkRegex.FindAllStringIndex(input, -1)
 	for _, u := range urls {
-		//url := input[u[0]:u[1]]
-		//if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		//	result = append(result, Link{
-		//		Start: u[0],
-		//		End:   u[1],
-		//		Text:  input[u[0]:u[1]],
-		//		Link:  "https://" + input[u[0]:u[1]],
-		//	})
-		//} else {
 		result = append(result, Link{
 			Start: u[0],
 			End:   u[1],
 			Text:  input[u[0]:u[1]],
 			Link:  input[u[0]:u[1]],
 		})
-		//}
 	}
 	output := input
 	offset := 0

@@ -188,7 +188,7 @@ func TestHandleKick(t *testing.T) {
 				serverMessage = msg
 			}
 
-			handler := HandleKick(tt.args.linkRegex, tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, getChannelByName, removeChannel, addMessage)
+			handler := HandleKick(tt.args.tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, getChannelByName, removeChannel, addMessage)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

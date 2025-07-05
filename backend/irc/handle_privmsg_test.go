@@ -362,7 +362,7 @@ func TestHandlePrivMsg(t *testing.T) {
 				return true
 			}
 
-			handler := HandlePrivMsg(tt.args.linkRegex, tt.args.timestampFormat, setPendingUpdate, tt.args.isValidChannel, getChannelByName, tt.args.currentNick, tt.args.getServerName, checkAndNotify, getQueryByName, addQuery)
+			handler := HandlePrivMsg(tt.args.tt.args.timestampFormat, setPendingUpdate, tt.args.isValidChannel, getChannelByName, tt.args.currentNick, tt.args.getServerName, checkAndNotify, getQueryByName, addQuery)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

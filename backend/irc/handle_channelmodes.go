@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"github.com/ergochat/irc-go/ircmsg"
 	"log/slog"
-	"regexp"
 	"strings"
 )
 
 func HandleChannelModes(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	isValidChannel func(string) bool,
 	setPendingUpdate func(),
@@ -49,7 +47,7 @@ func HandleChannelModes(
 				modeStr = "-" + change.mode
 			}
 
-			channel.AddMessage(NewEvent(linkRegex, EventMode, timestampFormat, false,
+			channel.AddMessage(NewEvent(EventMode, timestampFormat, false,
 				fmt.Sprintf("%s sets mode %s %s", message.Nick(), modeStr, change.nickname)))
 		}
 		if !isValidChannel(message.Params[0]) {
@@ -153,7 +151,7 @@ func HandleChannelModes(
 					paramStr = " " + op.parameter
 				}
 
-				channel.AddMessage(NewEvent(linkRegex, EventMode, timestampFormat, false,
+				channel.AddMessage(NewEvent(EventMode, timestampFormat, false,
 					fmt.Sprintf("%s sets mode %s%s", message.Nick(), modeStr, paramStr)))
 			default:
 				slog.Warn("Unknown mode type", "mode", op.mode, "type", op.modeType)

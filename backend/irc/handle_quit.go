@@ -2,13 +2,11 @@ package irc
 
 import (
 	"github.com/ergochat/irc-go/ircmsg"
-	"regexp"
 	"slices"
 	"strings"
 )
 
 func HandleQuit(
-	linkRegex *regexp.Regexp,
 	timestampFormat string,
 	setPendingUpdate func(),
 	getChannels func() []*Channel,
@@ -29,7 +27,7 @@ func HandleQuit(
 			if changed {
 				channels[i].SetUsers(users)
 				nuh, _ := message.NUH()
-				channels[i].AddMessage(NewEvent(linkRegex, EventNick, timestampFormat, false, nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " ")))
+				channels[i].AddMessage(NewEvent(EventNick, timestampFormat, false, nuh.Canonical()+" has quit "+strings.Join(message.Params[1:], " ")))
 			}
 		}
 	}

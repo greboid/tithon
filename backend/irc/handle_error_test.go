@@ -63,7 +63,7 @@ func TestHandleError(t *testing.T) {
 				messagesAdded = append(messagesAdded, msg)
 			}
 
-			handler := HandleError(linkRegex, timestampFormat, setPendingUpdate, addMessage)
+			handler := HandleError(timestampFormat, setPendingUpdate, addMessage)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should be called")
@@ -114,7 +114,7 @@ func TestHandleNickInUse(t *testing.T) {
 				messagesAdded = append(messagesAdded, msg)
 			}
 
-			handler := HandleNickInUse(linkRegex, timestampFormat, setPendingUpdate, addMessage)
+			handler := HandleNickInUse(timestampFormat, setPendingUpdate, addMessage)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should be called")
@@ -173,7 +173,7 @@ func TestHandlePasswordMismatch(t *testing.T) {
 				messagesAdded = append(messagesAdded, msg)
 			}
 
-			handler := HandlePasswordMismatch(linkRegex, timestampFormat, setPendingUpdate, addMessage)
+			handler := HandlePasswordMismatch(timestampFormat, setPendingUpdate, addMessage)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should be called")

@@ -1,7 +1,6 @@
 package irc
 
 import (
-	"github.com/hueristiq/hq-go-url/extractor"
 	"testing"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 )
 
 func TestNewMessage(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name       string
 		timeFormat string
@@ -104,7 +102,6 @@ func TestNewMessage(t *testing.T) {
 }
 
 func TestNewNotice(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name       string
 		timeFormat string
@@ -151,7 +148,6 @@ func TestNewNotice(t *testing.T) {
 }
 
 func TestNewEvent(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name       string
 		timeFormat string
@@ -182,7 +178,6 @@ func TestNewEvent(t *testing.T) {
 }
 
 func TestNewError(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name       string
 		timeFormat string
@@ -213,7 +208,6 @@ func TestNewError(t *testing.T) {
 }
 
 func TestMessage_parseTime(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	setTime := time.Date(2025, 1, 2, 3, 4, 5, 0, time.UTC)
 	nowTime := time.Date(2023, 5, 4, 3, 2, 1, 0, time.UTC)
 	nowFunc := func() time.Time {
@@ -248,9 +242,8 @@ func TestMessage_parseTime(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex: linkRegex,
-				tags:      tt.tags,
-				nowFunc:   tt.nowFunc,
+				tags:    tt.tags,
+				nowFunc: tt.nowFunc,
 			}
 			m.parseTime()
 			assert.Equal(t, tt.wantTime, m.timestamp, "parseTime() timestamp mismatch")
@@ -259,7 +252,6 @@ func TestMessage_parseTime(t *testing.T) {
 }
 
 func TestMessage_parseAction(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name        string
 		message     string
@@ -293,7 +285,6 @@ func TestMessage_parseAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex:   linkRegex,
 				message:     tt.message,
 				messageType: tt.messageType,
 			}
@@ -305,7 +296,6 @@ func TestMessage_parseAction(t *testing.T) {
 }
 
 func TestMessage_parseHighlight(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name        string
 		message     string
@@ -353,7 +343,6 @@ func TestMessage_parseHighlight(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex:   linkRegex,
 				message:     tt.message,
 				messageType: tt.messageType,
 				highlights:  tt.highlights,
@@ -365,7 +354,6 @@ func TestMessage_parseHighlight(t *testing.T) {
 }
 
 func TestMessage_GetTypeDisplay(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name        string
 		messageType MessageType
@@ -416,7 +404,6 @@ func TestMessage_GetTypeDisplay(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex:   linkRegex,
 				messageType: tt.messageType,
 			}
 			assert.Equal(t, tt.want, m.GetTypeDisplay(), "GetTypeDisplay() returned unexpected result")
@@ -425,7 +412,6 @@ func TestMessage_GetTypeDisplay(t *testing.T) {
 }
 
 func TestMessage_GetDisplayMessage(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name        string
 		messageType MessageType
@@ -452,7 +438,6 @@ func TestMessage_GetDisplayMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex:   linkRegex,
 				messageType: tt.messageType,
 				nickname:    tt.nickname,
 				message:     tt.message,
@@ -463,7 +448,6 @@ func TestMessage_GetDisplayMessage(t *testing.T) {
 }
 
 func TestMessage_GetDisplayNickname(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name        string
 		messageType MessageType
@@ -493,7 +477,6 @@ func TestMessage_GetDisplayNickname(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex:   linkRegex,
 				messageType: tt.messageType,
 				nickname:    tt.nickname,
 			}
@@ -503,7 +486,6 @@ func TestMessage_GetDisplayNickname(t *testing.T) {
 }
 
 func TestMessage_GetNameColour(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name     string
 		nickname string
@@ -533,9 +515,8 @@ func TestMessage_GetNameColour(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex: linkRegex,
-				nickname:  tt.nickname,
-				me:        tt.me,
+				nickname: tt.nickname,
+				me:       tt.me,
 			}
 			assert.Equal(t, tt.want, m.GetNameColour(), "GetNameColour() returned unexpected result")
 		})
@@ -543,7 +524,6 @@ func TestMessage_GetNameColour(t *testing.T) {
 }
 
 func TestMessage_isHighlight(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name       string
 		message    string
@@ -603,7 +583,6 @@ func TestMessage_isHighlight(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex:  linkRegex,
 				message:    tt.message,
 				highlights: tt.highlights,
 			}
@@ -613,7 +592,6 @@ func TestMessage_isHighlight(t *testing.T) {
 }
 
 func TestMessage_GetPlainDisplayMessage(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name        string
 		messageType MessageType
@@ -668,7 +646,6 @@ func TestMessage_GetPlainDisplayMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex:   linkRegex,
 				messageType: tt.messageType,
 				nickname:    tt.nickname,
 				message:     tt.message,
@@ -679,7 +656,6 @@ func TestMessage_GetPlainDisplayMessage(t *testing.T) {
 }
 
 func TestMessage_parseFormatting(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name    string
 		message string
@@ -750,8 +726,7 @@ func TestMessage_parseFormatting(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex: linkRegex,
-				message:   tt.message,
+				message: tt.message,
 			}
 			m.parseFormatting()
 			assert.Equal(t, tt.want, m.message, "parseFormatting() message mismatch")
@@ -760,7 +735,6 @@ func TestMessage_parseFormatting(t *testing.T) {
 }
 
 func TestMessage_parseIRCFormatting(t *testing.T) {
-	linkRegex := extractor.New(extractor.WithHost()).CompileRegex()
 	tests := []struct {
 		name    string
 		message string
@@ -831,8 +805,7 @@ func TestMessage_parseIRCFormatting(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Message{
-				linkregex: linkRegex,
-				message:   tt.message,
+				message: tt.message,
 			}
 			m.parseIRCFormatting()
 			assert.Equal(t, tt.want, m.message, "parseIRCFormatting() message mismatch")

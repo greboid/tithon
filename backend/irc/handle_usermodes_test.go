@@ -3,12 +3,10 @@ package irc
 import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/stretchr/testify/assert"
-	"regexp"
 	"testing"
 )
 
 func TestHandleUserModes(t *testing.T) {
-	linkRegex := regexp.MustCompile(`https?://[^\s]+`)
 	timestampFormat := "15:04:05"
 
 	tests := []struct {
@@ -193,7 +191,6 @@ func TestHandleUserModes(t *testing.T) {
 			}
 
 			handler := HandleUserModes(
-				linkRegex,
 				timestampFormat,
 				isValidChannel,
 				setPendingUpdate,

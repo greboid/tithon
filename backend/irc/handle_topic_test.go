@@ -189,7 +189,7 @@ func TestHandleTopic(t *testing.T) {
 				return channel, nil
 			}
 
-			handler := HandleTopic(tt.args.tt.args.timestampFormat, setPendingUpdate, getChannelByName, tt.args.getServerName, tt.args.currentNick)
+			handler := HandleTopic(tt.args.timestampFormat, setPendingUpdate, getChannelByName, tt.args.getServerName, tt.args.currentNick)
 
 			handler(tt.message)
 

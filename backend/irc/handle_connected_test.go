@@ -3,12 +3,10 @@ package irc
 import (
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/stretchr/testify/assert"
-	"regexp"
 	"testing"
 )
 
 func TestHandleConnected(t *testing.T) {
-	linkRegex := regexp.MustCompile(`https?://[^\s]+`)
 	timestampFormat := "15:04:05"
 
 	tests := []struct {
@@ -128,7 +126,6 @@ func TestHandleConnected(t *testing.T) {
 
 			// Create handler
 			handler := HandleConnected(
-				linkRegex,
 				timestampFormat,
 				setPendingUpdate,
 				getQueries,
@@ -173,7 +170,6 @@ func TestHandleConnected(t *testing.T) {
 }
 
 func TestHandleConnected_NetworkSupportVariations(t *testing.T) {
-	linkRegex := regexp.MustCompile(`https?://[^\s]+`)
 	timestampFormat := "15:04:05"
 
 	tests := []struct {
@@ -239,7 +235,6 @@ func TestHandleConnected_NetworkSupportVariations(t *testing.T) {
 
 			// Create handler
 			handler := HandleConnected(
-				linkRegex,
 				timestampFormat,
 				setPendingUpdate,
 				getQueries,
@@ -264,7 +259,6 @@ func TestHandleConnected_NetworkSupportVariations(t *testing.T) {
 }
 
 func TestHandleConnected_MessageDistribution(t *testing.T) {
-	linkRegex := regexp.MustCompile(`https?://[^\s]+`)
 	timestampFormat := "15:04:05"
 
 	// Create channels and queries
@@ -292,7 +286,6 @@ func TestHandleConnected_MessageDistribution(t *testing.T) {
 
 	// Create handler
 	handler := HandleConnected(
-		linkRegex,
 		timestampFormat,
 		setPendingUpdate,
 		getQueries,

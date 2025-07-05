@@ -194,7 +194,7 @@ func TestHandleQuit(t *testing.T) {
 				return channels
 			}
 
-			handler := HandleQuit(tt.args.tt.args.timestampFormat, setPendingUpdate, getChannels)
+			handler := HandleQuit(tt.args.timestampFormat, setPendingUpdate, getChannels)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

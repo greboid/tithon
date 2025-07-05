@@ -231,7 +231,7 @@ func TestHandleSelfJoin(t *testing.T) {
 				chathistoryCommandSent = command
 			}
 
-			handler := HandleSelfJoin(tt.args.tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, getChannelByName, addChannel, tt.args.hasCapability, sendRaw)
+			handler := HandleSelfJoin(tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, getChannelByName, addChannel, tt.args.hasCapability, sendRaw)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

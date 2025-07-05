@@ -4,12 +4,10 @@ import (
 	"errors"
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/stretchr/testify/assert"
-	"regexp"
 	"testing"
 )
 
 func TestHandlePart(t *testing.T) {
-	linkRegex := regexp.MustCompile(`https?://[^\s]+`)
 	timestampFormat := "15:04:05"
 
 	tests := []struct {
@@ -203,7 +201,6 @@ func TestHandlePart(t *testing.T) {
 			}
 
 			handler := HandlePart(
-				linkRegex,
 				timestampFormat,
 				setPendingUpdate,
 				currentNick,

@@ -100,7 +100,6 @@ func TestHandleKick(t *testing.T) {
 			wantKickReason:  "No spamming allowed",
 		},
 		{
-			//TODO Should not show brackets with no message
 			name: "Kick without reason",
 			args: args{
 				linkRegex:        regexp.MustCompile(`https?://\S+`),
@@ -188,7 +187,7 @@ func TestHandleKick(t *testing.T) {
 				serverMessage = msg
 			}
 
-			handler := HandleKick(tt.args.tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, getChannelByName, removeChannel, addMessage)
+			handler := HandleKick(tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, getChannelByName, removeChannel, addMessage)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

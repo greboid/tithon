@@ -363,7 +363,7 @@ func TestHandleNotice(t *testing.T) {
 				return query
 			}
 
-			handler := HandleNotice(tt.args.tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, addMessage, tt.args.isValidChannel, getChannelByName, getQueryByName, addQuery)
+			handler := HandleNotice(tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, addMessage, tt.args.isValidChannel, getChannelByName, getQueryByName, addQuery)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

@@ -4,12 +4,10 @@ import (
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/stretchr/testify/assert"
-	"regexp"
 	"testing"
 )
 
 func TestHandleWhois(t *testing.T) {
-	linkRegex := regexp.MustCompile(`https?://[^\s]+`)
 	timestampFormat := "15:04:05"
 
 	tests := []struct {

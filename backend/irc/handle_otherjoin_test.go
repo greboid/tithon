@@ -161,7 +161,7 @@ func TestHandleOtherJoin(t *testing.T) {
 				return channel, nil
 			}
 
-			handler := HandleOtherJoin(tt.args.tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, getChannelByName)
+			handler := HandleOtherJoin(tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, getChannelByName)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

@@ -230,7 +230,7 @@ func TestHandleNick(t *testing.T) {
 				return channels
 			}
 
-			handler := HandleNick(tt.args.tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, addMessage, getChannels)
+			handler := HandleNick(tt.args.timestampFormat, setPendingUpdate, tt.args.currentNick, addMessage, getChannels)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

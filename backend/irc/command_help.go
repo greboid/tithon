@@ -18,17 +18,47 @@ func (c Help) GetHelp() string {
 	return "Shows help for all commands or a specific command"
 }
 
+func (c Help) GetUsage() string {
+	return GenerateDetailedHelp(c)
+}
+
+func (c Help) GetArgSpecs() []Argument {
+	return []Argument{
+		{
+			Name:        "command",
+			Type:        ArgTypeString,
+			Required:    false,
+			Default:     "",
+			Description: "Optional command name to get specific help for",
+		},
+	}
+}
+
+func (c Help) GetFlagSpecs() []Flag {
+	return []Flag{}
+}
+
 func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
 
-	input = strings.TrimSpace(input)
+	parsed, err := Parse(c, input)
+	if err != nil {
+		return fmt.Errorf("argument parsing error: %w", err)
+	}
+
+	command, err := parsed.GetArgString("command")
+	if err != nil {
+		return fmt.Errorf("failed to get command: %w", err)
+	}
+
+	command = strings.TrimSpace(command)
 	timestampFormat := c.cm.conf.UISettings.TimestampFormat
 
-	if input != "" {
+	if command != "" {
 		for _, cmd := range c.cm.commands {
-			if cmd.GetName() == input {
+			if cmd.GetName() == command {
 				var helpText string
 				if cmdWithSpec, ok := cmd.(CommandWithSpecs); ok {
 					helpText = fmt.Sprintf("/%s", cmd.GetName())
@@ -42,7 +72,7 @@ func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 			}
 		}
 
-		errorText := fmt.Sprintf("Command '%s' not found. Use /help to see all available commands.", input)
+		errorText := fmt.Sprintf("Command '%s' not found. Use /help to see all available commands.", command)
 		window.AddMessage(NewEvent(EventHelp, timestampFormat, false, errorText))
 		return nil
 	}

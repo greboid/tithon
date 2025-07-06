@@ -1,8 +1,7 @@
 package irc
 
 import (
-	"errors"
-	"strings"
+	"fmt"
 )
 
 type QueryCommand struct{}
@@ -15,24 +14,60 @@ func (c QueryCommand) GetHelp() string {
 	return "Opens a query window with the specified user"
 }
 
+func (c QueryCommand) GetUsage() string {
+	return GenerateDetailedHelp(c)
+}
+
+func (c QueryCommand) GetArgSpecs() []Argument {
+	return []Argument{
+		{
+			Name:        "nickname",
+			Type:        ArgTypeNick,
+			Required:    true,
+			Description: "The nickname to open a query with",
+			Validator:   validateNonEmpty,
+		},
+		{
+			Name:        "message",
+			Type:        ArgTypeString,
+			Required:    false,
+			Default:     "",
+			Description: "Optional initial message to send",
+		},
+	}
+}
+
+func (c QueryCommand) GetFlagSpecs() []Flag {
+	return []Flag{}
+}
+
 func (c QueryCommand) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
 
-	parts := strings.SplitN(input, " ", 2)
-	if len(parts) == 0 || parts[0] == "" {
-		return errors.New("no user specified")
-	}
-	target := parts[0]
-
-	_, err := window.connection.GetQueryByName(target)
+	parsed, err := Parse(c, input)
 	if err != nil {
-		window.connection.AddQuery(target)
+		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	if len(parts) > 1 && parts[1] != "" {
-		err = window.connection.SendQuery(target, parts[1])
+	nickname, err := parsed.GetArgString("nickname")
+	if err != nil {
+		return fmt.Errorf("failed to get nickname: %w", err)
+	}
+
+	message, err := parsed.GetArgString("message")
+	if err != nil {
+		return fmt.Errorf("failed to get message: %w", err)
+	}
+
+	_, err = window.connection.GetQueryByName(nickname)
+	if err != nil {
+		window.connection.AddQuery(nickname)
+	}
+
+	if message != "" {
+		err = window.connection.SendQuery(nickname, message)
 		if err != nil {
 			return err
 		}

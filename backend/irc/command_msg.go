@@ -1,5 +1,9 @@
 package irc
 
+import (
+	"fmt"
+)
+
 type Msg struct{}
 
 func (c Msg) GetName() string {
@@ -10,9 +14,40 @@ func (c Msg) GetHelp() string {
 	return "Sends a message to a channel"
 }
 
+func (c Msg) GetUsage() string {
+	return GenerateDetailedHelp(c)
+}
+
+func (c Msg) GetArgSpecs() []Argument {
+	return []Argument{
+		{
+			Name:        "message",
+			Type:        ArgTypeString,
+			Required:    true,
+			Description: "The message to send",
+			Validator:   validateNonEmpty,
+		},
+	}
+}
+
+func (c Msg) GetFlagSpecs() []Flag {
+	return []Flag{}
+}
+
 func (c Msg) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	return window.connection.SendMessage(window.GetID(), input)
+	
+	parsed, err := Parse(c, input)
+	if err != nil {
+		return fmt.Errorf("argument parsing error: %w", err)
+	}
+
+	message, err := parsed.GetArgString("message")
+	if err != nil {
+		return fmt.Errorf("failed to get message: %w", err)
+	}
+
+	return window.connection.SendMessage(window.GetID(), message)
 }

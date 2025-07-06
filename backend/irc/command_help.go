@@ -29,7 +29,14 @@ func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 	if input != "" {
 		for _, cmd := range c.cm.commands {
 			if cmd.GetName() == input {
-				helpText := fmt.Sprintf("/%s - %s", cmd.GetName(), cmd.GetHelp())
+				var helpText string
+				if cmdWithSpec, ok := cmd.(CommandWithSpecs); ok {
+					helpText = fmt.Sprintf("/%s", cmd.GetName())
+					helpText += "\n"
+					helpText += cmdWithSpec.GetUsage()
+				} else {
+					helpText = fmt.Sprintf("/%s - %s", cmd.GetName(), cmd.GetHelp())
+				}
 				window.AddMessage(NewEvent(EventHelp, timestampFormat, false, helpText))
 				return nil
 			}

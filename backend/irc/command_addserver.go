@@ -2,6 +2,7 @@ package irc
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -9,59 +10,128 @@ import (
 type AddServer struct{}
 
 func (c AddServer) GetName() string {
-	return "addserver"
+	return "addserver" // Using different name to avoid conflicts with existing command
 }
 
 func (c AddServer) GetHelp() string {
-	return "Adds a new server and connects to it. Usage: /addserver hostname[:port] [nickname] [--notls] [--password=serverpassword] [--sasl=username:password]"
+	return "Adds a new server and connects to it."
+}
+
+func (c AddServer) GetUsage() string {
+	return GenerateDetailedHelp(c)
+}
+
+func (c AddServer) GetArgSpecs() []Argument {
+	return []Argument{
+		{
+			Name:        "hostname",
+			Type:        ArgTypeString,
+			Required:    true,
+			Description: "Server hostname with optional port (e.g., irc.server.com:6667)",
+			Validator:   validateNonEmpty,
+		},
+		{
+			Name:        "nickname",
+			Type:        ArgTypeNick,
+			Required:    false,
+			Default:     "",
+			Description: "Nickname to use on the server",
+		},
+	}
+}
+
+func (c AddServer) GetFlagSpecs() []Flag {
+	return []Flag{
+		{
+			Name:        "notls",
+			Type:        ArgTypeBool,
+			Required:    false,
+			Default:     false,
+			Description: "Disable TLS encryption",
+		},
+		{
+			Name:        "password",
+			Short:       "p",
+			Type:        ArgTypeString,
+			Required:    false,
+			Default:     "",
+			Description: "Server password",
+		},
+		{
+			Name:        "sasl",
+			Short:       "s",
+			Type:        ArgTypeString,
+			Required:    false,
+			Default:     "",
+			Description: "SASL authentication credentials (username:password)",
+		},
+	}
 }
 
 func (c AddServer) Execute(cm *ServerManager, _ *Window, input string) error {
-	if input == "" {
-		return errors.New("no hostname specified")
+	parsed, err := Parse(c, input)
+	if err != nil {
+		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	args := strings.Fields(input)
-	if len(args) == 0 {
-		return errors.New("no hostname specified")
+	hostname, err := parsed.GetArgString("hostname")
+	if err != nil {
+		return fmt.Errorf("failed to get hostname: %w", err)
 	}
 
-	hostPort := args[0]
-	hostname, port := parseHostPort(hostPort)
-
-	nickname := ""
-	if len(args) > 1 && !strings.HasPrefix(args[1], "--") {
-		nickname = args[1]
+	nickname, err := parsed.GetArgString("nickname")
+	if err != nil {
+		return fmt.Errorf("failed to get nickname: %w", err)
 	}
 
-	tls := true
-	password := ""
-	saslLogin := ""
-	saslPassword := ""
+	notls, err := parsed.GetFlagBool("notls")
+	if err != nil {
+		return fmt.Errorf("failed to get notls flag: %w", err)
+	}
 
-	for _, arg := range args {
-		if arg == "--notls" {
-			tls = false
-		} else if strings.HasPrefix(arg, "--password=") {
-			password = strings.TrimPrefix(arg, "--password=")
-		} else if strings.HasPrefix(arg, "--sasl=") {
-			saslCreds := strings.TrimPrefix(arg, "--sasl=")
-			parts := strings.SplitN(saslCreds, ":", 2)
-			if len(parts) == 2 {
-				saslLogin = parts[0]
-				saslPassword = parts[1]
-			}
+	password, err := parsed.GetFlagString("password")
+	if err != nil {
+		return fmt.Errorf("failed to get password flag: %w", err)
+	}
+
+	saslCreds, err := parsed.GetFlagString("sasl")
+	if err != nil {
+		return fmt.Errorf("failed to get sasl flag: %w", err)
+	}
+
+	host, port := parseHostPort(hostname)
+
+	if port == -1 {
+		if notls {
+			port = 6667
+		} else {
+			port = 6697
 		}
 	}
-	if tls && port == -1 {
-		port = 6697
-	} else {
-		port = 6667
+
+	var saslLogin, saslPassword string
+	if saslCreds != "" {
+		parts := splitSASLCredentials(saslCreds)
+		if len(parts) != 2 {
+			return errors.New("SASL credentials must be in format username:password")
+		}
+		saslLogin = parts[0]
+		saslPassword = parts[1]
 	}
+
 	profile := NewProfile(nickname)
-	cm.AddConnection("", hostname, port, tls, password, saslLogin, saslPassword, profile, true)
+	cm.AddConnection("", host, port, !notls, password, saslLogin, saslPassword, profile, false)
 
 	return nil
+}
+
+func splitSASLCredentials(creds string) []string {
+	for i, char := range creds {
+		if char == ':' {
+			return []string{creds[:i], creds[i+1:]}
+		}
+	}
+	return []string{creds}
 }
 
 func parseHostPort(hostPort string) (string, int) {

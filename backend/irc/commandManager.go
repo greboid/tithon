@@ -21,6 +21,13 @@ type Command interface {
 	Execute(*ServerManager, *Window, string) error
 }
 
+type CommandWithSpecs interface {
+	Command
+	GetArgSpecs() []Argument
+	GetFlagSpecs() []Flag
+	GetUsage() string
+}
+
 type Notifier interface {
 	showNotification(notification Notification)
 }

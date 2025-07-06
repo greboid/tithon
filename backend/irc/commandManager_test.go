@@ -14,6 +14,18 @@ type MockCommand struct {
 	mock.Mock
 }
 
+func (m *MockCommand) GetArgSpecs() []Argument {
+	return []Argument{}
+}
+
+func (m *MockCommand) GetFlagSpecs() []Flag {
+	return []Flag{}
+}
+
+func (m *MockCommand) GetUsage() string {
+	return GenerateDetailedHelp(m)
+}
+
 func (m *MockCommand) GetName() string {
 	args := m.Called()
 	return args.String(0)

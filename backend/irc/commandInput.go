@@ -358,7 +358,7 @@ func validateOneOf(allowed []string) func(interface{}) error {
 	}
 }
 
-func generateUsage(cmd CommandWithSpecs) string {
+func generateUsage(cmd Command) string {
 	var parts []string
 	parts = append(parts, cmd.GetName())
 
@@ -395,7 +395,7 @@ func generateUsage(cmd CommandWithSpecs) string {
 	return strings.Join(parts, " ")
 }
 
-func GenerateDetailedHelp(cmd CommandWithSpecs) string {
+func GenerateDetailedHelp(cmd Command) string {
 	var help strings.Builder
 
 	help.WriteString(cmd.GetHelp())
@@ -511,7 +511,7 @@ func (p *ParsedInput) GetFlagBool(name string) (bool, error) {
 	return false, fmt.Errorf("bool flag %s not found", name)
 }
 
-func Parse(cmd CommandWithSpecs, input string) (*ParsedInput, error) {
+func Parse(cmd Command, input string) (*ParsedInput, error) {
 	ca := NewCommandInput(input)
 	return ca.parseFlags(cmd.GetArgSpecs(), cmd.GetFlagSpecs())
 }

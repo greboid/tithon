@@ -19,10 +19,6 @@ type Command interface {
 	GetName() string
 	GetHelp() string
 	Execute(*ServerManager, *Window, string) error
-}
-
-type CommandWithSpecs interface {
-	Command
 	GetArgSpecs() []Argument
 	GetFlagSpecs() []Flag
 	GetUsage() string

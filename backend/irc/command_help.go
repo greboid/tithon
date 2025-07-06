@@ -59,14 +59,9 @@ func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 	if command != "" {
 		for _, cmd := range c.cm.commands {
 			if cmd.GetName() == command {
-				var helpText string
-				if cmdWithSpec, ok := cmd.(CommandWithSpecs); ok {
-					helpText = fmt.Sprintf("/%s", cmd.GetName())
-					helpText += "\n"
-					helpText += cmdWithSpec.GetUsage()
-				} else {
-					helpText = fmt.Sprintf("/%s - %s", cmd.GetName(), cmd.GetHelp())
-				}
+				helpText := fmt.Sprintf("/%s", cmd.GetName())
+				helpText += "\n"
+				helpText += cmd.GetUsage()
 				window.AddMessage(NewEvent(EventHelp, timestampFormat, false, helpText))
 				return nil
 			}

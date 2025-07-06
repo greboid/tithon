@@ -50,6 +50,7 @@ const (
 	EventConnecting
 	EventDisconnected
 	EventWhois
+	EventHelp
 )
 
 type Message struct {

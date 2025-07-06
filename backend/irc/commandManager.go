@@ -2,6 +2,7 @@ package irc
 
 import (
 	"errors"
+	"fmt"
 	"github.com/enescakir/emoji"
 	"github.com/greboid/tithon/config"
 	"log/slog"
@@ -52,6 +53,7 @@ func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandMana
 		&Settings{
 			showSettings: showSettings,
 		},
+		&Help{cm: cm},
 	}
 	cm.LinkRegex = linkRegex
 	cm.conf = conf
@@ -82,7 +84,8 @@ func (cm *CommandManager) Execute(connections *ServerManager, window *Window, in
 			return
 		}
 	}
-	cm.showError(window, "Unknown command: "+input)
+
+	cm.showError(window, fmt.Sprintf("Command '%s' not found. Use /help to see all available commands.", input))
 }
 
 func (cm *CommandManager) SetNotificationManager(nm NotificationManager) {

@@ -68,8 +68,10 @@ func (cm *ServerManager) RemoveConnection(id string) {
 	if connection != nil && cm.windowRemovalCallback != nil {
 		cm.windowRemovalCallback.OnWindowRemoved(connection.GetWindow())
 	}
-	connection.Disconnect()
-	delete(cm.connections, id)
+	if connection != nil {
+		connection.Disconnect()
+		delete(cm.connections, id)
+	}
 	cm.updateTrigger.SetPendingUpdate()
 }
 

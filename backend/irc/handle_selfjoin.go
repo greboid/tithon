@@ -32,6 +32,6 @@ func HandleSelfJoin(
 				sendRaw(fmt.Sprintf("CHATHISTORY LATEST %s * 100", message.Params[0]))
 			}
 		}
-		channel.AddMessage(NewEvent(EventJoin, timestampFormat, false, "You have joined "+channel.GetName()))
+		channel.AddMessage(NewEvent(EventJoin, timestampFormat, true, "You have joined "+channel.GetName()))
 	}
 }

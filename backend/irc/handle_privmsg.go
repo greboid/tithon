@@ -26,7 +26,7 @@ func HandlePrivMsg(
 				return
 			}
 			msg := NewMessage(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
-			if msg.tags["chathistory"] != "true" && !msg.isMe() {
+			if msg.tags["chathistory"] != "true" && !msg.IsMe() {
 				checkAndNotify(getServerName(), channel.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 			}
 			channel.AddMessage(msg)
@@ -37,7 +37,7 @@ func HandlePrivMsg(
 			}
 
 			msg := NewMessage(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
-			if msg.tags["chathistory"] != "true" && !msg.isMe() {
+			if msg.tags["chathistory"] != "true" && !msg.IsMe() {
 				checkAndNotify(getServerName(), pm.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 			}
 			pm.AddMessage(msg)

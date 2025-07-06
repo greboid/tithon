@@ -236,7 +236,7 @@ func (m *Message) GetTags() map[string]string {
 	return m.tags
 }
 
-func (m *Message) isMe() bool {
+func (m *Message) IsMe() bool {
 	return m.me
 }
 

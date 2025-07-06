@@ -61,7 +61,9 @@ func (c *Window) AddMessage(message *Message) {
 	if message.tags["chathistory"] != "true" {
 		switch message.messageType {
 		case Error, Event:
-			c.state = UnreadEvent
+			if !message.IsMe() {
+				c.state = UnreadEvent
+			}
 		case Normal, Notice, Action:
 			c.state = UnreadMessage
 		case Highlight, HighlightNotice, HighlightAction:

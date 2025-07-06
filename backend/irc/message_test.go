@@ -95,7 +95,7 @@ func TestNewMessage(t *testing.T) {
 			assert.Equal(t, tt.wantType, msg.GetType(), "NewMessage() type mismatch")
 			assert.Equal(t, tt.wantMsg, msg.GetMessage(), "NewMessage() message mismatch")
 			assert.Equal(t, tt.nickname, msg.GetNickname(), "NewMessage() nickname mismatch")
-			assert.Equal(t, tt.me, msg.isMe(), "NewMessage() me flag mismatch")
+			assert.Equal(t, tt.me, msg.IsMe(), "NewMessage() me flag mismatch")
 			assert.NotEmpty(t, msg.GetTimestamp(), "NewMessage() timestamp should not be empty")
 		})
 	}

@@ -1,11 +1,13 @@
 const handlePaste = async (e) => {
+  const fileUpload = document.getElementById('fileUpload')
+  if (!fileUpload) return
+  
   for (const clipboardItem of e.clipboardData.files) {
       const list = new DataTransfer()
-      list.items.add(new File(await clipboardItem.bytes(), clipboardItem.name, {
-        type: clipboardItem.type,
-      }))
-      document.getElementById('fileUpload').files = list.files
-      console.log(document.getElementById('fileUpload').files)
+      list.items.add(clipboardItem)
+      fileUpload.files = list.files
+      const changeEvent = new Event('change', { bubbles: true })
+      fileUpload.dispatchEvent(changeEvent)
   }
 }
 

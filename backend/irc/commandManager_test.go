@@ -94,7 +94,9 @@ func TestCommandManager_Execute_NoMatch(t *testing.T) {
 
 	messages := window.GetMessages()
 	assert.Len(t, messages, 1, "Should have added one error message")
-	assert.Contains(t, messages[0].GetMessage(), "Unknown command: nonexistent command", "Error message should say  unknown command")
+	assert.Contains(t, messages[0].GetMessage(),
+		"Command &#39;nonexistent command&#39; not found. Use /help to see all available commands.",
+		"Should state command not found")
 }
 
 func TestCommandManager_Execute_Error(t *testing.T) {

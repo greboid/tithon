@@ -296,7 +296,7 @@ func TestBuiltInCommandContexts(t *testing.T) {
 	assert.Equal(t, ContextAny, helpCmd.GetContext())
 
 	msgCmd := &Msg{}
-	assert.Equal(t, ContextChannelOrQuery, msgCmd.GetContext())
+	assert.Equal(t, ContextConnected, msgCmd.GetContext())
 
 	joinCmd := &Join{}
 	assert.Equal(t, ContextConnected, joinCmd.GetContext())

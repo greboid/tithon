@@ -25,6 +25,7 @@ const (
 	ContextChannel
 	ContextQuery
 	ContextChannelOrQuery
+	ContextAnyWithTarget
 )
 
 func (c CommandContext) String() string {

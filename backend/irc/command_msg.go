@@ -11,7 +11,7 @@ func (c Msg) GetName() string {
 }
 
 func (c Msg) GetHelp() string {
-	return "Sends a message to a channel"
+	return "Sends a message to a channel or user"
 }
 
 func (c Msg) GetUsage() string {
@@ -20,6 +20,12 @@ func (c Msg) GetUsage() string {
 
 func (c Msg) GetArgSpecs() []Argument {
 	return []Argument{
+		{
+			Name:        "target",
+			Type:        ArgTypeChannelOrNick,
+			Required:    false,
+			Description: "Target channel or nickname (defaults to current window)",
+		},
 		{
 			Name:        "message",
 			Type:        ArgTypeRestOfInput,
@@ -39,7 +45,7 @@ func (c Msg) GetAliases() []string {
 }
 
 func (c Msg) GetContext() CommandContext {
-	return ContextChannelOrQuery
+	return ContextConnected
 }
 
 func (c Msg) Execute(_ *ServerManager, window *Window, input string) error {
@@ -52,10 +58,15 @@ func (c Msg) Execute(_ *ServerManager, window *Window, input string) error {
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
+	target, err := parsed.GetArgStringWithTargetFallback("target", window)
+	if err != nil {
+		return err
+	}
+
 	message, err := parsed.GetArgString("message")
 	if err != nil {
 		return fmt.Errorf("failed to get message: %w", err)
 	}
 
-	return window.connection.SendMessage(window.GetID(), message)
+	return window.connection.SendMessage(target, message)
 }

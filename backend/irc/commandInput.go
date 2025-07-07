@@ -46,6 +46,7 @@ const (
 	ArgTypeHost
 	ArgTypePort
 	ArgTypeRestOfInput
+	ArgTypeChannelOrNick
 )
 
 type ParsedInput struct {
@@ -311,6 +312,15 @@ func (ca *CommandInput) parseValue(value string, argType ArgumentType) (interfac
 		return port, nil
 	case ArgTypeRestOfInput:
 		return value, nil
+	case ArgTypeChannelOrNick:
+		// TODO: As with above, should actually check channel prefixes
+		if strings.HasPrefix(value, "#") || strings.HasPrefix(value, "&") {
+			return value, nil
+		} else if isValidNick(value) {
+			return value, nil
+		} else {
+			return nil, errors.New("must be a valid channel name or nickname")
+		}
 	default:
 		return value, nil
 	}
@@ -532,4 +542,26 @@ func (p *ParsedInput) GetFlagBool(name string) (bool, error) {
 func Parse(cmd Command, input string) (*ParsedInput, error) {
 	ca := NewCommandInput(input)
 	return ca.parseFlags(cmd.GetArgSpecs(), cmd.GetFlagSpecs())
+}
+
+func (p *ParsedInput) GetArgStringWithChannelFallback(argName string, window *Window) (string, error) {
+	value, err := p.GetArgString(argName)
+	if err != nil {
+		if window != nil && window.IsChannel() {
+			return window.GetID(), nil
+		}
+		return "", fmt.Errorf("no %s specified and current window is not a channel", argName)
+	}
+	return value, nil
+}
+
+func (p *ParsedInput) GetArgStringWithTargetFallback(argName string, window *Window) (string, error) {
+	value, err := p.GetArgString(argName)
+	if err != nil {
+		if window != nil && (window.IsChannel() || window.IsQuery()) {
+			return window.GetID(), nil
+		}
+		return "", fmt.Errorf("no %s specified and current window is not a channel or query", argName)
+	}
+	return value, nil
 }

@@ -23,8 +23,8 @@ func (c ChangeTopic) GetArgSpecs() []Argument {
 		{
 			Name:        "channel",
 			Type:        ArgTypeChannel,
-			Required:    true,
-			Description: "The channel to set topic for",
+			Required:    false,
+			Description: "The channel to set topic for (defaults to current channel)",
 			Validator:   validateNonEmpty,
 		},
 		{
@@ -59,9 +59,9 @@ func (c ChangeTopic) Execute(_ *ServerManager, window *Window, input string) err
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	channel, err := parsed.GetArgString("channel")
+	channel, err := parsed.GetArgStringWithChannelFallback("channel", window)
 	if err != nil {
-		return fmt.Errorf("failed to get channel: %w", err)
+		return err
 	}
 
 	topic, err := parsed.GetArgString("topic")

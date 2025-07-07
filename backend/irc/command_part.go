@@ -46,7 +46,7 @@ func (c Part) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	
+
 	parsed, err := Parse(c, input)
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)
@@ -58,10 +58,9 @@ func (c Part) Execute(_ *ServerManager, window *Window, input string) error {
 	}
 
 	if message != "" {
-		// Send part message before leaving
 		window.connection.SendMessage(window.GetID(), "PART "+window.GetID()+" :"+message)
 	}
-	
+
 	window.connection.RemoveChannel(window.GetID())
 	return nil
 }

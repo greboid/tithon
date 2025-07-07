@@ -58,7 +58,6 @@ func (c Quit) Execute(cm *ServerManager, window *Window, input string) error {
 	}
 
 	if message != "" {
-		// Send quit message before disconnecting
 		window.connection.SendMessage(window.GetID(), "QUIT :"+message)
 	}
 

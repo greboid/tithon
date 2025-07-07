@@ -34,6 +34,14 @@ func (c Whois) GetFlagSpecs() []Flag {
 	return []Flag{}
 }
 
+func (c Whois) GetAliases() []string {
+	return []string{"w", "who"}
+}
+
+func (c Whois) GetContext() CommandContext {
+	return ContextConnected
+}
+
 func (c Whois) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError

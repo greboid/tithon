@@ -68,6 +68,14 @@ func (c AddServer) GetFlagSpecs() []Flag {
 	}
 }
 
+func (c AddServer) GetAliases() []string {
+	return []string{"ad", "add"}
+}
+
+func (c AddServer) GetContext() CommandContext {
+	return ContextAny
+}
+
 func (c AddServer) Execute(cm *ServerManager, _ *Window, input string) error {
 	parsed, err := Parse(c, input)
 	if err != nil {

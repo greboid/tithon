@@ -34,6 +34,14 @@ func (c Nick) GetFlagSpecs() []Flag {
 	return []Flag{}
 }
 
+func (c Nick) GetAliases() []string {
+	return []string{"n", "nickname"}
+}
+
+func (c Nick) GetContext() CommandContext {
+	return ContextConnected
+}
+
 func (c Nick) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError

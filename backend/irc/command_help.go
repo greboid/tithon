@@ -38,6 +38,14 @@ func (c Help) GetFlagSpecs() []Flag {
 	return []Flag{}
 }
 
+func (c Help) GetAliases() []string {
+	return []string{"h", "?"}
+}
+
+func (c Help) GetContext() CommandContext {
+	return ContextAny
+}
+
 func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
@@ -59,7 +67,11 @@ func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 	if command != "" {
 		for _, cmd := range c.cm.commands {
 			if cmd.GetName() == command {
+				aliases := cmd.GetAliases()
 				helpText := fmt.Sprintf("/%s", cmd.GetName())
+				if len(aliases) > 0 {
+					helpText += fmt.Sprintf(" (aliases: %s)", strings.Join(aliases, ", "))
+				}
 				helpText += "\n"
 				helpText += cmd.GetUsage()
 				window.AddMessage(NewEvent(EventHelp, timestampFormat, false, helpText))
@@ -74,7 +86,14 @@ func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 
 	var commands []string
 	for _, cmd := range c.cm.commands {
-		commands = append(commands, fmt.Sprintf("/%s - %s", cmd.GetName(), cmd.GetHelp()))
+		aliases := cmd.GetAliases()
+		var cmdLine string
+		if len(aliases) > 0 {
+			cmdLine = fmt.Sprintf("/%s (%s) - %s", cmd.GetName(), strings.Join(aliases, ", "), cmd.GetHelp())
+		} else {
+			cmdLine = fmt.Sprintf("/%s - %s", cmd.GetName(), cmd.GetHelp())
+		}
+		commands = append(commands, cmdLine)
 	}
 
 	sort.Strings(commands)

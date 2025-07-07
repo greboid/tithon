@@ -22,7 +22,7 @@ func (c SendNotice) GetArgSpecs() []Argument {
 	return []Argument{
 		{
 			Name:        "message",
-			Type:        ArgTypeString,
+			Type:        ArgTypeRestOfInput,
 			Required:    true,
 			Description: "The notice message to send",
 			Validator:   validateNonEmpty,
@@ -32,6 +32,14 @@ func (c SendNotice) GetArgSpecs() []Argument {
 
 func (c SendNotice) GetFlagSpecs() []Flag {
 	return []Flag{}
+}
+
+func (c SendNotice) GetAliases() []string {
+	return []string{}
+}
+
+func (c SendNotice) GetContext() CommandContext {
+	return ContextChannelOrQuery
 }
 
 func (c SendNotice) Execute(_ *ServerManager, window *Window, input string) error {

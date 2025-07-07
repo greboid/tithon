@@ -43,6 +43,14 @@ func (c Join) GetFlagSpecs() []Flag {
 	}
 }
 
+func (c Join) GetAliases() []string {
+	return []string{"j"}
+}
+
+func (c Join) GetContext() CommandContext {
+	return ContextConnected
+}
+
 func (c Join) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError

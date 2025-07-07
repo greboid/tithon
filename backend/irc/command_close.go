@@ -27,6 +27,14 @@ func (c CloseCommand) GetFlagSpecs() []Flag {
 	return []Flag{}
 }
 
+func (c CloseCommand) GetAliases() []string {
+	return []string{}
+}
+
+func (c CloseCommand) GetContext() CommandContext {
+	return ContextConnected
+}
+
 func (c CloseCommand) Execute(connections *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError

@@ -583,3 +583,134 @@ func TestParsedInput_GetFlagByName_WithDefaults(t *testing.T) {
 	assert.Equal(t, 6667, parsed.flags["port"])
 	assert.Equal(t, false, parsed.boolFlags["verbose"])
 }
+
+func TestArgTypeRestOfInput(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Single word",
+			input:    "Hello",
+			expected: "Hello",
+		},
+		{
+			name:     "Multiple words",
+			input:    "Hello world this is a test",
+			expected: "Hello world this is a test",
+		},
+		{
+			name:     "Input with extra spaces",
+			input:    "Hello   world   test",
+			expected: "Hello world test",
+		},
+		{
+			name:     "Quoted strings within input",
+			input:    "Hello \"quoted text\" and more",
+			expected: "Hello quoted text and more",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create command args with RestOfInput type
+			args := []Argument{
+				{
+					Name:        "message",
+					Type:        ArgTypeRestOfInput,
+					Required:    true,
+					Description: "Test message",
+				},
+			}
+
+			ca := NewCommandInput(tt.input)
+			result, err := ca.parseFlags(args, []Flag{})
+
+			assert.NoError(t, err)
+			message, err := result.GetArgString("message")
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, message)
+		})
+	}
+}
+
+func TestArgTypeRestOfInputWithMultipleArgs(t *testing.T) {
+	// Test case where RestOfInput is the second argument
+	args := []Argument{
+		{
+			Name:        "target",
+			Type:        ArgTypeNick,
+			Required:    true,
+			Description: "Target nickname",
+		},
+		{
+			Name:        "message",
+			Type:        ArgTypeRestOfInput,
+			Required:    true,
+			Description: "Message text",
+		},
+	}
+
+	ca := NewCommandInput("alice Hello world this is a message")
+	result, err := ca.parseFlags(args, []Flag{})
+
+	assert.NoError(t, err)
+	
+	target, err := result.GetArgString("target")
+	assert.NoError(t, err)
+	assert.Equal(t, "alice", target)
+	
+	message, err := result.GetArgString("message")
+	assert.NoError(t, err)
+	assert.Equal(t, "Hello world this is a message", message)
+}
+
+func TestArgTypeRestOfInputOptional(t *testing.T) {
+	// Test optional RestOfInput argument
+	args := []Argument{
+		{
+			Name:        "message",
+			Type:        ArgTypeRestOfInput,
+			Required:    false,
+			Default:     "default message",
+			Description: "Optional message",
+		},
+	}
+
+	// Test with empty input
+	ca := NewCommandInput("")
+	result, err := ca.parseFlags(args, []Flag{})
+
+	assert.NoError(t, err)
+	message, err := result.GetArgString("message")
+	assert.NoError(t, err)
+	assert.Equal(t, "default message", message)
+
+	// Test with actual input
+	ca2 := NewCommandInput("actual message text")
+	result2, err := ca2.parseFlags(args, []Flag{})
+
+	assert.NoError(t, err)
+	message2, err := result2.GetArgString("message")
+	assert.NoError(t, err)
+	assert.Equal(t, "actual message text", message2)
+}
+
+func TestArgTypeRestOfInputEmptyRequired(t *testing.T) {
+	// Test required RestOfInput argument with empty input
+	args := []Argument{
+		{
+			Name:        "message",
+			Type:        ArgTypeRestOfInput,
+			Required:    true,
+			Description: "Required message",
+		},
+	}
+
+	ca := NewCommandInput("")
+	_, err := ca.parseFlags(args, []Flag{})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "required argument message is missing")
+}

@@ -29,7 +29,7 @@ func (c ChangeTopic) GetArgSpecs() []Argument {
 		},
 		{
 			Name:        "topic",
-			Type:        ArgTypeString,
+			Type:        ArgTypeRestOfInput,
 			Required:    true,
 			Description: "The new topic text",
 			Validator:   validateNonEmpty,
@@ -39,6 +39,14 @@ func (c ChangeTopic) GetArgSpecs() []Argument {
 
 func (c ChangeTopic) GetFlagSpecs() []Flag {
 	return []Flag{}
+}
+
+func (c ChangeTopic) GetAliases() []string {
+	return []string{"t"}
+}
+
+func (c ChangeTopic) GetContext() CommandContext {
+	return ContextConnected
 }
 
 func (c ChangeTopic) Execute(_ *ServerManager, window *Window, input string) error {

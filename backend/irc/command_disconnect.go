@@ -27,6 +27,14 @@ func (c Disconnect) GetFlagSpecs() []Flag {
 	return []Flag{}
 }
 
+func (c Disconnect) GetAliases() []string {
+	return []string{"dc"}
+}
+
+func (c Disconnect) GetContext() CommandContext {
+	return ContextConnected
+}
+
 func (c Disconnect) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return errors.New("no window specified")

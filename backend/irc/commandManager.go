@@ -7,6 +7,7 @@ import (
 	"github.com/greboid/tithon/config"
 	"log/slog"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -15,6 +16,36 @@ var (
 	NoChannelError = errors.New("no channel specified")
 )
 
+type CommandContext int
+
+const (
+	ContextAny CommandContext = iota
+	ContextConnected
+	ContextServer
+	ContextChannel
+	ContextQuery
+	ContextChannelOrQuery
+)
+
+func (c CommandContext) String() string {
+	switch c {
+	case ContextAny:
+		return "any"
+	case ContextConnected:
+		return "connected"
+	case ContextServer:
+		return "server"
+	case ContextChannel:
+		return "channel"
+	case ContextQuery:
+		return "query"
+	case ContextChannelOrQuery:
+		return "channel or query"
+	default:
+		return "unknown"
+	}
+}
+
 type Command interface {
 	GetName() string
 	GetHelp() string
@@ -22,6 +53,8 @@ type Command interface {
 	GetArgSpecs() []Argument
 	GetFlagSpecs() []Flag
 	GetUsage() string
+	GetAliases() []string
+	GetContext() CommandContext
 }
 
 type Notifier interface {
@@ -70,17 +103,19 @@ func (cm *CommandManager) Execute(connections *ServerManager, window *Window, in
 	input = strings.TrimPrefix(input, "/")
 	first := strings.Split(input, " ")[0]
 	for i := range cm.commands {
-		if first == cm.commands[i].GetName() {
-			if len(input) == len(first) {
-				err := cm.commands[i].Execute(connections, window, "")
-				if err != nil {
-					cm.showCommandError(window, cm.commands[i], err.Error())
-				}
+		if first == cm.commands[i].GetName() || slices.Contains(cm.commands[i].GetAliases(), first) {
+			if !cm.validateContext(cm.commands[i], window) {
+				cm.showContextError(window, cm.commands[i])
 				return
 			}
-			input = strings.TrimPrefix(input, first+" ")
-			input = emoji.Parse(input)
-			err := cm.commands[i].Execute(connections, window, input)
+
+			var args string
+			if len(input) > len(first) {
+				args = strings.TrimPrefix(input, first+" ")
+				args = emoji.Parse(args)
+			}
+
+			err := cm.commands[i].Execute(connections, window, args)
 			if err != nil {
 				cm.showCommandError(window, cm.commands[i], err.Error())
 			}
@@ -101,6 +136,49 @@ func (cm *CommandManager) showNotification(notification Notification) {
 
 func (cm *CommandManager) showCommandError(window *Window, command Command, message string) {
 	cm.showError(window, "Command Error: "+command.GetName()+": "+message)
+}
+
+func (cm *CommandManager) validateContext(command Command, window *Window) bool {
+	context := command.GetContext()
+
+	switch context {
+	case ContextAny:
+		return true
+	case ContextConnected:
+		return window != nil
+	case ContextServer:
+		return window != nil && window.IsServer()
+	case ContextChannel:
+		return window != nil && window.IsChannel()
+	case ContextQuery:
+		return window != nil && window.IsQuery()
+	case ContextChannelOrQuery:
+		return window != nil && (window.IsChannel() || window.IsQuery())
+	default:
+		return false
+	}
+}
+
+func (cm *CommandManager) showContextError(window *Window, command Command) {
+	context := command.GetContext()
+	var message string
+
+	switch context {
+	case ContextConnected:
+		message = fmt.Sprintf("Command '/%s' requires a connection to a server", command.GetName())
+	case ContextServer:
+		message = fmt.Sprintf("Command '/%s' can only be used in a server window", command.GetName())
+	case ContextChannel:
+		message = fmt.Sprintf("Command '/%s' can only be used in a channel", command.GetName())
+	case ContextQuery:
+		message = fmt.Sprintf("Command '/%s' can only be used in a query (private message)", command.GetName())
+	case ContextChannelOrQuery:
+		message = fmt.Sprintf("Command '/%s' can only be used in a channel or query", command.GetName())
+	default:
+		message = fmt.Sprintf("Command '/%s' cannot be used in this context", command.GetName())
+	}
+
+	cm.showError(window, message)
 }
 
 func (cm *CommandManager) showError(window *Window, message string) {

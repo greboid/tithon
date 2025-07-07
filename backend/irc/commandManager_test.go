@@ -41,6 +41,16 @@ func (m *MockCommand) Execute(cm *ServerManager, w *Window, input string) error 
 	return args.Error(0)
 }
 
+func (m *MockCommand) GetAliases() []string {
+	args := m.Called()
+	return args.Get(0).([]string)
+}
+
+func (m *MockCommand) GetContext() CommandContext {
+	args := m.Called()
+	return args.Get(0).(CommandContext)
+}
+
 var regex *regexp.Regexp
 
 func init() {
@@ -70,6 +80,8 @@ func TestCommandManager_Execute(t *testing.T) {
 
 	mockCmd := new(MockCommand)
 	mockCmd.On("GetName").Return("test")
+	mockCmd.On("GetAliases").Return([]string{}).Maybe()
+	mockCmd.On("GetContext").Return(ContextAny)
 	mockCmd.On("Execute", mock.Anything, mock.Anything, "test input").Return(nil)
 	cm.commands = []Command{mockCmd}
 
@@ -86,6 +98,8 @@ func TestCommandManager_Execute_NoArguments(t *testing.T) {
 
 	mockCmd := new(MockCommand)
 	mockCmd.On("GetName").Return("test")
+	mockCmd.On("GetAliases").Return([]string{}).Maybe()
+	mockCmd.On("GetContext").Return(ContextAny)
 	mockCmd.On("Execute", mock.Anything, mock.Anything, "").Return(nil)
 	cm.commands = []Command{mockCmd}
 
@@ -116,6 +130,8 @@ func TestCommandManager_Execute_Error(t *testing.T) {
 
 	mockCmd := new(MockCommand)
 	mockCmd.On("GetName").Return("test")
+	mockCmd.On("GetAliases").Return([]string{}).Maybe()
+	mockCmd.On("GetContext").Return(ContextAny)
 	mockCmd.On("Execute", mock.Anything, mock.Anything, "test input").Return(errors.New("test error"))
 	cm.commands = []Command{mockCmd}
 
@@ -134,9 +150,13 @@ func TestCommandManager_Execute_InputNoSlash(t *testing.T) {
 
 	mockCmd := new(MockCommand)
 	mockCmd.On("GetName").Return("test")
+	mockCmd.On("GetAliases").Return([]string{}).Maybe()
+	mockCmd.On("GetContext").Return(ContextAny).Maybe()
 	mockCmd.AssertNotCalled(t, "Execute")
 	msgCmd := new(MockCommand)
 	msgCmd.On("GetName").Return("msg")
+	msgCmd.On("GetAliases").Return([]string{}).Maybe()
+	msgCmd.On("GetContext").Return(ContextAny)
 	msgCmd.On("Execute", mock.Anything, mock.Anything, "Hello world").Return(nil)
 	cm.commands = []Command{mockCmd, msgCmd}
 
@@ -192,6 +212,100 @@ func TestCommandManager_showError(t *testing.T) {
 	messages := window.GetMessages()
 	assert.Len(t, messages, 1, "Should have added one error message")
 	assert.Contains(t, messages[0].GetMessage(), "Test error message", "Error message should be correct")
+}
+
+func TestCommandManager_ExecuteWithAlias(t *testing.T) {
+	cm := NewCommandManager(getCommandManagerTestConfig(), make(chan bool, 1))
+
+	mockCmd := new(MockCommand)
+	mockCmd.On("GetName").Return("testcommand")
+	mockCmd.On("GetAliases").Return([]string{"tc", "test"})
+	mockCmd.On("GetContext").Return(ContextAny)
+	mockCmd.On("Execute", mock.Anything, mock.Anything, "input").Return(nil)
+	cm.commands = []Command{mockCmd}
+
+	window := &Window{}
+	connections := &ServerManager{}
+
+	// Test with first alias
+	cm.Execute(connections, window, "/tc input")
+	mockCmd.AssertExpectations(t)
+
+	// Reset expectations
+	mockCmd.ExpectedCalls = nil
+	mockCmd.On("GetName").Return("testcommand")
+	mockCmd.On("GetAliases").Return([]string{"tc", "test"})
+	mockCmd.On("GetContext").Return(ContextAny)
+	mockCmd.On("Execute", mock.Anything, mock.Anything, "input").Return(nil)
+
+	// Test with second alias
+	cm.Execute(connections, window, "/test input")
+	mockCmd.AssertExpectations(t)
+}
+
+func TestCommandManager_ContextValidation(t *testing.T) {
+	cm := NewCommandManager(getCommandManagerTestConfig(), make(chan bool, 1))
+
+	mockCmd := new(MockCommand)
+	mockCmd.On("GetName").Return("channelonly")
+	mockCmd.On("GetAliases").Return([]string{}).Maybe()
+	mockCmd.On("GetContext").Return(ContextChannel)
+	mockCmd.AssertNotCalled(t, "Execute") // Should not execute due to context failure
+	cm.commands = []Command{mockCmd}
+
+	// Test command requiring channel context with nil window
+	window := createTestWindow()
+	cm.Execute(nil, window, "/channelonly test")
+
+	messages := window.GetMessages()
+	assert.Len(t, messages, 1, "Should have added one error message")
+	assert.Contains(t, messages[0].GetMessage(), "can only be used in a channel", "Should show context error")
+
+	mockCmd.AssertExpectations(t)
+}
+
+func TestBuiltInCommandAliases(t *testing.T) {
+	// Test that built-in commands have expected aliases
+	helpCmd := &Help{}
+	aliases := helpCmd.GetAliases()
+	assert.Contains(t, aliases, "h")
+	assert.Contains(t, aliases, "?")
+
+	msgCmd := &Msg{}
+	aliases = msgCmd.GetAliases()
+	assert.Contains(t, aliases, "m")
+	assert.Contains(t, aliases, "say")
+
+	joinCmd := &Join{}
+	aliases = joinCmd.GetAliases()
+	assert.Contains(t, aliases, "j")
+
+	partCmd := &Part{}
+	aliases = partCmd.GetAliases()
+	assert.Contains(t, aliases, "p")
+	assert.Contains(t, aliases, "leave")
+
+	quitCmd := &Quit{}
+	aliases = quitCmd.GetAliases()
+	assert.Contains(t, aliases, "q")
+}
+
+func TestBuiltInCommandContexts(t *testing.T) {
+	// Test that built-in commands have expected contexts
+	helpCmd := &Help{}
+	assert.Equal(t, ContextAny, helpCmd.GetContext())
+
+	msgCmd := &Msg{}
+	assert.Equal(t, ContextChannelOrQuery, msgCmd.GetContext())
+
+	joinCmd := &Join{}
+	assert.Equal(t, ContextConnected, joinCmd.GetContext())
+
+	partCmd := &Part{}
+	assert.Equal(t, ContextChannel, partCmd.GetContext())
+
+	addServerCmd := &AddServer{}
+	assert.Equal(t, ContextAny, addServerCmd.GetContext())
 }
 
 func getCommandManagerTestConfig() *config.Config {

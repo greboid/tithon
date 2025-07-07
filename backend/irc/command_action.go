@@ -22,7 +22,7 @@ func (c SendAction) GetArgSpecs() []Argument {
 	return []Argument{
 		{
 			Name:        "message",
-			Type:        ArgTypeString,
+			Type:        ArgTypeRestOfInput,
 			Required:    true,
 			Description: "The action message to send",
 			Validator:   validateNonEmpty,
@@ -34,11 +34,19 @@ func (c SendAction) GetFlagSpecs() []Flag {
 	return []Flag{}
 }
 
+func (c SendAction) GetAliases() []string {
+	return []string{"action"}
+}
+
+func (c SendAction) GetContext() CommandContext {
+	return ContextChannelOrQuery
+}
+
 func (c SendAction) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	
+
 	parsed, err := Parse(c, input)
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)

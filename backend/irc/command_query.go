@@ -29,7 +29,7 @@ func (c QueryCommand) GetArgSpecs() []Argument {
 		},
 		{
 			Name:        "message",
-			Type:        ArgTypeString,
+			Type:        ArgTypeRestOfInput,
 			Required:    false,
 			Default:     "",
 			Description: "Optional initial message to send",
@@ -39,6 +39,14 @@ func (c QueryCommand) GetArgSpecs() []Argument {
 
 func (c QueryCommand) GetFlagSpecs() []Flag {
 	return []Flag{}
+}
+
+func (c QueryCommand) GetAliases() []string {
+	return []string{"q"}
+}
+
+func (c QueryCommand) GetContext() CommandContext {
+	return ContextConnected
 }
 
 func (c QueryCommand) Execute(_ *ServerManager, window *Window, input string) error {

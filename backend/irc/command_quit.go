@@ -22,7 +22,7 @@ func (c Quit) GetArgSpecs() []Argument {
 	return []Argument{
 		{
 			Name:        "message",
-			Type:        ArgTypeString,
+			Type:        ArgTypeRestOfInput,
 			Required:    false,
 			Default:     "",
 			Description: "Optional quit message",
@@ -34,11 +34,19 @@ func (c Quit) GetFlagSpecs() []Flag {
 	return []Flag{}
 }
 
+func (c Quit) GetAliases() []string {
+	return []string{"q"}
+}
+
+func (c Quit) GetContext() CommandContext {
+	return ContextConnected
+}
+
 func (c Quit) Execute(cm *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	
+
 	parsed, err := Parse(c, input)
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)
@@ -53,7 +61,7 @@ func (c Quit) Execute(cm *ServerManager, window *Window, input string) error {
 		// Send quit message before disconnecting
 		window.connection.SendMessage(window.GetID(), "QUIT :"+message)
 	}
-	
+
 	cm.RemoveConnection(window.connection.GetID())
 	return nil
 }

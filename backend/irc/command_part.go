@@ -22,7 +22,7 @@ func (c Part) GetArgSpecs() []Argument {
 	return []Argument{
 		{
 			Name:        "message",
-			Type:        ArgTypeString,
+			Type:        ArgTypeRestOfInput,
 			Required:    false,
 			Default:     "",
 			Description: "Optional part message",
@@ -32,6 +32,14 @@ func (c Part) GetArgSpecs() []Argument {
 
 func (c Part) GetFlagSpecs() []Flag {
 	return []Flag{}
+}
+
+func (c Part) GetAliases() []string {
+	return []string{"p", "leave"}
+}
+
+func (c Part) GetContext() CommandContext {
+	return ContextChannel
 }
 
 func (c Part) Execute(_ *ServerManager, window *Window, input string) error {

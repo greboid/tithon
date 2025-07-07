@@ -24,7 +24,7 @@ func (c Notify) GetArgSpecs() []Argument {
 	return []Argument{
 		{
 			Name:        "message",
-			Type:        ArgTypeString,
+			Type:        ArgTypeRestOfInput,
 			Required:    true,
 			Description: "The notification message to display",
 			Validator:   validateNonEmpty,
@@ -49,6 +49,14 @@ func (c Notify) GetFlagSpecs() []Flag {
 			Description: "Show popup notification",
 		},
 	}
+}
+
+func (c Notify) GetAliases() []string {
+	return []string{}
+}
+
+func (c Notify) GetContext() CommandContext {
+	return ContextAny
 }
 
 func (c Notify) Execute(_ *ServerManager, window *Window, input string) error {

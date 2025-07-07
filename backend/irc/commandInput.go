@@ -45,6 +45,7 @@ const (
 	ArgTypeNick
 	ArgTypeHost
 	ArgTypePort
+	ArgTypeRestOfInput
 )
 
 type ParsedInput struct {
@@ -113,7 +114,16 @@ func (ca *CommandInput) parseFlags(args []Argument, flags []Flag) (*ParsedInput,
 		var value interface{}
 		var err error
 
-		if i < len(ca.args) {
+		if arg.Type == ArgTypeRestOfInput {
+			if i < len(ca.args) {
+				remaining := ca.args[i:]
+				value = strings.Join(remaining, " ")
+			} else if arg.Required {
+				return nil, fmt.Errorf("required argument %s is missing", arg.Name)
+			} else {
+				value = arg.Default
+			}
+		} else if i < len(ca.args) {
 			value, err = ca.parseValue(ca.args[i], arg.Type)
 			if err != nil {
 				return nil, fmt.Errorf("argument %s: %w", arg.Name, err)
@@ -299,6 +309,8 @@ func (ca *CommandInput) parseValue(value string, argType ArgumentType) (interfac
 			return nil, errors.New("port must be between 1 and 65535")
 		}
 		return port, nil
+	case ArgTypeRestOfInput:
+		return value, nil
 	default:
 		return value, nil
 	}
@@ -401,6 +413,12 @@ func GenerateDetailedHelp(cmd Command) string {
 	help.WriteString(cmd.GetHelp())
 	help.WriteString("\n\nUsage: /")
 	help.WriteString(generateUsage(cmd))
+
+	// Add context information
+	context := cmd.GetContext()
+	if context != ContextAny {
+		help.WriteString(fmt.Sprintf("\n\nContext: %s", context.String()))
+	}
 
 	argSpecs := cmd.GetArgSpecs()
 	if len(argSpecs) > 0 {

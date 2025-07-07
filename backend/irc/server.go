@@ -38,6 +38,7 @@ type Server struct {
 	possibleUserModes     []*UserMode
 	ut                    UpdateTrigger
 	nm                    NotificationManager
+	cm                    *CommandManager
 	timestampFormat       string
 	reconnecting          bool
 	reconnectAttempts     int
@@ -51,7 +52,7 @@ func (c *Server) GetWindow() *Window {
 	return c.Window
 }
 
-func NewServer(timestampFormat string, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager) *Server {
+func NewServer(timestampFormat string, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager, cm *CommandManager) *Server {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}
@@ -92,6 +93,7 @@ func NewServer(timestampFormat string, id string, hostname string, port int, tls
 		},
 		ut:                ut,
 		nm:                nm,
+		cm:                cm,
 		timestampFormat:   timestampFormat,
 		reconnecting:      false,
 		reconnectAttempts: 0,
@@ -106,7 +108,7 @@ func NewServer(timestampFormat string, id string, hostname string, port int, tls
 		messages:     make([]*Message, 0),
 		connection:   server,
 		isServer:     true,
-		tabCompleter: NewServerTabCompleter(server),
+		tabCompleter: NewServerTabCompleter(server, cm),
 	}
 
 	return server

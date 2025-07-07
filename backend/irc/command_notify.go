@@ -8,6 +8,10 @@ type Notify struct {
 	nm Notifier
 }
 
+func init() {
+	RegisterCommand(&Notify{})
+}
+
 func (c Notify) GetName() string {
 	return "notify"
 }
@@ -59,11 +63,15 @@ func (c Notify) GetContext() CommandContext {
 	return ContextAny
 }
 
+func (c Notify) InjectDependencies(deps *CommandDependencies) {
+	c.nm = deps.Notifier
+}
+
 func (c Notify) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	
+
 	parsed, err := Parse(c, input)
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)

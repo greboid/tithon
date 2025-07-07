@@ -19,6 +19,6 @@ func NewQuery(connection *Server, name string) *Query {
 			isQuery:    true,
 		},
 	}
-	query.Window.tabCompleter = NewQueryTabCompleter(query)
+	query.Window.tabCompleter = NewQueryTabCompleter(query, connection.cm)
 	return query
 }

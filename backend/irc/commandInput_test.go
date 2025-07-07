@@ -11,13 +11,14 @@ type TestCommand struct {
 	flags []Flag
 }
 
-func (t *TestCommand) GetName() string        { return "test" }
-func (t *TestCommand) GetHelp() string        { return "Test command" }
-func (t *TestCommand) GetUsage() string       { return "test" }
-func (t *TestCommand) GetArgSpecs() []Argument { return t.args }
-func (t *TestCommand) GetFlagSpecs() []Flag    { return t.flags }
-func (t *TestCommand) GetAliases() []string    { return []string{} }
-func (t *TestCommand) GetContext() CommandContext { return ContextAny }
+func (t *TestCommand) GetName() string                                     { return "test" }
+func (t *TestCommand) GetHelp() string                                     { return "Test command" }
+func (t *TestCommand) GetUsage() string                                    { return "test" }
+func (t *TestCommand) GetArgSpecs() []Argument                             { return t.args }
+func (t *TestCommand) GetFlagSpecs() []Flag                                { return t.flags }
+func (t *TestCommand) GetAliases() []string                                { return []string{} }
+func (t *TestCommand) GetContext() CommandContext                          { return ContextAny }
+func (t *TestCommand) InjectDependencies(*CommandDependencies)             { return }
 func (t *TestCommand) Execute(_ *ServerManager, _ *Window, _ string) error { return nil }
 
 func TestCommandArgs_Parse(t *testing.T) {
@@ -671,11 +672,11 @@ func TestArgTypeRestOfInputWithMultipleArgs(t *testing.T) {
 	result, err := ca.parseFlags(args, []Flag{})
 
 	assert.NoError(t, err)
-	
+
 	target, err := result.GetArgString("target")
 	assert.NoError(t, err)
 	assert.Equal(t, "alice", target)
-	
+
 	message, err := result.GetArgString("message")
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello world this is a message", message)
@@ -802,47 +803,47 @@ func TestArgTypeChannelOrNick(t *testing.T) {
 
 func TestGetArgStringWithChannelFallback(t *testing.T) {
 	tests := []struct {
-		name           string
-		input          string
+		name            string
+		input           string
 		windowIsChannel bool
-		windowID       string
-		expected       string
-		wantError      bool
-		errorContains  string
+		windowID        string
+		expected        string
+		wantError       bool
+		errorContains   string
 	}{
 		{
-			name:           "explicit channel provided",
-			input:          "#explicit",
+			name:            "explicit channel provided",
+			input:           "#explicit",
 			windowIsChannel: true,
-			windowID:       "#current",
-			expected:       "#explicit",
-			wantError:      false,
+			windowID:        "#current",
+			expected:        "#explicit",
+			wantError:       false,
 		},
 		{
-			name:           "fallback to current channel",
-			input:          "",
+			name:            "fallback to current channel",
+			input:           "",
 			windowIsChannel: true,
-			windowID:       "#current",
-			expected:       "#current",
-			wantError:      false,
+			windowID:        "#current",
+			expected:        "#current",
+			wantError:       false,
 		},
 		{
-			name:           "fallback fails - not a channel",
-			input:          "",
+			name:            "fallback fails - not a channel",
+			input:           "",
 			windowIsChannel: false,
-			windowID:       "server",
-			expected:       "",
-			wantError:      true,
-			errorContains:  "current window is not a channel",
+			windowID:        "server",
+			expected:        "",
+			wantError:       true,
+			errorContains:   "current window is not a channel",
 		},
 		{
-			name:           "fallback fails - nil window",
-			input:          "",
+			name:            "fallback fails - nil window",
+			input:           "",
 			windowIsChannel: false,
-			windowID:       "",
-			expected:       "",
-			wantError:      true,
-			errorContains:  "current window is not a channel",
+			windowID:        "",
+			expected:        "",
+			wantError:       true,
+			errorContains:   "current window is not a channel",
 		},
 	}
 
@@ -886,61 +887,61 @@ func TestGetArgStringWithChannelFallback(t *testing.T) {
 
 func TestGetArgStringWithTargetFallback(t *testing.T) {
 	tests := []struct {
-		name           string
-		input          string
+		name            string
+		input           string
 		windowIsChannel bool
-		windowIsQuery  bool
-		windowID       string
-		expected       string
-		wantError      bool
-		errorContains  string
+		windowIsQuery   bool
+		windowID        string
+		expected        string
+		wantError       bool
+		errorContains   string
 	}{
 		{
-			name:           "explicit target provided",
-			input:          "#explicit",
+			name:            "explicit target provided",
+			input:           "#explicit",
 			windowIsChannel: true,
-			windowIsQuery:  false,
-			windowID:       "#current",
-			expected:       "#explicit",
-			wantError:      false,
+			windowIsQuery:   false,
+			windowID:        "#current",
+			expected:        "#explicit",
+			wantError:       false,
 		},
 		{
-			name:           "fallback to current channel",
-			input:          "",
+			name:            "fallback to current channel",
+			input:           "",
 			windowIsChannel: true,
-			windowIsQuery:  false,
-			windowID:       "#current",
-			expected:       "#current",
-			wantError:      false,
+			windowIsQuery:   false,
+			windowID:        "#current",
+			expected:        "#current",
+			wantError:       false,
 		},
 		{
-			name:           "fallback to current query",
-			input:          "",
+			name:            "fallback to current query",
+			input:           "",
 			windowIsChannel: false,
-			windowIsQuery:  true,
-			windowID:       "user",
-			expected:       "user",
-			wantError:      false,
+			windowIsQuery:   true,
+			windowID:        "user",
+			expected:        "user",
+			wantError:       false,
 		},
 		{
-			name:           "fallback fails - server window",
-			input:          "",
+			name:            "fallback fails - server window",
+			input:           "",
 			windowIsChannel: false,
-			windowIsQuery:  false,
-			windowID:       "server",
-			expected:       "",
-			wantError:      true,
-			errorContains:  "current window is not a channel or query",
+			windowIsQuery:   false,
+			windowID:        "server",
+			expected:        "",
+			wantError:       true,
+			errorContains:   "current window is not a channel or query",
 		},
 		{
-			name:           "fallback fails - nil window",
-			input:          "",
+			name:            "fallback fails - nil window",
+			input:           "",
 			windowIsChannel: false,
-			windowIsQuery:  false,
-			windowID:       "",
-			expected:       "",
-			wantError:      true,
-			errorContains:  "current window is not a channel or query",
+			windowIsQuery:   false,
+			windowID:        "",
+			expected:        "",
+			wantError:       true,
+			errorContains:   "current window is not a channel or query",
 		},
 	}
 

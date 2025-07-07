@@ -7,6 +7,10 @@ import (
 
 type CloseCommand struct{}
 
+func init() {
+	RegisterCommand(&CloseCommand{})
+}
+
 func (c CloseCommand) GetName() string {
 	return "close"
 }
@@ -33,6 +37,10 @@ func (c CloseCommand) GetAliases() []string {
 
 func (c CloseCommand) GetContext() CommandContext {
 	return ContextConnected
+}
+
+func (c CloseCommand) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c CloseCommand) Execute(connections *ServerManager, window *Window, input string) error {

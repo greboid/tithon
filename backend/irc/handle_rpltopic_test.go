@@ -24,8 +24,8 @@ func TestHandleRPLTopic(t *testing.T) {
 				Params:  []string{"testnick", "#general", "Welcome to the channel!"},
 			},
 			channels: []*Channel{
-				NewChannel(nil, "#general"),
-				NewChannel(nil, "#other"),
+				createTestChannel("#general"),
+				createTestChannel("#other"),
 			},
 			serverName:        "irc.example.com",
 			expectedTopic:     "Welcome to the channel!",
@@ -39,7 +39,7 @@ func TestHandleRPLTopic(t *testing.T) {
 				Params:  []string{"user", "#test", "This", "is", "a", "multi-word", "topic"},
 			},
 			channels: []*Channel{
-				NewChannel(nil, "#test"),
+				createTestChannel("#test"),
 			},
 			serverName:        "irc.test.net",
 			expectedTopic:     "This is a multi-word topic",
@@ -53,7 +53,7 @@ func TestHandleRPLTopic(t *testing.T) {
 				Params:  []string{"nick", "#empty"},
 			},
 			channels: []*Channel{
-				NewChannel(nil, "#empty"),
+				createTestChannel("#empty"),
 			},
 			serverName:        "irc.server.org",
 			expectedTopic:     "No Topic set",
@@ -67,7 +67,7 @@ func TestHandleRPLTopic(t *testing.T) {
 				Params:  []string{"nick", "#nonexistent", "Some topic"},
 			},
 			channels: []*Channel{
-				NewChannel(nil, "#other"),
+				createTestChannel("#other"),
 			},
 			serverName:        "irc.example.net",
 			expectedTopic:     "",
@@ -81,7 +81,7 @@ func TestHandleRPLTopic(t *testing.T) {
 				Params:  []string{"nick", "#replace", "New topic"},
 			},
 			channels: func() []*Channel {
-				ch := NewChannel(nil, "#replace")
+				ch := createTestChannel("#replace")
 				ch.SetTopic(NewTopic("Old topic", "olduser", time.Now()))
 				return []*Channel{ch}
 			}(),
@@ -97,7 +97,7 @@ func TestHandleRPLTopic(t *testing.T) {
 				Params:  []string{"nick", "#special", "Topic with éspecial çharacters & symbols!"},
 			},
 			channels: []*Channel{
-				NewChannel(nil, "#special"),
+				createTestChannel("#special"),
 			},
 			serverName:        "irc.unicode.net",
 			expectedTopic:     "Topic with éspecial çharacters & symbols!",

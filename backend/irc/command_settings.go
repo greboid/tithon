@@ -8,6 +8,10 @@ type Settings struct {
 	showSettings chan bool
 }
 
+func init() {
+	RegisterCommand(&Settings{})
+}
+
 func (c Settings) GetName() string {
 	return "settings"
 }
@@ -34,6 +38,10 @@ func (c Settings) GetAliases() []string {
 
 func (c Settings) GetContext() CommandContext {
 	return ContextAny
+}
+
+func (c Settings) InjectDependencies(deps *CommandDependencies) {
+	c.showSettings = deps.ShowSettings
 }
 
 func (c Settings) Execute(_ *ServerManager, _ *Window, input string) error {

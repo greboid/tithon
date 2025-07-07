@@ -9,6 +9,10 @@ import (
 
 type AddServer struct{}
 
+func init() {
+	RegisterCommand(&AddServer{})
+}
+
 func (c AddServer) GetName() string {
 	return "addserver" // Using different name to avoid conflicts with existing command
 }
@@ -74,6 +78,10 @@ func (c AddServer) GetAliases() []string {
 
 func (c AddServer) GetContext() CommandContext {
 	return ContextAny
+}
+
+func (c AddServer) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c AddServer) Execute(cm *ServerManager, _ *Window, input string) error {

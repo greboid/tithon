@@ -25,7 +25,7 @@ func TestHandleRPLTopicWhoTime(t *testing.T) {
 				Params:  []string{"testnick", "#general", "user123", "1640995200"},
 			},
 			channels: func() []*Channel {
-				ch := NewChannel(nil, "#general")
+				ch := createTestChannel("#general")
 				ch.SetTopic(NewTopic("Existing topic", "", time.Time{}))
 				return []*Channel{ch}
 			}(),
@@ -42,7 +42,7 @@ func TestHandleRPLTopicWhoTime(t *testing.T) {
 				Params:  []string{"nick", "#test", "moderator", "1609459200"},
 			},
 			channels: func() []*Channel {
-				ch := NewChannel(nil, "#test")
+				ch := createTestChannel("#test")
 				ch.SetTopic(nil)
 				return []*Channel{ch}
 			}(),
@@ -59,7 +59,7 @@ func TestHandleRPLTopicWhoTime(t *testing.T) {
 				Params:  []string{"nick", "#nonexistent", "someone", "1640995200"},
 			},
 			channels: []*Channel{
-				NewChannel(nil, "#other"),
+				createTestChannel("#other"),
 			},
 			serverName:        "irc.example.net",
 			expectedSetBy:     "",
@@ -74,7 +74,7 @@ func TestHandleRPLTopicWhoTime(t *testing.T) {
 				Params:  []string{"nick", "#invalid", "user", "notanumber"},
 			},
 			channels: func() []*Channel {
-				ch := NewChannel(nil, "#invalid")
+				ch := createTestChannel("#invalid")
 				ch.SetTopic(NewTopic("Test topic", "", time.Time{}))
 				return []*Channel{ch}
 			}(),
@@ -91,7 +91,7 @@ func TestHandleRPLTopicWhoTime(t *testing.T) {
 				Params:  []string{"nick", "#short", "user"},
 			},
 			channels: func() []*Channel {
-				ch := NewChannel(nil, "#short")
+				ch := createTestChannel("#short")
 				ch.SetTopic(NewTopic("Test topic", "", time.Time{}))
 				return []*Channel{ch}
 			}(),
@@ -108,7 +108,7 @@ func TestHandleRPLTopicWhoTime(t *testing.T) {
 				Params:  []string{},
 			},
 			channels: []*Channel{
-				NewChannel(nil, "#test"),
+				createTestChannel("#test"),
 			},
 			serverName:        "irc.empty.net",
 			expectedSetBy:     "",
@@ -123,7 +123,7 @@ func TestHandleRPLTopicWhoTime(t *testing.T) {
 				Params:  []string{"nick", "#zero", "admin", "0"},
 			},
 			channels: func() []*Channel {
-				ch := NewChannel(nil, "#zero")
+				ch := createTestChannel("#zero")
 				ch.SetTopic(NewTopic("Zero time topic", "", time.Time{}))
 				return []*Channel{ch}
 			}(),
@@ -140,7 +140,7 @@ func TestHandleRPLTopicWhoTime(t *testing.T) {
 				Params:  []string{"nick", "#negative", "timeuser", "-1"},
 			},
 			channels: func() []*Channel {
-				ch := NewChannel(nil, "#negative")
+				ch := createTestChannel("#negative")
 				ch.SetTopic(NewTopic("Negative time topic", "", time.Time{}))
 				return []*Channel{ch}
 			}(),

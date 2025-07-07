@@ -6,6 +6,10 @@ import (
 
 type Join struct{}
 
+func init() {
+	RegisterCommand(&Join{})
+}
+
 func (c Join) GetName() string {
 	return "join"
 }
@@ -51,11 +55,15 @@ func (c Join) GetContext() CommandContext {
 	return ContextConnected
 }
 
+func (c Join) InjectDependencies(*CommandDependencies) {
+	return
+}
+
 func (c Join) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	
+
 	parsed, err := Parse(c, input)
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)

@@ -7,6 +7,10 @@ import (
 
 type Disconnect struct{}
 
+func init() {
+	RegisterCommand(&Disconnect{})
+}
+
 func (c Disconnect) GetName() string {
 	return "disconnect"
 }
@@ -33,6 +37,10 @@ func (c Disconnect) GetAliases() []string {
 
 func (c Disconnect) GetContext() CommandContext {
 	return ContextConnected
+}
+
+func (c Disconnect) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c Disconnect) Execute(_ *ServerManager, window *Window, input string) error {

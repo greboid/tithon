@@ -6,6 +6,10 @@ import (
 
 type Whois struct{}
 
+func init() {
+	RegisterCommand(&Whois{})
+}
+
 func (c Whois) GetName() string {
 	return "whois"
 }
@@ -42,11 +46,15 @@ func (c Whois) GetContext() CommandContext {
 	return ContextConnected
 }
 
+func (c Whois) InjectDependencies(*CommandDependencies) {
+	return
+}
+
 func (c Whois) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	
+
 	parsed, err := Parse(c, input)
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)

@@ -6,6 +6,10 @@ import (
 
 type Msg struct{}
 
+func init() {
+	RegisterCommand(&Msg{})
+}
+
 func (c Msg) GetName() string {
 	return "msg"
 }
@@ -46,6 +50,10 @@ func (c Msg) GetAliases() []string {
 
 func (c Msg) GetContext() CommandContext {
 	return ContextConnected
+}
+
+func (c Msg) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c Msg) Execute(_ *ServerManager, window *Window, input string) error {

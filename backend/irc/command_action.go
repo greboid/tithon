@@ -6,6 +6,10 @@ import (
 
 type SendAction struct{}
 
+func init() {
+	RegisterCommand(&SendAction{})
+}
+
 func (c SendAction) GetName() string {
 	return "me"
 }
@@ -46,6 +50,10 @@ func (c SendAction) GetAliases() []string {
 
 func (c SendAction) GetContext() CommandContext {
 	return ContextConnected
+}
+
+func (c SendAction) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c SendAction) Execute(_ *ServerManager, window *Window, input string) error {

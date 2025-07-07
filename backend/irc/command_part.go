@@ -6,6 +6,10 @@ import (
 
 type Part struct{}
 
+func init() {
+	RegisterCommand(&Part{})
+}
+
 func (c Part) GetName() string {
 	return "part"
 }
@@ -40,6 +44,10 @@ func (c Part) GetAliases() []string {
 
 func (c Part) GetContext() CommandContext {
 	return ContextChannel
+}
+
+func (c Part) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c Part) Execute(_ *ServerManager, window *Window, input string) error {

@@ -7,13 +7,15 @@ import (
 	"github.com/greboid/tithon/config"
 	"log/slog"
 	"regexp"
-	"slices"
 	"strings"
+	"sync"
 )
 
 var (
-	NoServerError  = errors.New("no server specified")
-	NoChannelError = errors.New("no channel specified")
+	NoServerError   = errors.New("no server specified")
+	NoChannelError  = errors.New("no channel specified")
+	commandRegistry = make(map[string]Command)
+	registryMutex   sync.RWMutex
 )
 
 type CommandContext int
@@ -47,6 +49,12 @@ func (c CommandContext) String() string {
 	}
 }
 
+type CommandDependencies struct {
+	CommandManager *CommandManager
+	ShowSettings   chan bool
+	Notifier       Notifier
+}
+
 type Command interface {
 	GetName() string
 	GetHelp() string
@@ -56,6 +64,7 @@ type Command interface {
 	GetUsage() string
 	GetAliases() []string
 	GetContext() CommandContext
+	InjectDependencies(*CommandDependencies)
 }
 
 type Notifier interface {
@@ -63,7 +72,7 @@ type Notifier interface {
 }
 
 type CommandManager struct {
-	commands  []Command
+	commands  map[string]Command
 	conf      *config.Config
 	nm        NotificationManager
 	LinkRegex *regexp.Regexp
@@ -71,29 +80,22 @@ type CommandManager struct {
 
 func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandManager {
 	cm := &CommandManager{}
-	cm.commands = []Command{
-		&SendAction{},
-		&Msg{},
-		&Quit{},
-		&Join{},
-		&Part{},
-		&Nick{},
-		&ChangeTopic{},
-		&SendNotice{},
-		&Whois{},
-		&Notify{nm: cm},
-		&QueryCommand{},
-		&AddServer{},
-		&Disconnect{},
-		&Reconnect{},
-		&CloseCommand{},
-		&Settings{
-			showSettings: showSettings,
-		},
-		&Help{cm: cm},
-	}
 	cm.LinkRegex = linkRegex
 	cm.conf = conf
+
+	registeredCommands := GetRegisteredCommands()
+
+	deps := &CommandDependencies{
+		CommandManager: cm,
+		ShowSettings:   showSettings,
+		Notifier:       cm,
+	}
+
+	cm.commands = make(map[string]Command)
+	for _, cmd := range registeredCommands {
+		cmd.InjectDependencies(deps)
+	}
+
 	return cm
 }
 
@@ -103,28 +105,28 @@ func (cm *CommandManager) Execute(connections *ServerManager, window *Window, in
 	}
 	input = strings.TrimPrefix(input, "/")
 	first := strings.Split(input, " ")[0]
-	for i := range cm.commands {
-		if first == cm.commands[i].GetName() || slices.Contains(cm.commands[i].GetAliases(), first) {
-			if !cm.validateContext(cm.commands[i], window) {
-				cm.showContextError(window, cm.commands[i])
-				return
-			}
-
-			var args string
-			if len(input) > len(first) {
-				args = strings.TrimPrefix(input, first+" ")
-				args = emoji.Parse(args)
-			}
-
-			err := cm.commands[i].Execute(connections, window, args)
-			if err != nil {
-				cm.showCommandError(window, cm.commands[i], err.Error())
-			}
-			return
-		}
+	
+	cmd, exists := cm.commands[first]
+	if !exists {
+		cm.showError(window, fmt.Sprintf("Command '%s' not found. Use /help to see all available commands.", input))
+		return
 	}
 
-	cm.showError(window, fmt.Sprintf("Command '%s' not found. Use /help to see all available commands.", input))
+	if !cm.validateContext(cmd, window) {
+		cm.showContextError(window, cmd)
+		return
+	}
+
+	var args string
+	if len(input) > len(first) {
+		args = strings.TrimPrefix(input, first+" ")
+		args = emoji.Parse(args)
+	}
+
+	err := cmd.Execute(connections, window, args)
+	if err != nil {
+		cm.showCommandError(window, cmd, err.Error())
+	}
 }
 
 func (cm *CommandManager) SetNotificationManager(nm NotificationManager) {
@@ -188,4 +190,42 @@ func (cm *CommandManager) showError(window *Window, message string) {
 	} else {
 		slog.Error("Command error", "message", message)
 	}
+}
+
+func RegisterCommand(cmd Command) {
+	registryMutex.Lock()
+	defer registryMutex.Unlock()
+
+	commandRegistry[cmd.GetName()] = cmd
+	for _, alias := range cmd.GetAliases() {
+		commandRegistry[alias] = cmd
+	}
+}
+
+func GetRegisteredCommands() map[string]Command {
+	registryMutex.RLock()
+	defer registryMutex.RUnlock()
+
+	commands := make(map[string]Command)
+	for name, cmd := range commandRegistry {
+		commands[name] = cmd
+	}
+	return commands
+}
+
+func GetRegisteredCommandList() []Command {
+	registryMutex.RLock()
+	defer registryMutex.RUnlock()
+
+	seen := make(map[Command]bool)
+	var commands []Command
+
+	for _, cmd := range commandRegistry {
+		if !seen[cmd] {
+			seen[cmd] = true
+			commands = append(commands, cmd)
+		}
+	}
+
+	return commands
 }

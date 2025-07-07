@@ -6,6 +6,10 @@ import (
 
 type Quit struct{}
 
+func init() {
+	RegisterCommand(&Quit{})
+}
+
 func (c Quit) GetName() string {
 	return "quit"
 }
@@ -40,6 +44,10 @@ func (c Quit) GetAliases() []string {
 
 func (c Quit) GetContext() CommandContext {
 	return ContextConnected
+}
+
+func (c Quit) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c Quit) Execute(cm *ServerManager, window *Window, input string) error {

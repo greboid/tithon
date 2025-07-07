@@ -26,7 +26,7 @@ func NewChannel(connection *Server, name string) *Channel {
 		topic:        NewTopic("No topic Set", "", time.Time{}),
 		channelModes: make([]*ChannelMode, 0),
 	}
-	channel.Window.tabCompleter = NewChannelTabCompleter(channel)
+	channel.Window.tabCompleter = NewChannelTabCompleter(channel, connection.cm)
 	return channel
 }
 

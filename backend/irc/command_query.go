@@ -6,6 +6,10 @@ import (
 
 type QueryCommand struct{}
 
+func init() {
+	RegisterCommand(&QueryCommand{})
+}
+
 func (c QueryCommand) GetName() string {
 	return "query"
 }
@@ -47,6 +51,10 @@ func (c QueryCommand) GetAliases() []string {
 
 func (c QueryCommand) GetContext() CommandContext {
 	return ContextConnected
+}
+
+func (c QueryCommand) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c QueryCommand) Execute(_ *ServerManager, window *Window, input string) error {

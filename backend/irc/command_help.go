@@ -10,6 +10,10 @@ type Help struct {
 	cm *CommandManager
 }
 
+func init() {
+	RegisterCommand(&Help{})
+}
+
 func (c Help) GetName() string {
 	return "help"
 }
@@ -44,6 +48,10 @@ func (c Help) GetAliases() []string {
 
 func (c Help) GetContext() CommandContext {
 	return ContextAny
+}
+
+func (c Help) InjectDependencies(deps *CommandDependencies) {
+	c.cm = deps.CommandManager
 }
 
 func (c Help) Execute(_ *ServerManager, window *Window, input string) error {

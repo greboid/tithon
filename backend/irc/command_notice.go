@@ -6,6 +6,10 @@ import (
 
 type SendNotice struct{}
 
+func init() {
+	RegisterCommand(&SendNotice{})
+}
+
 func (c SendNotice) GetName() string {
 	return "notice"
 }
@@ -46,6 +50,10 @@ func (c SendNotice) GetAliases() []string {
 
 func (c SendNotice) GetContext() CommandContext {
 	return ContextConnected
+}
+
+func (c SendNotice) InjectDependencies(*CommandDependencies) {
+	return
 }
 
 func (c SendNotice) Execute(_ *ServerManager, window *Window, input string) error {

@@ -6,6 +6,10 @@ import (
 
 type ChangeTopic struct{}
 
+func init() {
+	RegisterCommand(&ChangeTopic{})
+}
+
 func (c ChangeTopic) GetName() string {
 	return "topic"
 }
@@ -49,11 +53,15 @@ func (c ChangeTopic) GetContext() CommandContext {
 	return ContextConnected
 }
 
+func (c ChangeTopic) InjectDependencies(*CommandDependencies) {
+	return
+}
+
 func (c ChangeTopic) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	
+
 	parsed, err := Parse(c, input)
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)

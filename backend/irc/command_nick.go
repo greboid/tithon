@@ -6,6 +6,10 @@ import (
 
 type Nick struct{}
 
+func init() {
+	RegisterCommand(&Nick{})
+}
+
 func (c Nick) GetName() string {
 	return "nick"
 }
@@ -42,11 +46,15 @@ func (c Nick) GetContext() CommandContext {
 	return ContextConnected
 }
 
+func (c Nick) InjectDependencies(*CommandDependencies) {
+	return
+}
+
 func (c Nick) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-	
+
 	parsed, err := Parse(c, input)
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)

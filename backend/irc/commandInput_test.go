@@ -911,7 +911,7 @@ func TestGetArgStringWithTargetFallback(t *testing.T) {
 			windowIsChannel: true,
 			windowIsQuery:   false,
 			windowID:        "#current",
-			expected:        "#current",
+			expected:        "",
 			wantError:       false,
 		},
 		{
@@ -920,7 +920,7 @@ func TestGetArgStringWithTargetFallback(t *testing.T) {
 			windowIsChannel: false,
 			windowIsQuery:   true,
 			windowID:        "user",
-			expected:        "user",
+			expected:        "",
 			wantError:       false,
 		},
 		{

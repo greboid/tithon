@@ -109,10 +109,9 @@ func (cm *CommandManager) Execute(connections *ServerManager, window *Window, in
 	}
 	input = strings.TrimPrefix(input, "/")
 	first := strings.Split(input, " ")[0]
-	
 	cmd, exists := cm.commands[first]
 	if !exists {
-		cm.showError(window, fmt.Sprintf("Command '%s' not found. Use /help to see all available commands.", input))
+		cm.showError(window, fmt.Sprintf("Command '%s' not found. Use /help to see all available commands.", first))
 		return
 	}
 

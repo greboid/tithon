@@ -559,9 +559,17 @@ func (p *ParsedInput) GetArgStringWithTargetFallback(argName string, window *Win
 	value, err := p.GetArgString(argName)
 	if err != nil {
 		if window != nil && (window.IsChannel() || window.IsQuery()) {
-			return window.GetID(), nil
+			return window.GetName(), nil
 		}
 		return "", fmt.Errorf("no %s specified and current window is not a channel or query", argName)
 	}
+
+	if window != nil && (window.IsChannel() || window.IsQuery()) {
+		if strings.HasPrefix(value, "#") || strings.HasPrefix(value, "&") {
+			return value, nil
+		}
+		return window.GetName(), nil
+	}
+
 	return value, nil
 }

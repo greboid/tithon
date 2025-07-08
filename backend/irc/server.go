@@ -460,6 +460,22 @@ func (c *Server) SendQuery(target string, message string) error {
 	return nil
 }
 
+func (c *Server) SendPrivmsg(target string, message string) error {
+	defer c.ut.SetPendingUpdate()
+	
+	// PRIVMSG target :message == 10 + target length
+	messageParts := c.SplitMessage(10+len(target), message)
+	
+	for _, part := range messageParts {
+		err := c.connection.Send("PRIVMSG", target, part)
+		if err != nil {
+			return err
+		}
+	}
+	
+	return nil
+}
+
 func (c *Server) SendNotice(window string, message string) error {
 	channel := c.GetChannel(window)
 	if channel == nil {

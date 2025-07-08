@@ -2,6 +2,7 @@ package irc
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Msg struct{}
@@ -76,5 +77,14 @@ func (c Msg) Execute(_ *ServerManager, window *Window, input string) error {
 		return fmt.Errorf("failed to get message: %w", err)
 	}
 
-	return window.connection.SendMessage(target, message)
+	if (window.IsChannel() || window.IsQuery()) && target == window.GetName() {
+		originalTarget, targetErr := parsed.GetArgString("target")
+		if targetErr == nil {
+			if !strings.HasPrefix(originalTarget, "#") && !strings.HasPrefix(originalTarget, "&") {
+				message = originalTarget + " " + message
+			}
+		}
+	}
+
+	return window.connection.SendPrivmsg(target, message)
 }

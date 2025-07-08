@@ -94,6 +94,10 @@ func NewCommandManager(conf *config.Config, showSettings chan bool) *CommandMana
 	cm.commands = make(map[string]Command)
 	for _, cmd := range registeredCommands {
 		cmd.InjectDependencies(deps)
+		cm.commands[cmd.GetName()] = cmd
+		for _, alias := range cmd.GetAliases() {
+			cm.commands[alias] = cmd
+		}
 	}
 
 	return cm

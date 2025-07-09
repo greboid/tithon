@@ -25,12 +25,6 @@ func (c SendAction) GetUsage() string {
 func (c SendAction) GetArgSpecs() []Argument {
 	return []Argument{
 		{
-			Name:        "target",
-			Type:        ArgTypeChannelOrNick,
-			Required:    false,
-			Description: "Target channel or nickname (defaults to current window)",
-		},
-		{
 			Name:        "message",
 			Type:        ArgTypeRestOfInput,
 			Required:    true,
@@ -49,7 +43,7 @@ func (c SendAction) GetAliases() []string {
 }
 
 func (c SendAction) GetContext() CommandContext {
-	return ContextConnected
+	return ContextChannelOrQuery
 }
 
 func (c SendAction) InjectDependencies(*CommandDependencies) {
@@ -66,16 +60,11 @@ func (c SendAction) Execute(_ *ServerManager, window *Window, input string) erro
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	target, err := parsed.GetArgStringWithTargetFallback("target", window)
-	if err != nil {
-		return err
-	}
-
 	message, err := parsed.GetArgString("message")
 	if err != nil {
 		return fmt.Errorf("failed to get message: %w", err)
 	}
 
 	actionMessage := fmt.Sprintf("\001ACTION %s\001", message)
-	return window.connection.SendMessage(target, actionMessage)
+	return window.connection.SendMessage(window.GetID(), actionMessage)
 }

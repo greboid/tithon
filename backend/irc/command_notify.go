@@ -28,7 +28,7 @@ func (c Notify) GetArgSpecs() []Argument {
 	return []Argument{
 		{
 			Name:        "message",
-			Type:        ArgTypeRestOfInput,
+			Type:        ArgTypeString,
 			Required:    true,
 			Description: "The notification message to display",
 			Validator:   validateNonEmpty,
@@ -77,9 +77,12 @@ func (c Notify) Execute(_ *ServerManager, window *Window, input string) error {
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	message, err := parsed.GetArgString("message")
+	args, err := parsed.GetArgs()
 	if err != nil {
-		return fmt.Errorf("failed to get message: %w", err)
+		return fmt.Errorf("failed to get arguments: %w", err)
+	}
+	if len(args) == 0 {
+		return fmt.Errorf("incorrect number of arguments: message")
 	}
 
 	sound, err := parsed.GetFlagBool("sound")
@@ -93,7 +96,7 @@ func (c Notify) Execute(_ *ServerManager, window *Window, input string) error {
 	}
 
 	c.nm.showNotification(Notification{
-		Text:  message,
+		Text:  args[0],
 		Sound: sound,
 		Popup: popup,
 	})

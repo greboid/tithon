@@ -9,11 +9,10 @@ import (
 )
 
 type CommandInput struct {
-	raw       string
-	args      []string
-	flags     map[string]string
-	boolFlags map[string]bool
-	parsed    bool
+	raw    string
+	args   []string
+	flags  map[string]string
+	parsed bool
 }
 
 type Argument struct {
@@ -45,23 +44,20 @@ const (
 	ArgTypeNick
 	ArgTypeHost
 	ArgTypePort
-	ArgTypeRestOfInput
 )
 
 type ParsedInput struct {
-	args      []interface{}
-	flags     map[string]interface{}
-	boolFlags map[string]bool
-	argNames  map[string]int
+	args     []string
+	flags    map[string]interface{}
+	argNames map[string]int
 }
 
 func NewCommandInput(input string) *CommandInput {
 	return &CommandInput{
-		raw:       input,
-		args:      make([]string, 0),
-		flags:     make(map[string]string),
-		boolFlags: make(map[string]bool),
-		parsed:    false,
+		raw:    input,
+		args:   make([]string, 0),
+		flags:  make(map[string]string),
+		parsed: false,
 	}
 }
 
@@ -75,74 +71,46 @@ func (ca *CommandInput) parseRaw() error {
 		return nil
 	}
 
-	fields, err := ca.splitFields(ca.raw)
+	args, flags, err := ca.parseInputCharByChar(ca.raw)
 	if err != nil {
 		return err
 	}
-
-	for _, field := range fields {
-		if strings.HasPrefix(field, "--") {
-			if err = ca.parseLongFlag(field); err != nil {
-				return err
-			}
-		} else if strings.HasPrefix(field, "-") && len(field) > 1 {
-			if err = ca.parseShortFlag(field); err != nil {
-				return err
-			}
-		} else {
-			ca.args = append(ca.args, field)
-		}
-	}
-
+	ca.args = args
+	ca.flags = flags
 	ca.parsed = true
 	return nil
 }
 
-func (ca *CommandInput) parseFlags(args []Argument, flags []Flag) (*ParsedInput, error) {
+func (ca *CommandInput) parseInputCharByChar(input string) ([]string, map[string]string, error) {
+	args := make([]string, 0)
+	flags := make(map[string]string)
+	tokens := strings.Fields(input)
+	processingFlags := true
+	for _, value := range tokens {
+		if processingFlags && (strings.HasPrefix(value, "--") || strings.HasPrefix(value, "-") && strings.Contains(value, "=")) {
+			value = strings.TrimLeft(value, "-")
+			split := strings.Split(value, "=")
+			flags[split[0]] = split[1]
+			continue
+		} else {
+			processingFlags = false
+		}
+		args = append(args, value)
+	}
+	return args, flags, nil
+}
+
+func (ca *CommandInput) parseFlags(flags []Flag) (*ParsedInput, error) {
 	if err := ca.parseRaw(); err != nil {
 		return nil, err
 	}
 
 	result := &ParsedInput{
-		args:      make([]interface{}, 0),
-		flags:     make(map[string]interface{}),
-		boolFlags: make(map[string]bool),
-		argNames:  make(map[string]int),
+		args:  make([]string, 0),
+		flags: make(map[string]interface{}),
 	}
 
-	for i, arg := range args {
-		var value interface{}
-		var err error
-
-		if arg.Type == ArgTypeRestOfInput {
-			if i < len(ca.args) {
-				remaining := ca.args[i:]
-				value = strings.Join(remaining, " ")
-			} else if arg.Required {
-				return nil, fmt.Errorf("required argument %s is missing", arg.Name)
-			} else {
-				value = arg.Default
-			}
-		} else if i < len(ca.args) {
-			value, err = ca.parseValue(ca.args[i], arg.Type)
-			if err != nil {
-				return nil, fmt.Errorf("argument %s: %w", arg.Name, err)
-			}
-		} else if arg.Required {
-			return nil, fmt.Errorf("required argument %s is missing", arg.Name)
-		} else {
-			value = arg.Default
-		}
-
-		if arg.Validator != nil && value != nil {
-			if err = arg.Validator(value); err != nil {
-				return nil, fmt.Errorf("argument %s: %w", arg.Name, err)
-			}
-		}
-
-		result.args = append(result.args, value)
-		result.argNames[arg.Name] = i
-	}
+	result.args = ca.args
 
 	for _, flag := range flags {
 		var strValue string
@@ -150,14 +118,14 @@ func (ca *CommandInput) parseFlags(args []Argument, flags []Flag) (*ParsedInput,
 		var found bool
 
 		if flag.Type == ArgTypeBool {
-			value, found = ca.boolFlags[flag.Name]
+			value, found = ca.flags[flag.Name]
 			if !found && flag.Short != "" {
-				value, found = ca.boolFlags[flag.Short]
+				value, found = ca.flags[flag.Short]
 			}
 			if !found {
 				value = flag.Default
 			}
-			result.boolFlags[flag.Name] = value.(bool)
+			result.flags[flag.Name] = value
 		} else {
 			strValue, found = ca.flags[flag.Name]
 			if !found && flag.Short != "" {
@@ -207,11 +175,19 @@ func (ca *CommandInput) GetFlag(name string) (string, bool) {
 	return value, ok
 }
 
-func (ca *CommandInput) GetBoolFlag(name string) bool {
+func (ca *CommandInput) GetBoolFlag(name string) (bool, bool) {
 	if err := ca.parseRaw(); err != nil {
-		return false
+		return false, false
 	}
-	return ca.boolFlags[name]
+	value, ok := ca.flags[name]
+	if !ok {
+		return false, false
+	}
+	result, err := strconv.ParseBool(value)
+	if err != nil {
+		return false, false
+	}
+	return result, true
 }
 
 func (ca *CommandInput) splitFields(input string) ([]string, error) {
@@ -255,27 +231,6 @@ func (ca *CommandInput) splitFields(input string) ([]string, error) {
 	return fields, nil
 }
 
-func (ca *CommandInput) parseLongFlag(flag string) error {
-	return ca.parseFlag("--", flag)
-}
-
-func (ca *CommandInput) parseShortFlag(flag string) error {
-	return ca.parseFlag("-", flag)
-}
-
-func (ca *CommandInput) parseFlag(prefix, flag string) error {
-	flag = strings.TrimPrefix(flag, prefix)
-
-	if strings.Contains(flag, "=") {
-		parts := strings.SplitN(flag, "=", 2)
-		ca.flags[parts[0]] = parts[1]
-	} else {
-		ca.boolFlags[flag] = true
-	}
-
-	return nil
-}
-
 func (ca *CommandInput) parseValue(value string, argType ArgumentType) (interface{}, error) {
 	switch argType {
 	case ArgTypeString:
@@ -309,8 +264,6 @@ func (ca *CommandInput) parseValue(value string, argType ArgumentType) (interfac
 			return nil, errors.New("port must be between 1 and 65535")
 		}
 		return port, nil
-	case ArgTypeRestOfInput:
-		return value, nil
 	default:
 		return value, nil
 	}
@@ -451,49 +404,9 @@ func GenerateDetailedHelp(cmd Command) string {
 	return help.String()
 }
 
-func (p *ParsedInput) GetArg(name string) (interface{}, error) {
-	if index, exists := p.argNames[name]; exists {
-		if index < len(p.args) {
-			return p.args[index], nil
-		}
-	}
-	return nil, fmt.Errorf("argument %s not found", name)
-}
-
-func (p *ParsedInput) GetArgString(name string) (string, error) {
-	value, err := p.GetArg(name)
-	if err != nil {
-		return "", err
-	}
-	if str, ok := value.(string); ok {
-		return str, nil
-	}
-	return "", fmt.Errorf("unable to convert arg %s to string", name)
-}
-
-func (p *ParsedInput) GetArgInt(name string) (int, error) {
-	value, err := p.GetArg(name)
-	if err != nil {
-		return -1, err
-	}
-	if str, ok := value.(int); ok {
-		return str, nil
-	}
-	return -1, fmt.Errorf("unable to convert arg %s to int", name)
-}
-
-func (p *ParsedInput) GetArgBool(name string) (bool, error) {
-	value, err := p.GetArg(name)
-	if err != nil {
-		return false, err
-	}
-	if str, ok := value.(bool); ok {
-		return str, nil
-	}
-	return false, fmt.Errorf("unable to convert arg %s to bool", name)
-}
-
 func (p *ParsedInput) GetFlag(name string) (interface{}, error) {
+	fmt.Println(name)
+	fmt.Println(p.flags[name])
 	if value, exists := p.flags[name]; exists {
 		return value, nil
 	}
@@ -523,24 +436,17 @@ func (p *ParsedInput) GetFlagInt(name string) (int, error) {
 }
 
 func (p *ParsedInput) GetFlagBool(name string) (bool, error) {
-	if value, exists := p.boolFlags[name]; exists {
-		return value, nil
+	if value, exists := p.flags[name]; exists {
+		return value.(bool), nil
 	}
 	return false, fmt.Errorf("bool flag %s not found", name)
 }
 
-func Parse(cmd Command, input string) (*ParsedInput, error) {
-	ca := NewCommandInput(input)
-	return ca.parseFlags(cmd.GetArgSpecs(), cmd.GetFlagSpecs())
+func (p *ParsedInput) GetArgs() ([]string, error) {
+	return p.args, nil
 }
 
-func (p *ParsedInput) GetArgStringWithChannelFallback(argName string, window *Window) (string, error) {
-	value, err := p.GetArgString(argName)
-	if err != nil {
-		if window != nil && window.IsChannel() {
-			return window.GetID(), nil
-		}
-		return "", fmt.Errorf("no %s specified and current window is not a channel", argName)
-	}
-	return value, nil
+func Parse(cmd Command, input string) (*ParsedInput, error) {
+	ca := NewCommandInput(input)
+	return ca.parseFlags(cmd.GetFlagSpecs())
 }

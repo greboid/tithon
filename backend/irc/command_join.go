@@ -69,9 +69,12 @@ func (c Join) Execute(_ *ServerManager, window *Window, input string) error {
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	channel, err := parsed.GetArgString("channel")
+	args, err := parsed.GetArgs()
 	if err != nil {
-		return fmt.Errorf("failed to get channel: %w", err)
+		return fmt.Errorf("failed to get arguments: %w", err)
+	}
+	if len(args) == 0 {
+		return fmt.Errorf("incorrect number of arguments: channel")
 	}
 
 	key, err := parsed.GetFlagString("key")
@@ -79,5 +82,5 @@ func (c Join) Execute(_ *ServerManager, window *Window, input string) error {
 		return fmt.Errorf("failed to get key: %w", err)
 	}
 
-	return window.connection.JoinChannel(channel, key)
+	return window.connection.JoinChannel(args[0], key)
 }

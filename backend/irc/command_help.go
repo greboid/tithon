@@ -14,19 +14,19 @@ func init() {
 	RegisterCommand(&Help{})
 }
 
-func (c Help) GetName() string {
+func (c *Help) GetName() string {
 	return "help"
 }
 
-func (c Help) GetHelp() string {
+func (c *Help) GetHelp() string {
 	return "Shows help for all commands or a specific command"
 }
 
-func (c Help) GetUsage() string {
+func (c *Help) GetUsage() string {
 	return GenerateDetailedHelp(c)
 }
 
-func (c Help) GetArgSpecs() []Argument {
+func (c *Help) GetArgSpecs() []Argument {
 	return []Argument{
 		{
 			Name:        "command",
@@ -38,23 +38,23 @@ func (c Help) GetArgSpecs() []Argument {
 	}
 }
 
-func (c Help) GetFlagSpecs() []Flag {
+func (c *Help) GetFlagSpecs() []Flag {
 	return []Flag{}
 }
 
-func (c Help) GetAliases() []string {
+func (c *Help) GetAliases() []string {
 	return []string{"h", "?"}
 }
 
-func (c Help) GetContext() CommandContext {
+func (c *Help) GetContext() CommandContext {
 	return ContextAny
 }
 
-func (c Help) InjectDependencies(deps *CommandDependencies) {
+func (c *Help) InjectDependencies(deps *CommandDependencies) {
 	c.cm = deps.CommandManager
 }
 
-func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
+func (c *Help) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
@@ -63,13 +63,15 @@ func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
-
-	command, err := parsed.GetArgString("command")
+	args, err := parsed.GetArgs()
 	if err != nil {
-		return fmt.Errorf("failed to get command: %w", err)
+		return fmt.Errorf("failed to get arguments: %w", err)
+	}
+	command := ""
+	if len(args) > 0 {
+		command = strings.TrimSpace(args[0])
 	}
 
-	command = strings.TrimSpace(command)
 	timestampFormat := c.cm.conf.UISettings.TimestampFormat
 
 	if command != "" {

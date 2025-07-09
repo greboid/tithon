@@ -2,6 +2,7 @@ package irc
 
 import (
 	"fmt"
+	"strings"
 )
 
 type QueryCommand struct{}
@@ -33,7 +34,7 @@ func (c QueryCommand) GetArgSpecs() []Argument {
 		},
 		{
 			Name:        "message",
-			Type:        ArgTypeRestOfInput,
+			Type:        ArgTypeString,
 			Required:    false,
 			Default:     "",
 			Description: "Optional initial message to send",
@@ -67,23 +68,25 @@ func (c QueryCommand) Execute(_ *ServerManager, window *Window, input string) er
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	nickname, err := parsed.GetArgString("nickname")
+	args, err := parsed.GetArgs()
 	if err != nil {
-		return fmt.Errorf("failed to get nickname: %w", err)
+		return fmt.Errorf("failed to get arguments: %w", err)
+	}
+	if len(args) == 0 {
+		return fmt.Errorf("incorrect number of arguments: nickname message")
+	}
+	message := ""
+	if len(args) >= 2 {
+		message = strings.Join(args[1:], " ")
 	}
 
-	message, err := parsed.GetArgString("message")
+	_, err = window.connection.GetQueryByName(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to get message: %w", err)
-	}
-
-	_, err = window.connection.GetQueryByName(nickname)
-	if err != nil {
-		window.connection.AddQuery(nickname)
+		window.connection.AddQuery(args[0])
 	}
 
 	if message != "" {
-		err = window.connection.SendQuery(nickname, message)
+		err = window.connection.SendQuery(args[0], message)
 		if err != nil {
 			return err
 		}

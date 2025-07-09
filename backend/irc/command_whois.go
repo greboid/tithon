@@ -59,12 +59,14 @@ func (c Whois) Execute(_ *ServerManager, window *Window, input string) error {
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
-
-	nickname, err := parsed.GetArgString("nickname")
+	args, err := parsed.GetArgs()
 	if err != nil {
-		return fmt.Errorf("failed to get nickname: %w", err)
+		return fmt.Errorf("failed to get arguments: %w", err)
+	}
+	if len(args) == 0 {
+		return fmt.Errorf("incorrect number of arguments: nickname")
 	}
 
-	window.connection.SendRaw(fmt.Sprintf("whois :%s", nickname))
+	window.connection.SendRaw(fmt.Sprintf("whois :%s", args[0]))
 	return nil
 }

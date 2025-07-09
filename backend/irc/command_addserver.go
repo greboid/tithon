@@ -89,15 +89,12 @@ func (c AddServer) Execute(cm *ServerManager, _ *Window, input string) error {
 	if err != nil {
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
-
-	hostname, err := parsed.GetArgString("hostname")
+	args, err := parsed.GetArgs()
 	if err != nil {
-		return fmt.Errorf("failed to get hostname: %w", err)
+		return fmt.Errorf("failed to get arguments: %w", err)
 	}
-
-	nickname, err := parsed.GetArgString("nickname")
-	if err != nil {
-		return fmt.Errorf("failed to get nickname: %w", err)
+	if len(args) != 2 {
+		return fmt.Errorf("incorrect number of arguments: hostname nickname")
 	}
 
 	notls, err := parsed.GetFlagBool("notls")
@@ -115,7 +112,7 @@ func (c AddServer) Execute(cm *ServerManager, _ *Window, input string) error {
 		return fmt.Errorf("failed to get sasl flag: %w", err)
 	}
 
-	host, port := parseHostPort(hostname)
+	host, port := parseHostPort(args[0])
 
 	if port == -1 {
 		if notls {
@@ -135,7 +132,7 @@ func (c AddServer) Execute(cm *ServerManager, _ *Window, input string) error {
 		saslPassword = parts[1]
 	}
 
-	profile := NewProfile(nickname)
+	profile := NewProfile(args[1])
 	cm.AddConnection("", host, port, !notls, password, saslLogin, saslPassword, profile, false)
 
 	return nil

@@ -2,6 +2,7 @@ package irc
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ChangeTopic struct{}
@@ -25,16 +26,9 @@ func (c ChangeTopic) GetUsage() string {
 func (c ChangeTopic) GetArgSpecs() []Argument {
 	return []Argument{
 		{
-			Name:        "channel",
-			Type:        ArgTypeChannel,
-			Required:    false,
-			Description: "The channel to set topic for (defaults to current channel)",
-			Validator:   validateNonEmpty,
-		},
-		{
 			Name:        "topic",
-			Type:        ArgTypeRestOfInput,
-			Required:    true,
+			Type:        ArgTypeString,
+			Required:    false,
 			Description: "The new topic text",
 			Validator:   validateNonEmpty,
 		},
@@ -67,15 +61,17 @@ func (c ChangeTopic) Execute(_ *ServerManager, window *Window, input string) err
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	channel, err := parsed.GetArgStringWithChannelFallback("channel", window)
+	channel, err := parsed.GetFlagString("channel")
 	if err != nil {
-		return err
+		channel = window.GetName()
 	}
 
-	topic, err := parsed.GetArgString("topic")
+	args, err := parsed.GetArgs()
 	if err != nil {
-		return fmt.Errorf("failed to get topic: %w", err)
+		return fmt.Errorf("failed to get arguments: %w", err)
 	}
-
-	return window.GetServer().SendTopic(channel, topic)
+	if len(args) == 0 {
+		return fmt.Errorf("incorrect number of arguments: topic")
+	}
+	return window.GetServer().SendTopic(channel, strings.Join(args[0:], " "))
 }

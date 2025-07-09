@@ -2,6 +2,7 @@ package irc
 
 import (
 	"fmt"
+	"strings"
 )
 
 type SendAction struct{}
@@ -23,15 +24,7 @@ func (c SendAction) GetUsage() string {
 }
 
 func (c SendAction) GetArgSpecs() []Argument {
-	return []Argument{
-		{
-			Name:        "message",
-			Type:        ArgTypeRestOfInput,
-			Required:    true,
-			Description: "The action message to send",
-			Validator:   validateNonEmpty,
-		},
-	}
+	return []Argument{}
 }
 
 func (c SendAction) GetFlagSpecs() []Flag {
@@ -60,11 +53,13 @@ func (c SendAction) Execute(_ *ServerManager, window *Window, input string) erro
 		return fmt.Errorf("argument parsing error: %w", err)
 	}
 
-	message, err := parsed.GetArgString("message")
+	args, err := parsed.GetArgs()
 	if err != nil {
-		return fmt.Errorf("failed to get message: %w", err)
+		return fmt.Errorf("failed to get arguments: %w", err)
+	}
+	if len(args) == 0 {
+		return fmt.Errorf("incorrect number of arguments: message")
 	}
 
-	actionMessage := fmt.Sprintf("\001ACTION %s\001", message)
-	return window.connection.SendMessage(window.GetID(), actionMessage)
+	return window.connection.SendMessage(window.GetID(), fmt.Sprintf("\001ACTION %s\001", strings.Join(args[0:], " ")))
 }

@@ -8,7 +8,7 @@ import (
 
 // createTestServer creates a mock server for testing
 func createTestServer() *Server {
-	cm := &CommandManager{commands: map[string]Command{}}
+	cm := &CommandManager{commands: []Command{}}
 	return &Server{
 		cm: cm,
 		Window: &Window{

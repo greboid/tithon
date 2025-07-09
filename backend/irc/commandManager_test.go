@@ -83,9 +83,10 @@ func TestCommandManager_Execute(t *testing.T) {
 	cm := NewCommandManager(getCommandManagerTestConfig(), make(chan bool, 1))
 
 	mockCmd := new(MockCommand)
+	mockCmd.On("GetName").Return("test")
 	mockCmd.On("GetContext").Return(ContextAny)
 	mockCmd.On("Execute", mock.Anything, mock.Anything, "test input").Return(nil)
-	cm.commands = map[string]Command{"test": mockCmd}
+	cm.commands = []Command{mockCmd}
 
 	window := &Window{}
 	connections := &ServerManager{}
@@ -99,9 +100,10 @@ func TestCommandManager_Execute_NoArguments(t *testing.T) {
 	cm := NewCommandManager(getCommandManagerTestConfig(), make(chan bool, 1))
 
 	mockCmd := new(MockCommand)
+	mockCmd.On("GetName").Return("test")
 	mockCmd.On("GetContext").Return(ContextAny)
 	mockCmd.On("Execute", mock.Anything, mock.Anything, "").Return(nil)
-	cm.commands = map[string]Command{"test": mockCmd}
+	cm.commands = []Command{mockCmd}
 
 	window := &Window{}
 	connections := &ServerManager{}
@@ -132,7 +134,7 @@ func TestCommandManager_Execute_Error(t *testing.T) {
 	mockCmd.On("GetName").Return("test")
 	mockCmd.On("GetContext").Return(ContextAny)
 	mockCmd.On("Execute", mock.Anything, mock.Anything, "test input").Return(errors.New("test error"))
-	cm.commands = map[string]Command{"test": mockCmd}
+	cm.commands = []Command{mockCmd}
 
 	window := createTestWindow()
 
@@ -149,10 +151,13 @@ func TestCommandManager_Execute_InputNoSlash(t *testing.T) {
 
 	mockCmd := new(MockCommand)
 	mockCmd.AssertNotCalled(t, "Execute")
+	mockCmd.On("GetName").Return("test")
+	mockCmd.On("GetAliases").Return([]string{})
 	msgCmd := new(MockCommand)
+	msgCmd.On("GetName").Return("msg")
 	msgCmd.On("GetContext").Return(ContextAny)
 	msgCmd.On("Execute", mock.Anything, mock.Anything, "Hello world").Return(nil)
-	cm.commands = map[string]Command{"test": mockCmd, "msg": msgCmd}
+	cm.commands = []Command{mockCmd, msgCmd}
 
 	window := &Window{}
 	connections := &ServerManager{}
@@ -213,9 +218,14 @@ func TestCommandManager_ExecuteWithAlias(t *testing.T) {
 	cm := NewCommandManager(getCommandManagerTestConfig(), make(chan bool, 1))
 
 	mockCmd := new(MockCommand)
+	mockCmd.On("GetName").Return("tc")
 	mockCmd.On("GetContext").Return(ContextAny)
 	mockCmd.On("Execute", mock.Anything, mock.Anything, "input").Return(nil)
-	cm.commands = map[string]Command{"testcommand": mockCmd, "tc": mockCmd, "test": mockCmd}
+	// mockCmd.On("GetAliases").Return([]string{"test"})
+	msgCmd := new(MockCommand)
+	msgCmd.On("GetContext").Return(ContextAny)
+	msgCmd.On("Execute", mock.Anything, mock.Anything, "Hello world").Return(nil)
+	cm.commands = []Command{mockCmd, msgCmd}
 
 	window := &Window{}
 	connections := &ServerManager{}
@@ -226,6 +236,8 @@ func TestCommandManager_ExecuteWithAlias(t *testing.T) {
 
 	// Reset expectations
 	mockCmd.ExpectedCalls = nil
+	mockCmd.On("GetName").Return("tc")
+	mockCmd.On("GetAliases").Return([]string{"test"})
 	mockCmd.On("GetContext").Return(ContextAny)
 	mockCmd.On("Execute", mock.Anything, mock.Anything, "input").Return(nil)
 
@@ -241,7 +253,7 @@ func TestCommandManager_ContextValidation(t *testing.T) {
 	mockCmd.On("GetName").Return("channelonly")
 	mockCmd.On("GetContext").Return(ContextChannel)
 	mockCmd.AssertNotCalled(t, "Execute") // Should not execute due to context failure
-	cm.commands = map[string]Command{"channelonly": mockCmd}
+	cm.commands = []Command{mockCmd}
 
 	// Test command requiring channel context with nil window
 	window := createTestWindow()

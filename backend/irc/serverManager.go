@@ -49,7 +49,7 @@ func (cm *ServerManager) AddConnection(
 	profile *Profile,
 	connect bool,
 ) string {
-	connection := NewServer(cm.timestampFormat, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager, cm.commandManager)
+	connection := NewServer(cm.timestampFormat, id, hostname, port, tls, password, sasllogin, saslpassword, profile, cm.updateTrigger, cm.notificationManager)
 	if cm.windowRemovalCallback != nil {
 		connection.SetWindowRemovalCallback(cm.windowRemovalCallback)
 	}

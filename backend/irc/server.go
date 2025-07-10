@@ -38,7 +38,6 @@ type Server struct {
 	possibleUserModes     []*UserMode
 	ut                    UpdateTrigger
 	nm                    NotificationManager
-	cm                    *CommandManager
 	timestampFormat       string
 	reconnecting          bool
 	reconnectAttempts     int
@@ -52,7 +51,7 @@ func (c *Server) GetWindow() *Window {
 	return c.Window
 }
 
-func NewServer(timestampFormat string, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager, cm *CommandManager) *Server {
+func NewServer(timestampFormat string, id string, hostname string, port int, tls bool, password string, sasllogin string, saslpassword string, profile *Profile, ut UpdateTrigger, nm NotificationManager) *Server {
 	if id == "" {
 		id, _ = uniqueid.Generateid("a", 5, "s")
 	}
@@ -93,7 +92,6 @@ func NewServer(timestampFormat string, id string, hostname string, port int, tls
 		},
 		ut:                ut,
 		nm:                nm,
-		cm:                cm,
 		timestampFormat:   timestampFormat,
 		reconnecting:      false,
 		reconnectAttempts: 0,
@@ -108,7 +106,7 @@ func NewServer(timestampFormat string, id string, hostname string, port int, tls
 		messages:     make([]*Message, 0),
 		connection:   server,
 		isServer:     true,
-		tabCompleter: NewServerTabCompleter(server, cm),
+		tabCompleter: NewServerTabCompleter(server),
 	}
 
 	return server
@@ -457,22 +455,6 @@ func (c *Server) SendQuery(target string, message string) error {
 		}
 	}
 
-	return nil
-}
-
-func (c *Server) SendPrivmsg(target string, message string) error {
-	defer c.ut.SetPendingUpdate()
-	
-	// PRIVMSG target :message == 10 + target length
-	messageParts := c.SplitMessage(10+len(target), message)
-	
-	for _, part := range messageParts {
-		err := c.connection.Send("PRIVMSG", target, part)
-		if err != nil {
-			return err
-		}
-	}
-	
 	return nil
 }
 

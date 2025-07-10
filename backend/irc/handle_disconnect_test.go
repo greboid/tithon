@@ -50,11 +50,11 @@ func TestHandleDisconnected(t *testing.T) {
 			},
 			serverHostname: "irc.test.net",
 			channels: []*Channel{
-				createTestChannel("#test"),
-				createTestChannel("#general"),
+				NewChannel(nil, "#test"),
+				NewChannel(nil, "#general"),
 			},
 			queries: []*Query{
-				createTestQuery("friend"),
+				NewQuery(nil, "friend"),
 			},
 			expectedMessage:     "Disconnected from irc.test.net: Server shutdown",
 			expectPendingUpdate: true,

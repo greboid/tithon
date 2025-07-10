@@ -6,33 +6,6 @@ import (
 	"testing"
 )
 
-// createTestServer creates a mock server for testing
-func createTestServer() *Server {
-	cm := &CommandManager{commands: []Command{}}
-	return &Server{
-		cm: cm,
-		Window: &Window{
-			id:           "test",
-			name:         "test",
-			title:        "test",
-			messages:     make([]*Message, 0),
-			tabCompleter: &NoopTabCompleter{},
-		},
-	}
-}
-
-// createTestChannel creates a test channel with a mock server
-func createTestChannel(name string) *Channel {
-	server := createTestServer()
-	return NewChannel(server, name)
-}
-
-// createTestQuery creates a test query with a mock server
-func createTestQuery(name string) *Query {
-	server := createTestServer()
-	return NewQuery(server, name)
-}
-
 func TestHandleConnected(t *testing.T) {
 	timestampFormat := "15:04:05"
 
@@ -98,13 +71,13 @@ func TestHandleConnected(t *testing.T) {
 			networkSupport: "BigNetwork",
 			serverHostname: "irc.big.net",
 			channels: []*Channel{
-				createTestChannel("#general"),
-				createTestChannel("#random"),
-				createTestChannel("#dev"),
+				NewChannel(nil, "#general"),
+				NewChannel(nil, "#random"),
+				NewChannel(nil, "#dev"),
 			},
 			queries: []*Query{
-				createTestQuery("friend1"),
-				createTestQuery("friend2"),
+				NewQuery(nil, "friend1"),
+				NewQuery(nil, "friend2"),
 			},
 			expectedMessage:     "Connected to irc.big.net",
 			expectedServerName:  "BigNetwork",
@@ -290,12 +263,12 @@ func TestHandleConnected_MessageDistribution(t *testing.T) {
 
 	// Create channels and queries
 	channels := []*Channel{
-		createTestChannel("#channel1"),
-		createTestChannel("#channel2"),
+		NewChannel(nil, "#channel1"),
+		NewChannel(nil, "#channel2"),
 	}
 	queries := []*Query{
-		createTestQuery("user1"),
-		createTestQuery("user2"),
+		NewQuery(nil, "user1"),
+		NewQuery(nil, "user2"),
 	}
 
 	messagesAdded := []*Message{}

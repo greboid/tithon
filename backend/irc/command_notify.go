@@ -1,15 +1,7 @@
 package irc
 
-import (
-	"fmt"
-)
-
 type Notify struct {
 	nm Notifier
-}
-
-func init() {
-	RegisterCommand(&Notify{})
 }
 
 func (c Notify) GetName() string {
@@ -20,85 +12,14 @@ func (c Notify) GetHelp() string {
 	return "Shows a notification"
 }
 
-func (c Notify) GetUsage() string {
-	return GenerateDetailedHelp(c)
-}
-
-func (c Notify) GetArgSpecs() []Argument {
-	return []Argument{
-		{
-			Name:        "message",
-			Type:        ArgTypeString,
-			Required:    true,
-			Description: "The notification message to display",
-			Validator:   validateNonEmpty,
-		},
-	}
-}
-
-func (c Notify) GetFlagSpecs() []Flag {
-	return []Flag{
-		{
-			Name:        "sound",
-			Type:        ArgTypeBool,
-			Required:    false,
-			Default:     false,
-			Description: "Play notification sound",
-		},
-		{
-			Name:        "popup",
-			Type:        ArgTypeBool,
-			Required:    false,
-			Default:     false,
-			Description: "Show popup notification",
-		},
-	}
-}
-
-func (c Notify) GetAliases() []string {
-	return []string{}
-}
-
-func (c Notify) GetContext() CommandContext {
-	return ContextAny
-}
-
-func (c Notify) InjectDependencies(deps *CommandDependencies) {
-	c.nm = deps.Notifier
-}
-
 func (c Notify) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
 		return NoServerError
 	}
-
-	parsed, err := Parse(c, input)
-	if err != nil {
-		return fmt.Errorf("argument parsing error: %w", err)
-	}
-
-	args, err := parsed.GetArgs()
-	if err != nil {
-		return fmt.Errorf("failed to get arguments: %w", err)
-	}
-	if len(args) == 0 {
-		return fmt.Errorf("incorrect number of arguments: message")
-	}
-
-	sound, err := parsed.GetFlagBool("sound")
-	if err != nil {
-		return fmt.Errorf("failed to get sound flag: %w", err)
-	}
-
-	popup, err := parsed.GetFlagBool("popup")
-	if err != nil {
-		return fmt.Errorf("failed to get popup flag: %w", err)
-	}
-
 	c.nm.showNotification(Notification{
-		Text:  args[0],
-		Sound: sound,
-		Popup: popup,
+		Text:  input,
+		Sound: false,
+		Popup: false,
 	})
 	return nil
 }

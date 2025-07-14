@@ -42,6 +42,15 @@ func AddCallbacks(connection *Server, updateTrigger UpdateTrigger,
 		),
 	)
 	connection.AddCallback(
+		"PRIVMSG",
+		HandleCTCPQuery(
+			timestampFormat,
+			updateTrigger.SetPendingUpdate,
+			connection.SendRaw,
+			connection.AddMessage,
+		),
+	)
+	connection.AddCallback(
 		"NOTICE",
 		HandleNotice(
 			timestampFormat,
@@ -52,6 +61,14 @@ func AddCallbacks(connection *Server, updateTrigger UpdateTrigger,
 			connection.GetChannelByName,
 			connection.GetQueryByName,
 			connection.AddQuery,
+		),
+	)
+	connection.AddCallback(
+		"NOTICE",
+		HandleCTCPReply(
+			timestampFormat,
+			updateTrigger.SetPendingUpdate,
+			connection.AddMessage,
 		),
 	)
 	connection.AddCallback(

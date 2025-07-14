@@ -18,6 +18,9 @@ func HandlePrivMsg(
 	addQuery func(string) *Query,
 ) func(message ircmsg.Message) {
 	return func(message ircmsg.Message) {
+		if isCTCP(strings.Join(message.Params[1:], " ")) {
+			return
+		}
 		defer setPendingUpdate()
 		if isValidChannel(message.Params[0]) {
 			channel, err := getChannelByName(message.Params[0])

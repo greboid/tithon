@@ -17,6 +17,9 @@ func HandleNotice(
 	addQuery func(string) *Query,
 ) func(ircmsg.Message) {
 	return func(message ircmsg.Message) {
+		if isCTCP(strings.Join(message.Params[1:], " ")) {
+			return
+		}
 		defer setPendingUpdate()
 		mess := NewNotice(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), nil, currentNick())
 		if message.Source == "" || (strings.Contains(message.Source, ".") && !strings.Contains(message.Source, "@")) {

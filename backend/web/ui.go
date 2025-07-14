@@ -45,7 +45,9 @@ func (s *WebClient) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var fileHost string
-	if s.getActiveWindow() == nil || s.getActiveWindow().GetServer() == nil {
+	if s.conf.UISettings.UploadURL != "" {
+		fileHost = s.conf.UISettings.UploadURL
+	} else if s.getActiveWindow() == nil || s.getActiveWindow().GetServer() == nil {
 		fileHost = ""
 	} else {
 		fileHost = s.getActiveWindow().GetServer().GetFileHost()

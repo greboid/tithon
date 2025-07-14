@@ -580,12 +580,23 @@ func (s *WebClient) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dataReader := bytes.NewReader(data)
-	username, password := s.getActiveWindow().GetServer().GetCredentials()
-	if strings.Contains(username, "/") {
-		username = strings.Split(username, "/")[0]
+	var username, password, apiKey string
+	if s.conf.UISettings.UploadURL != "" {
+		if s.conf.UISettings.UploadAPIKey != "" {
+			apiKey = s.conf.UISettings.UploadAPIKey
+		}
+	} else {
+		username, password = s.getActiveWindow().GetServer().GetCredentials()
+		if strings.Contains(username, "/") {
+			username = strings.Split(username, "/")[0]
+		}
 	}
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", uploaded.FileHost, dataReader)
+	method := "POST"
+	if s.conf.UISettings.UploadMethod != "" {
+		method = s.conf.UISettings.UploadMethod
+	}
+	req, err := http.NewRequest(method, uploaded.FileHost, dataReader)
 	if err != nil {
 		slog.Debug("Error creating request file", "error", err)
 		return
@@ -596,13 +607,17 @@ func (s *WebClient) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if len(uploaded.Names) > 0 {
 		req.Header.Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, uploaded.Names[0]))
 	}
-	req.SetBasicAuth(username, password)
+	if apiKey == "" {
+		req.SetBasicAuth(username, password)
+	} else {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		slog.Debug("Error uploading file", "error", err)
 		return
 	}
-	if resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode < 199 && resp.StatusCode > 299 {
 		defer func() {
 			_ = resp.Body.Close()
 		}()
@@ -611,15 +626,24 @@ func (s *WebClient) handleUpload(w http.ResponseWriter, r *http.Request) {
 			slog.Debug("Error reading error", "error", err)
 			return
 		}
-		slog.Debug("File not uploaded", "error", string(body))
+		slog.Debug("File not uploaded", "status", resp.StatusCode, "error", string(body))
 		return
 	}
 	location := resp.Header.Get("location")
-	location = strings.TrimPrefix(location, "/uploads")
+	if location == "" {
+		locationData, err := io.ReadAll(resp.Body)
+		if err != nil {
+			slog.Debug("Unable to read body", "error", err)
+		} else {
+			uploaded.Location = string(locationData)
+		}
+	} else {
+		location = strings.TrimPrefix(location, "/uploads")
+		uploaded.Location = uploaded.FileHost + location
+	}
 	uploaded.Files = []string{}
 	uploaded.Mimes = []string{}
 	uploaded.Names = []string{}
-	uploaded.Location = uploaded.FileHost + location
 	uploaded.Input = uploaded.Input[:uploaded.Position] + uploaded.Location + uploaded.Input[uploaded.Position:]
 	slog.Debug("File uploaded", "location", uploaded.Location)
 	s.lock.Lock()

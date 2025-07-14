@@ -78,6 +78,9 @@ type UISettings struct {
 	TimestampFormat string `yaml:"timestamp_format"`
 	ShowNicklist    bool   `yaml:"show_nicklist"`
 	Theme           string `yaml:"theme" validate:"omitempty,oneof=light dark auto"`
+	UploadURL       string `yaml:"upload-url,omitempty" validate:"omitempty,http_url"`
+	UploadAPIKey    string `yaml:"upload-api-key,omitempty"`
+	UploadMethod    string `yaml:"upload-method,omitempty" validate:"omitempty,oneof=POST PUT post put"`
 }
 
 type Profile struct {

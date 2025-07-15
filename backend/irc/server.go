@@ -281,7 +281,7 @@ func (c *Server) GetChannel(id string) *Channel {
 
 func (c *Server) GetChannelByName(name string) (*Channel, error) {
 	for _, channel := range c.GetChannels() {
-		if strings.ToLower(channel.name) == strings.ToLower(name) {
+		if strings.EqualFold(channel.name, name) {
 			return channel, nil
 		}
 	}
@@ -325,7 +325,7 @@ func (c *Server) GetQuery(id string) *Query {
 
 func (c *Server) GetQueryByName(name string) (*Query, error) {
 	for _, pm := range c.GetQueries() {
-		if strings.ToLower(pm.name) == strings.ToLower(name) {
+		if strings.EqualFold(pm.name, name) {
 			return pm, nil
 		}
 	}

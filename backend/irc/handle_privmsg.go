@@ -33,7 +33,7 @@ func HandlePrivMsg(
 				checkAndNotify(getServerName(), channel.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 			}
 			channel.AddMessage(msg)
-		} else if strings.ToLower(message.Params[0]) == strings.ToLower(currentNick()) {
+		} else if strings.EqualFold(message.Params[0], currentNick()) {
 			pm, err := getQueryByName(message.Nick())
 			if err != nil {
 				pm = addQuery(message.Nick())

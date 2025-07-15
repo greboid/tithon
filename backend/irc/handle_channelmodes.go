@@ -23,9 +23,7 @@ func HandleChannelModes(
 			parameter string
 			modeType  rune
 		}
-		var handleUserPrivilegeMode func(change modeChange, channel *Channel, message ircmsg.Message)
-
-		handleUserPrivilegeMode = func(change modeChange, channel *Channel, message ircmsg.Message) {
+		handleUserPrivilegeMode := func(change modeChange, channel *Channel, message ircmsg.Message) {
 			mode := getModeNameForMode(change.mode)
 			users := channel.GetUsers()
 			for j := range users {

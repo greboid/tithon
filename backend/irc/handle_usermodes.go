@@ -20,7 +20,7 @@ func HandleUserModes(
 			return
 		}
 		defer setPendingUpdate()
-		var add bool = true
+		add := true
 
 		if len(message.Params) < 2 {
 			slog.Warn("Invalid user mode message", "message", message)

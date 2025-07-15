@@ -80,7 +80,7 @@ func main() {
 	connectionManager.SetWindowRemovalCallback(server)
 	connectionManager.Load(conf.Servers)
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGKILL, syscall.SIGINT)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	host, port := server.GetListenAddress()
 	slog.Info("Listening on", "host", host, "port", port)
 	go func() {

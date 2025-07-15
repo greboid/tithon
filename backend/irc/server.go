@@ -33,9 +33,7 @@ type Server struct {
 	channels              map[string]*Channel
 	pms                   map[string]*Query
 	mutex                 sync.Mutex
-	supportsFileHost      bool
 	currentModes          string
-	possibleUserModes     []*UserMode
 	ut                    UpdateTrigger
 	nm                    NotificationManager
 	timestampFormat       string

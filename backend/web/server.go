@@ -31,7 +31,6 @@ type WebClient struct {
 	httpServer          *http.Server
 	connectionManager   *irc.ServerManager
 	commands            *irc.CommandManager
-	activeQuery         *irc.Query
 	fixedPort           int
 	templates           *template.Template
 	pendingUpdate       atomic.Bool

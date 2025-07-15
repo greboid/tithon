@@ -82,7 +82,7 @@ func TestChannelTabCompleter_Complete(t1 *testing.T) {
 			}
 			got := tt.input
 			got1 := tt.position
-			for _ = range tt.runs {
+			for range tt.runs {
 				got, got1 = t.Complete(got, got1)
 			}
 			assert.Equal(t1, tt.want, got, "Complete() returned unexpected string")

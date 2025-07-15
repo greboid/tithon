@@ -138,7 +138,7 @@ func (cm DesktopNotificationManager) CheckAndNotify(network, source, nick, messa
 			cm.notifications[i].Message.MatchString(message) {
 			cm.pendingNotifications <- Notification{
 				Title: fmt.Sprintf("%s (%s)", nick, source),
-				Text:  fmt.Sprintf("%s", message),
+				Text:  message,
 				Sound: cm.notifications[i].Sound,
 				Popup: cm.notifications[i].Popup,
 			}

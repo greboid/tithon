@@ -16,7 +16,7 @@ func (c CloseCommand) GetHelp() string {
 
 func (c CloseCommand) Execute(connections *ServerManager, window *Window, _ string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 
 	if window.IsServer() {

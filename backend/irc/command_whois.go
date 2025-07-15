@@ -16,7 +16,7 @@ func (c Whois) GetHelp() string {
 
 func (c Whois) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	window.connection.SendRaw(fmt.Sprintf("whois :%s", input))
 	return nil

@@ -12,7 +12,7 @@ func (c Part) GetHelp() string {
 
 func (c Part) Execute(_ *ServerManager, window *Window, _ string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	window.connection.RemoveChannel(window.GetID())
 	return nil

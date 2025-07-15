@@ -12,7 +12,7 @@ func (c Quit) GetHelp() string {
 
 func (c Quit) Execute(cm *ServerManager, window *Window, _ string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	cm.RemoveConnection(window.connection.GetID())
 	return nil

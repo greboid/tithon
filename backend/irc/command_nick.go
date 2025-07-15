@@ -12,7 +12,7 @@ func (c Nick) GetHelp() string {
 
 func (c Nick) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	window.GetServer().SetNick(input)
 	return nil

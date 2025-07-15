@@ -16,11 +16,11 @@ func (c ChangeTopic) GetHelp() string {
 
 func (c ChangeTopic) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	split := strings.SplitN(input, " ", 2)
 	if len(split) != 2 {
-		return NoChannelError
+		return ErrNoChannel
 	}
 	return window.GetServer().SendTopic(split[0], split[1])
 }

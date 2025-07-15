@@ -17,7 +17,7 @@ func (c QueryCommand) GetHelp() string {
 
 func (c QueryCommand) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 
 	parts := strings.SplitN(input, " ", 2)

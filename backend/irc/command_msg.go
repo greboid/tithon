@@ -12,7 +12,7 @@ func (c Msg) GetHelp() string {
 
 func (c Msg) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	return window.connection.SendMessage(window.GetID(), input)
 }

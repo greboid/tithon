@@ -14,7 +14,7 @@ func (c Notify) GetHelp() string {
 
 func (c Notify) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	c.nm.showNotification(Notification{
 		Text:  input,

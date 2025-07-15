@@ -17,7 +17,7 @@ func (c *CTCPCommand) GetHelp() string {
 
 func (c *CTCPCommand) Execute(sm *ServerManager, window *Window, input string) error {
 	if window.connection == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 
 	parts := strings.SplitN(input, " ", 3)

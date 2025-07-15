@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	NoServerError  = errors.New("no server specified")
-	NoChannelError = errors.New("no channel specified")
+	ErrNoServer  = errors.New("no server specified")
+	ErrNoChannel = errors.New("no channel specified")
 )
 
 type Command interface {

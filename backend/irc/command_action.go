@@ -16,7 +16,7 @@ func (c SendAction) GetHelp() string {
 
 func (c SendAction) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	input = fmt.Sprintf("\001ACTION %s\001", input)
 	return window.connection.SendMessage(window.GetID(), input)

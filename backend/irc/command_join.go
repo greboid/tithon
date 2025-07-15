@@ -12,7 +12,7 @@ func (c Join) GetHelp() string {
 
 func (c Join) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 	return window.connection.JoinChannel(input, "")
 }

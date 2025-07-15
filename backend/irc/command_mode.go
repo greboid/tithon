@@ -16,7 +16,7 @@ func (c Mode) GetHelp() string {
 
 func (c Mode) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 
 	if input == "" {

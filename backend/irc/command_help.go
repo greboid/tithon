@@ -20,7 +20,7 @@ func (c Help) GetHelp() string {
 
 func (c Help) Execute(_ *ServerManager, window *Window, input string) error {
 	if window == nil {
-		return NoServerError
+		return ErrNoServer
 	}
 
 	input = strings.TrimSpace(input)

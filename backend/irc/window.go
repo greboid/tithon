@@ -75,10 +75,8 @@ func (c *Window) AddMessage(message *Message) {
 func (c *Window) GetMessages() []*Message {
 	c.stateSync.Lock()
 	defer c.stateSync.Unlock()
-	var messages []*Message
-	for _, message := range c.messages {
-		messages = append(messages, message)
-	}
+	messages := make([]*Message, len(c.messages))
+	copy(messages, c.messages)
 	return messages
 }
 
@@ -120,10 +118,8 @@ func (c *Window) GetUsers() []*User {
 	if !c.hasUsers {
 		return nil
 	}
-	var users []*User
-	for i := range c.users {
-		users = append(users, c.users[i])
-	}
+	users := make([]*User, len(c.users))
+	copy(users, c.users)
 	return users
 }
 

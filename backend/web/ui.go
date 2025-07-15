@@ -53,9 +53,9 @@ func (s *WebClient) UpdateUI(w http.ResponseWriter, r *http.Request) {
 		fileHost = s.getActiveWindow().GetServer().GetFileHost()
 	}
 	type FileHost struct {
-		Url string `json:"filehost"`
+		URL string `json:"filehost"`
 	}
-	jsonData, _ := json.Marshal(FileHost{Url: fileHost})
+	jsonData, _ := json.Marshal(FileHost{URL: fileHost})
 	err = sse.MergeSignals(jsonData)
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)

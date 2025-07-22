@@ -16,7 +16,7 @@ type CTCPMessage struct {
 }
 
 func isCTCP(text string) bool {
-	return strings.HasPrefix(text, CTCPDelimiter) && strings.HasSuffix(text, CTCPDelimiter) && len(text) >= 8 && text[1:6] != "ACTION"
+	return strings.HasPrefix(text, CTCPDelimiter) && strings.HasSuffix(text, CTCPDelimiter) && len(text) >= 8 && text[1:7] != "ACTION"
 }
 
 func ParseCTCPMessage(text string) (*CTCPMessage, bool) {

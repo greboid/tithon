@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"regexp"
 	"sort"
+	"sync"
+	"time"
 )
 
 type NotificationManager interface {
@@ -21,22 +23,26 @@ type Notification struct {
 }
 
 type Trigger struct {
-	Network *regexp.Regexp
-	Source  *regexp.Regexp
-	Nick    *regexp.Regexp
-	Message *regexp.Regexp
-	Sound   bool
-	Popup   bool
+	Network          *regexp.Regexp
+	Source           *regexp.Regexp
+	Nick             *regexp.Regexp
+	Message          *regexp.Regexp
+	Sound            bool
+	Popup            bool
+	DebounceDuration time.Duration
 }
 
 type DesktopNotificationManager struct {
-	notifications        []Trigger
-	pendingNotifications chan Notification
+	notifications           []Trigger
+	pendingNotifications    chan Notification
+	lastNotificationTimes   map[string]time.Time
+	lastNotificationTimesMu sync.RWMutex
 }
 
 func NewNotificationManager(pendingNotifications chan Notification, triggers []config.NotificationTrigger) NotificationManager {
 	nm := &DesktopNotificationManager{
-		pendingNotifications: pendingNotifications,
+		pendingNotifications:  pendingNotifications,
+		lastNotificationTimes: make(map[string]time.Time),
 	}
 	triggers = SortNotificationTriggers(triggers)
 
@@ -48,7 +54,7 @@ func ConvertNotificationsFromConfig(triggers []config.NotificationTrigger) []Tri
 	triggers = SortNotificationTriggers(triggers)
 	var result []Trigger
 	for i := range triggers {
-		trigger, err := CreateNotification(triggers[i].Network, triggers[i].Source, triggers[i].Nick, triggers[i].Message, triggers[i].Sound, triggers[i].Popup)
+		trigger, err := CreateNotification(triggers[i].Network, triggers[i].Source, triggers[i].Nick, triggers[i].Message, triggers[i].Sound, triggers[i].Popup, triggers[i].DebounceDuration)
 		if err != nil {
 			slog.Error("Invalid notification", "error", err)
 			continue
@@ -58,10 +64,11 @@ func ConvertNotificationsFromConfig(triggers []config.NotificationTrigger) []Tri
 	return result
 }
 
-func CreateNotification(network, source, nick, message string, sound bool, popup bool) (*Trigger, error) {
+func CreateNotification(network, source, nick, message string, sound bool, popup bool, debounceDuration time.Duration) (*Trigger, error) {
 	trigger := &Trigger{
-		Sound: sound,
-		Popup: popup,
+		Sound:            sound,
+		Popup:            popup,
+		DebounceDuration: debounceDuration,
 	}
 
 	reg, err := CompileNotificationRegex(network)
@@ -130,12 +137,28 @@ func GetTriggerSpecificity(trigger config.NotificationTrigger) int {
 	return length
 }
 
-func (cm DesktopNotificationManager) CheckAndNotify(network, source, nick, message string) bool {
+func (cm *DesktopNotificationManager) CheckAndNotify(network, source, nick, message string) bool {
 	for i := range cm.notifications {
 		if cm.notifications[i].Network.MatchString(network) &&
 			cm.notifications[i].Source.MatchString(source) &&
 			cm.notifications[i].Nick.MatchString(nick) &&
 			cm.notifications[i].Message.MatchString(message) {
+
+			key := fmt.Sprintf("%s#%s", network, source)
+			now := time.Now()
+
+			cm.lastNotificationTimesMu.RLock()
+			lastTime, exists := cm.lastNotificationTimes[key]
+			cm.lastNotificationTimesMu.RUnlock()
+
+			if exists && now.Sub(lastTime) < cm.notifications[i].DebounceDuration {
+				return false
+			}
+
+			cm.lastNotificationTimesMu.Lock()
+			cm.lastNotificationTimes[key] = now
+			cm.lastNotificationTimesMu.Unlock()
+
 			cm.pendingNotifications <- Notification{
 				Title: fmt.Sprintf("%s (%s)", nick, source),
 				Text:  message,
@@ -148,6 +171,6 @@ func (cm DesktopNotificationManager) CheckAndNotify(network, source, nick, messa
 	return false
 }
 
-func (cm DesktopNotificationManager) SendNotification(notification Notification) {
+func (cm *DesktopNotificationManager) SendNotification(notification Notification) {
 	cm.pendingNotifications <- notification
 }

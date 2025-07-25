@@ -92,12 +92,13 @@ type Notifications struct {
 }
 
 type NotificationTrigger struct {
-	Network string `yaml:"network"`
-	Source  string `yaml:"source"`
-	Nick    string `yaml:"nick"`
-	Message string `yaml:"message"`
-	Sound   bool   `yaml:"sound" validate:"required_without Popup"`
-	Popup   bool   `yaml:"popup" validate:"required_without Sound"`
+	Network          string        `yaml:"network"`
+	Source           string        `yaml:"source"`
+	Nick             string        `yaml:"nick"`
+	Message          string        `yaml:"message"`
+	Sound            bool          `yaml:"sound" validate:"required_without Popup"`
+	Popup            bool          `yaml:"popup" validate:"required_without Sound"`
+	DebounceDuration time.Duration `yaml:"debounce_duration"`
 }
 
 func (c *Config) Load() error {
@@ -144,6 +145,13 @@ func (c *Config) applyDefaults() {
 			} else {
 				c.Servers[i].Port = 6667
 			}
+		}
+	}
+
+	// Set default debounce duration for notification triggers
+	for i := range c.Notifications.Triggers {
+		if c.Notifications.Triggers[i].DebounceDuration == 0 {
+			c.Notifications.Triggers[i].DebounceDuration = 5 * time.Second
 		}
 	}
 }

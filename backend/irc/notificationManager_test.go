@@ -1,9 +1,11 @@
 package irc
 
 import (
+	"fmt"
 	"github.com/greboid/tithon/config"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -390,7 +392,7 @@ func TestNotificationManager_AddNotification(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CreateNotification(tt.network, tt.source, tt.nick, tt.message, tt.sound, tt.popup)
+			got, err := CreateNotification(tt.network, tt.source, tt.nick, tt.message, tt.sound, tt.popup, 5*time.Second)
 
 			if tt.wantErr {
 				assert.Error(t, err, "AddNotification() should return an error")
@@ -782,8 +784,9 @@ func TestNotificationManager_CheckAndNotify(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			notificationChan := make(chan Notification, 1)
 			nm := &DesktopNotificationManager{
-				notifications:        tt.notifications,
-				pendingNotifications: notificationChan,
+				notifications:         tt.notifications,
+				pendingNotifications:  notificationChan,
+				lastNotificationTimes: make(map[string]time.Time),
 			}
 			require.NotNil(t, nm, "NotificationManager should not be nil")
 			nm.CheckAndNotify(tt.network, tt.source, tt.nick, tt.message)
@@ -798,6 +801,155 @@ func TestNotificationManager_CheckAndNotify(t *testing.T) {
 				assert.Equal(t, tt.expectedPopup, receivedNotification.Popup, "CheckAndNotify() notification popup mismatch")
 			default:
 				assert.False(t, tt.expectNotification, "CheckAndNotify() did not send a notification when one was expected")
+			}
+		})
+	}
+}
+
+func TestNotificationManager_CheckAndNotify_Debouncing(t *testing.T) {
+	tests := []struct {
+		name             string
+		debounceDuration time.Duration
+		calls            []struct {
+			network            string
+			source             string
+			nick               string
+			message            string
+			expectNotification bool
+			sleepBefore        time.Duration
+		}
+	}{
+		{
+			name:             "First notification sent, second debounced",
+			debounceDuration: 100 * time.Millisecond,
+			calls: []struct {
+				network            string
+				source             string
+				nick               string
+				message            string
+				expectNotification bool
+				sleepBefore        time.Duration
+			}{
+				{
+					network:            "testnet",
+					source:             "#testchannel",
+					nick:               "testnick",
+					message:            "first message",
+					expectNotification: true,
+					sleepBefore:        0,
+				},
+				{
+					network:            "testnet",
+					source:             "#testchannel",
+					nick:               "testnick2",
+					message:            "second message",
+					expectNotification: false,
+					sleepBefore:        50 * time.Millisecond,
+				},
+			},
+		},
+		{
+			name:             "Both notifications sent after debounce period",
+			debounceDuration: 50 * time.Millisecond,
+			calls: []struct {
+				network            string
+				source             string
+				nick               string
+				message            string
+				expectNotification bool
+				sleepBefore        time.Duration
+			}{
+				{
+					network:            "testnet",
+					source:             "#testchannel",
+					nick:               "testnick",
+					message:            "first message",
+					expectNotification: true,
+					sleepBefore:        0,
+				},
+				{
+					network:            "testnet",
+					source:             "#testchannel",
+					nick:               "testnick2",
+					message:            "second message",
+					expectNotification: true,
+					sleepBefore:        100 * time.Millisecond,
+				},
+			},
+		},
+		{
+			name:             "Different network-channel pairs don't affect each other",
+			debounceDuration: 100 * time.Millisecond,
+			calls: []struct {
+				network            string
+				source             string
+				nick               string
+				message            string
+				expectNotification bool
+				sleepBefore        time.Duration
+			}{
+				{
+					network:            "testnet",
+					source:             "#testchannel",
+					nick:               "testnick",
+					message:            "first message",
+					expectNotification: true,
+					sleepBefore:        0,
+				},
+				{
+					network:            "othernet",
+					source:             "#testchannel",
+					nick:               "testnick2",
+					message:            "second message",
+					expectNotification: true,
+					sleepBefore:        10 * time.Millisecond,
+				},
+				{
+					network:            "testnet",
+					source:             "#otherchannel",
+					nick:               "testnick3",
+					message:            "third message",
+					expectNotification: true,
+					sleepBefore:        10 * time.Millisecond,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			notificationChan := make(chan Notification, 10)
+			trigger := Trigger{
+				Network:          regexp.MustCompile(".*"),
+				Source:           regexp.MustCompile(".*"),
+				Nick:             regexp.MustCompile(".*"),
+				Message:          regexp.MustCompile(".*"),
+				Sound:            true,
+				Popup:            true,
+				DebounceDuration: tt.debounceDuration,
+			}
+
+			nm := &DesktopNotificationManager{
+				notifications:         []Trigger{trigger},
+				pendingNotifications:  notificationChan,
+				lastNotificationTimes: make(map[string]time.Time),
+			}
+
+			for i, call := range tt.calls {
+				if call.sleepBefore > 0 {
+					time.Sleep(call.sleepBefore)
+				}
+
+				nm.CheckAndNotify(call.network, call.source, call.nick, call.message)
+
+				select {
+				case notification := <-notificationChan:
+					assert.True(t, call.expectNotification, "Call %d: CheckAndNotify() sent notification when none expected", i)
+					assert.Equal(t, fmt.Sprintf("%s (%s)", call.nick, call.source), notification.Title, "Call %d: notification title mismatch", i)
+					assert.Equal(t, call.message, notification.Text, "Call %d: notification text mismatch", i)
+				default:
+					assert.False(t, call.expectNotification, "Call %d: CheckAndNotify() did not send notification when one was expected", i)
+				}
 			}
 		})
 	}

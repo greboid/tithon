@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"regexp"
 	"testing"
+	"time"
 )
 
 type MockCommand struct {
@@ -138,7 +139,9 @@ func TestCommandManager_Execute_InputNoSlash(t *testing.T) {
 
 func TestCommandManager_SetNotificationManager(t *testing.T) {
 	cm := NewCommandManager(getCommandManagerTestConfig(), make(chan bool, 1))
-	nm := DesktopNotificationManager{}
+	nm := &DesktopNotificationManager{
+		lastNotificationTimes: make(map[string]time.Time),
+	}
 
 	cm.SetNotificationManager(nm)
 

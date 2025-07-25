@@ -18,8 +18,8 @@ func (c Notify) Execute(_ *ServerManager, window *Window, input string) error {
 	}
 	c.nm.showNotification(Notification{
 		Text:  input,
-		Sound: false,
-		Popup: false,
+		Sound: true,
+		Popup: true,
 	})
 	return nil
 }

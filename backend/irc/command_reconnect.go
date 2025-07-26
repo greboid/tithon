@@ -22,8 +22,9 @@ func (c Reconnect) Execute(_ *ServerManager, window *Window, _ string) error {
 	if connection == nil {
 		return errors.New("not connected to a server")
 	}
-	connection.Disconnect()
-	connection.Connect()
+
+	connection.CancelReconnection()
+	connection.connection.Reconnect()
 
 	return nil
 }

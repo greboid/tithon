@@ -171,6 +171,13 @@ func (c *Server) resetReconnectValues() {
 	}
 }
 
+func (c *Server) CancelReconnection() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	defer c.ut.SetPendingUpdate()
+	c.resetReconnectValues()
+}
+
 func (c *Server) scheduleReconnect() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

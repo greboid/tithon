@@ -51,6 +51,7 @@ func (s *WebClient) addRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /nicklistshow", s.handleUpdateNicklist)
 	mux.HandleFunc("GET /historyUp", s.handleHistoryUp)
 	mux.HandleFunc("GET /historyDown", s.handleHistoryDown)
+	mux.HandleFunc("GET /notificationClick", s.handleNotificationClick)
 }
 
 func (s *WebClient) handleIndex(w http.ResponseWriter, _ *http.Request) {
@@ -108,11 +109,13 @@ func (s *WebClient) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		case notification := <-s.notificationService.GetNotificationChannel():
 			slog.Debug("Sending notification", "notification", notification)
 			err := datastar.NewSSE(w, r).ExecuteScript(
-				fmt.Sprintf(`notify("%s", "%s", %t, %t, "")`,
+				fmt.Sprintf(`notify("%s", "%s", %t, %t, "", "%s", "%s")`,
 					html.EscapeString(notification.Title),
 					html.EscapeString(notification.Text),
 					notification.Popup,
 					notification.Sound,
+					html.EscapeString(notification.ServerID),
+					html.EscapeString(notification.Source),
 				), datastar.WithExecuteScriptAutoRemove(true))
 			if err != nil {
 				slog.Error("Unable to send notification", "error", err)
@@ -825,4 +828,37 @@ func (s *WebClient) handleHistoryDown(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Debug("Error merging signals", "error", err)
 	}
+}
+
+func (s *WebClient) handleNotificationClick(w http.ResponseWriter, r *http.Request) {
+	serverID := r.URL.Query().Get("serverId")
+	source := r.URL.Query().Get("source")
+
+	if serverID == "" || source == "" {
+		slog.Debug("Invalid notification click, missing serverId or source", "serverID", serverID, "source", source)
+		return
+	}
+
+	connection := s.connectionManager.GetConnection(serverID)
+	if connection == nil {
+		slog.Debug("Invalid notification click, unknown server", "serverID", serverID)
+		return
+	}
+
+	if strings.HasPrefix(source, "#") {
+		channel, _ := connection.GetChannelByName(source)
+		if channel != nil {
+			s.setActiveWindow(channel.Window)
+			slog.Debug("Activating channel from notification", "serverID", serverID, "source", source)
+		}
+	} else {
+		query, _ := connection.GetQueryByName(source)
+		if query != nil {
+			s.setActiveWindow(query.Window)
+			slog.Debug("Activating query from notification", "serverID", serverID, "source", source)
+		}
+	}
+
+	s.updateURL(w, r)
+	s.UpdateUI(w, r)
 }

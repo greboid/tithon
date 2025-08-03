@@ -789,7 +789,7 @@ func TestNotificationManager_CheckAndNotify(t *testing.T) {
 				lastNotificationTimes: make(map[string]time.Time),
 			}
 			require.NotNil(t, nm, "NotificationManager should not be nil")
-			nm.CheckAndNotify(tt.network, tt.source, tt.nick, tt.message)
+			nm.CheckAndNotify(tt.network, "test-server-id", tt.source, tt.nick, tt.message)
 
 			var receivedNotification Notification
 			select {
@@ -940,7 +940,7 @@ func TestNotificationManager_CheckAndNotify_Debouncing(t *testing.T) {
 					time.Sleep(call.sleepBefore)
 				}
 
-				nm.CheckAndNotify(call.network, call.source, call.nick, call.message)
+				nm.CheckAndNotify(call.network, "test-server-id", call.source, call.nick, call.message)
 
 				select {
 				case notification := <-notificationChan:

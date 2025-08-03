@@ -13,12 +13,19 @@ const handlePaste = async (e) => {
 
 window.addEventListener('paste', handlePaste)
 
-const notify = (title, text, popup, sound, noise) => {
+const notify = (title, text, popup, sound, noise, serverID, source) => {
   if (popup) {
-    new Notification(title, {
+    const notification = new Notification(title, {
       body: text,
       icon: "/static/icon.png"
     });
+    
+    if (serverID && source) {
+      notification.onclick = () => {
+        window.focus();
+        fetch(`/notificationClick?serverId=${encodeURIComponent(serverID)}&source=${encodeURIComponent(source)}`);
+      };
+    }
   }
   if (sound) {
     if (!noise) {

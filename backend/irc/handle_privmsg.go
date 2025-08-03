@@ -13,7 +13,8 @@ func HandlePrivMsg(
 	getChannelByName func(string) (*Channel, error),
 	currentNick func() string,
 	getServerName func() string,
-	checkAndNotify func(string, string, string, string) bool,
+	getServerID func() string,
+	checkAndNotify func(string, string, string, string, string) bool,
 	getQueryByName func(string) (*Query, error),
 	addQuery func(string) *Query,
 ) func(message ircmsg.Message) {
@@ -30,7 +31,7 @@ func HandlePrivMsg(
 			}
 			msg := NewMessage(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
 			if msg.tags["chathistory"] != "true" && !msg.IsMe() {
-				checkAndNotify(getServerName(), channel.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
+				checkAndNotify(getServerName(), getServerID(), channel.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 			}
 			channel.AddMessage(msg)
 		} else if strings.EqualFold(message.Params[0], currentNick()) {
@@ -41,7 +42,7 @@ func HandlePrivMsg(
 
 			msg := NewMessage(timestampFormat, message.Nick() == currentNick(), message.Nick(), strings.Join(message.Params[1:], " "), message.AllTags(), currentNick())
 			if msg.tags["chathistory"] != "true" && !msg.IsMe() {
-				checkAndNotify(getServerName(), pm.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
+				checkAndNotify(getServerName(), getServerID(), pm.GetName(), msg.GetNickname(), msg.GetPlainDisplayMessage())
 			}
 			pm.AddMessage(msg)
 		} else if message.Nick() == currentNick() {

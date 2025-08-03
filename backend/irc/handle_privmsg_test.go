@@ -16,7 +16,7 @@ func TestHandlePrivMsg(t *testing.T) {
 		getChannelByName func(string) (*Channel, error)
 		currentNick      func() string
 		getServerName    func() string
-		checkAndNotify   func(string, string, string, string) bool
+		checkAndNotify   func(string, string, string, string, string) bool
 		getQueryByName   func(string) (*Query, error)
 		addQuery         func(string) *Query
 	}
@@ -54,7 +54,7 @@ func TestHandlePrivMsg(t *testing.T) {
 				},
 				currentNick:   func() string { return "testnick" },
 				getServerName: func() string { return "irc.example.com" },
-				checkAndNotify: func(server, target, nick, message string) bool {
+				checkAndNotify: func(network, serverID, target, nick, message string) bool {
 					return true
 				},
 				getQueryByName: func(name string) (*Query, error) {
@@ -99,7 +99,7 @@ func TestHandlePrivMsg(t *testing.T) {
 				},
 				currentNick:   func() string { return "testnick" },
 				getServerName: func() string { return "irc.example.com" },
-				checkAndNotify: func(server, target, nick, message string) bool {
+				checkAndNotify: func(network, serverID, target, nick, message string) bool {
 					return true
 				},
 				getQueryByName: func(name string) (*Query, error) {
@@ -137,7 +137,7 @@ func TestHandlePrivMsg(t *testing.T) {
 				},
 				currentNick:   func() string { return "testnick" },
 				getServerName: func() string { return "irc.example.com" },
-				checkAndNotify: func(server, target, nick, message string) bool {
+				checkAndNotify: func(network, serverID, target, nick, message string) bool {
 					return true
 				},
 				getQueryByName: func(name string) (*Query, error) {
@@ -176,7 +176,7 @@ func TestHandlePrivMsg(t *testing.T) {
 				},
 				currentNick:   func() string { return "testnick" },
 				getServerName: func() string { return "irc.example.com" },
-				checkAndNotify: func(server, target, nick, message string) bool {
+				checkAndNotify: func(network, serverID, target, nick, message string) bool {
 					return true
 				},
 				getQueryByName: func(name string) (*Query, error) {
@@ -222,7 +222,7 @@ func TestHandlePrivMsg(t *testing.T) {
 				},
 				currentNick:   func() string { return "testnick" },
 				getServerName: func() string { return "irc.example.com" },
-				checkAndNotify: func(server, target, nick, message string) bool {
+				checkAndNotify: func(network, serverID, target, nick, message string) bool {
 					return true
 				},
 				getQueryByName: func(name string) (*Query, error) {
@@ -256,7 +256,7 @@ func TestHandlePrivMsg(t *testing.T) {
 				},
 				currentNick:   func() string { return "testnick" },
 				getServerName: func() string { return "irc.example.com" },
-				checkAndNotify: func(server, target, nick, message string) bool {
+				checkAndNotify: func(network, serverID, target, nick, message string) bool {
 					return true
 				},
 				getQueryByName: func(name string) (*Query, error) {
@@ -293,7 +293,7 @@ func TestHandlePrivMsg(t *testing.T) {
 				},
 				currentNick:   func() string { return "testnick" },
 				getServerName: func() string { return "irc.example.com" },
-				checkAndNotify: func(server, target, nick, message string) bool {
+				checkAndNotify: func(network, serverID, target, nick, message string) bool {
 					return true
 				},
 				getQueryByName: func(name string) (*Query, error) {
@@ -357,12 +357,12 @@ func TestHandlePrivMsg(t *testing.T) {
 				}
 				return query
 			}
-			checkAndNotify := func(server, target, nick, message string) bool {
+			checkAndNotify := func(network, serverID, target, nick, message string) bool {
 				notificationCalled = true
 				return true
 			}
 
-			handler := HandlePrivMsg(tt.args.timestampFormat, setPendingUpdate, tt.args.isValidChannel, getChannelByName, tt.args.currentNick, tt.args.getServerName, checkAndNotify, getQueryByName, addQuery)
+			handler := HandlePrivMsg(tt.args.timestampFormat, setPendingUpdate, tt.args.isValidChannel, getChannelByName, tt.args.currentNick, tt.args.getServerName, tt.args.getServerName, checkAndNotify, getQueryByName, addQuery)
 			handler(tt.message)
 
 			assert.True(t, pendingUpdateCalled, "setPendingUpdate should have been called")

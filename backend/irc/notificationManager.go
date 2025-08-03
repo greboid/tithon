@@ -11,15 +11,17 @@ import (
 )
 
 type NotificationManager interface {
-	CheckAndNotify(network, source, nick, message string) bool
+	CheckAndNotify(network, serverID, source, nick, message string) bool
 	SendNotification(notification Notification)
 }
 
 type Notification struct {
-	Title string
-	Text  string
-	Sound bool
-	Popup bool
+	Title    string
+	Text     string
+	Sound    bool
+	Popup    bool
+	ServerID string
+	Source   string
 }
 
 type Trigger struct {
@@ -137,7 +139,7 @@ func GetTriggerSpecificity(trigger config.NotificationTrigger) int {
 	return length
 }
 
-func (cm *DesktopNotificationManager) CheckAndNotify(network, source, nick, message string) bool {
+func (cm *DesktopNotificationManager) CheckAndNotify(network, serverID, source, nick, message string) bool {
 	for i := range cm.notifications {
 		if cm.notifications[i].Network.MatchString(network) &&
 			cm.notifications[i].Source.MatchString(source) &&
@@ -160,10 +162,12 @@ func (cm *DesktopNotificationManager) CheckAndNotify(network, source, nick, mess
 			cm.lastNotificationTimesMu.Unlock()
 
 			cm.pendingNotifications <- Notification{
-				Title: fmt.Sprintf("%s (%s)", nick, source),
-				Text:  message,
-				Sound: cm.notifications[i].Sound,
-				Popup: cm.notifications[i].Popup,
+				Title:    fmt.Sprintf("%s (%s)", nick, source),
+				Text:     message,
+				Sound:    cm.notifications[i].Sound,
+				Popup:    cm.notifications[i].Popup,
+				ServerID: serverID,
+				Source:   source,
 			}
 			break
 		}

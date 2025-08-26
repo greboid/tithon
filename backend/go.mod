@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hueristiq/hq-go-url v0.0.0-20250513180855-22cafaf83fb4
 	github.com/starfederation/datastar v1.0.0-beta.11
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	golang.org/x/net v0.43.0
 )
 

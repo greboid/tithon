@@ -12,7 +12,7 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v5
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           cache-dependency-path: './backend/go.sum'
           go-version: 'stable'
@@ -38,7 +38,7 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v5
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           cache-dependency-path: './backend/go.sum'
           go-version: 'stable'

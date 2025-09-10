@@ -25,7 +25,7 @@
     "@electron-forge/maker-deb": "^7.9.0",
     "@electron-forge/maker-zip": "^7.8.3",
     "@electron-forge/publisher-github": "^7.8.3",
-    "electron": "^38.0.0"
+    "electron": "^38.1.0"
   },
   "dependencies": {}
 }

@@ -16,7 +16,7 @@ jobs:
         with:
           cache-dependency-path: './backend/go.sum'
           go-version: 'stable'
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: 'latest'
       - name: Release

@@ -11,7 +11,7 @@ require (
 	github.com/ergochat/irc-go v0.4.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-playground/validator/v10 v10.28.0
-	github.com/hashicorp/go-version v1.7.0
+	github.com/hashicorp/go-version v1.8.0
 	github.com/hueristiq/hq-go-url v0.0.0-20250513180855-22cafaf83fb4
 	github.com/starfederation/datastar v1.0.0-beta.11
 	github.com/stretchr/testify v1.11.1

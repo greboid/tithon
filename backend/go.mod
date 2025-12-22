@@ -10,7 +10,7 @@ require (
 	github.com/enescakir/emoji v1.0.0
 	github.com/ergochat/irc-go v0.4.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/go-playground/validator/v10 v10.29.0
+	github.com/go-playground/validator/v10 v10.30.0
 	github.com/hashicorp/go-version v1.8.0
 	github.com/hueristiq/hq-go-url v0.0.0-20250513180855-22cafaf83fb4
 	github.com/starfederation/datastar v1.0.0-beta.11
@@ -24,7 +24,7 @@ require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/delaneyj/gostar v0.8.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.11 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect

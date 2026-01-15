@@ -8,7 +8,7 @@ require (
 	github.com/csmith/envflag/v2 v2.0.0
 	github.com/csmith/slogflags v1.1.0
 	github.com/enescakir/emoji v1.0.0
-	github.com/ergochat/irc-go v0.4.0
+	github.com/ergochat/irc-go v0.5.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/hashicorp/go-version v1.8.0

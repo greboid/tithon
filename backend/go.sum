@@ -21,8 +21,8 @@ github.com/delaneyj/gostar v0.8.0 h1:uT1JR+77P5ePL4BVTXsKNLtwUUtMAu/dNLryjEk95RA
 github.com/delaneyj/gostar v0.8.0/go.mod h1:mlxRWAVbntRR2VWlpXAzt7y9HY+bQtEm/lsyFnGLx/w=
 github.com/enescakir/emoji v1.0.0 h1:W+HsNql8swfCQFtioDGDHCHri8nudlK1n5p2rHCJoog=
 github.com/enescakir/emoji v1.0.0/go.mod h1:Bt1EKuLnKDTYpLALApstIkAjdDrS/8IAgTkKp+WKFD0=
-github.com/ergochat/irc-go v0.4.0 h1:0YibCKfAAtwxQdNjLQd9xpIEPisLcJ45f8FNsMHAuZc=
-github.com/ergochat/irc-go v0.4.0/go.mod h1:2vi7KNpIPWnReB5hmLpl92eMywQvuIeIIGdt/FQCph0=
+github.com/ergochat/irc-go v0.5.0 h1:woQ1RS9YbfgqPgSpPBBQeczXGIGzR0aC7dEgk469fTw=
+github.com/ergochat/irc-go v0.5.0/go.mod h1:2vi7KNpIPWnReB5hmLpl92eMywQvuIeIIGdt/FQCph0=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/gabriel-vasile/mimetype v1.4.12 h1:e9hWvmLYvtp846tLHam2o++qitpguFiYCKbn0w9jyqw=

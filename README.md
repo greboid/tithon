@@ -1,3 +1,6 @@
+> [!Warning]
+> I'm archiving this project as [Halloy](https://github.com/squidowl/halloy) meets the requirements without me needing to do the work
+
 # <img alt="Tithon" src="/frontend/icon.png" height="50px"> Tithon - Modern Desktop IRC Client
 
 Tithon is a modern, cross-platform IRC client that combines the power of IRC with a clean desktop interface. Built with Go and Electron, it leverages IRCv3 features to provide a smooth messaging experience while staying true to the IRC protocol.
